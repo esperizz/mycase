@@ -1,15 +1,51 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
-import type { Caso, CasoNuevo, Vencimiento } from "./tipos";
+import { createClient } from "@/lib/supabase/client";
+import type { Caso, CasoNuevo, EstadoCaso, Vencimiento } from "./tipos";
 
-const CLAVE = "mycase-casos";
+interface FilaCaso {
+  id: string;
+  cliente: string;
+  contacto: string;
+  empleador: string;
+  tipo_reclamo: string;
+  estado: EstadoCaso;
+  fecha_apertura: string;
+  notas: string;
+}
+
+interface FilaVencimiento {
+  id: string;
+  caso_id: string;
+  fecha: string;
+  descripcion: string;
+  cumplido: boolean;
+}
+
+function aCaso(fila: FilaCaso, vencimientos: Vencimiento[]): Caso {
+  return {
+    id: fila.id,
+    cliente: fila.cliente,
+    contacto: fila.contacto,
+    empleador: fila.empleador,
+    tipoReclamo: fila.tipo_reclamo,
+    estado: fila.estado,
+    fechaApertura: fila.fecha_apertura,
+    notas: fila.notas,
+    vencimientos,
+  };
+}
+
+function aVencimiento(fila: FilaVencimiento): Vencimiento {
+  return { id: fila.id, fecha: fila.fecha, descripcion: fila.descripcion, cumplido: fila.cumplido };
+}
 
 interface Contexto {
   casos: Caso[];
-  /** false hasta leer lo guardado, para no pisarlo con la lista vacía inicial. */
+  /** false hasta terminar de cargar los casos desde Supabase. */
   listo: boolean;
-  agregar: (caso: CasoNuevo) => Caso;
+  agregar: (caso: CasoNuevo) => Promise<Caso>;
   actualizar: (id: string, cambio: (c: Caso) => Caso) => void;
   agregarVencimiento: (casoId: string, vencimiento: Omit<Vencimiento, "id" | "cumplido">) => void;
   marcarVencimiento: (casoId: string, vencimientoId: string, cumplido: boolean) => void;
@@ -18,90 +54,145 @@ interface Contexto {
 
 const CasosContext = createContext<Contexto | null>(null);
 
-function crearId() {
-  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
-}
-
-/** Tolera datos guardados con la forma vieja (un solo `proximoVencimiento`). */
-function normalizar(caso: Partial<Caso> & { proximoVencimiento?: Vencimiento | null }): Caso {
-  const vencimientos =
-    caso.vencimientos ??
-    (caso.proximoVencimiento ? [{ ...caso.proximoVencimiento, id: crearId(), cumplido: false }] : []);
-  return {
-    id: caso.id ?? crearId(),
-    cliente: caso.cliente ?? "",
-    contacto: caso.contacto ?? "",
-    empleador: caso.empleador ?? "",
-    tipoReclamo: caso.tipoReclamo ?? "",
-    estado: caso.estado ?? "consulta",
-    fechaApertura: caso.fechaApertura ?? new Date().toISOString().slice(0, 10),
-    vencimientos,
-    notas: caso.notas ?? "",
-  };
-}
-
 export function CasosProvider({ children }: { children: React.ReactNode }) {
   const [casos, setCasos] = useState<Caso[]>([]);
   const [listo, setListo] = useState(false);
+  const supabase = createClient();
 
   useEffect(() => {
-    try {
-      const guardado = localStorage.getItem(CLAVE);
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- hidratar desde localStorage
-      if (guardado) setCasos((JSON.parse(guardado) as Caso[]).map(normalizar));
-    } catch {
-      // Sin almacenamiento disponible: se arranca de cero.
+    let cancelado = false;
+
+    async function cargar() {
+      const { data: filasCasos, error: errorCasos } = await supabase
+        .from("casos")
+        .select("*")
+        .order("fecha_apertura", { ascending: false });
+
+      if (errorCasos || !filasCasos) {
+        if (!cancelado) setListo(true);
+        return;
+      }
+
+      const { data: filasVencimientos } = await supabase.from("vencimientos").select("*");
+
+      if (cancelado) return;
+
+      const porCaso = new Map<string, Vencimiento[]>();
+      for (const fv of (filasVencimientos ?? []) as FilaVencimiento[]) {
+        const lista = porCaso.get(fv.caso_id) ?? [];
+        lista.push(aVencimiento(fv));
+        porCaso.set(fv.caso_id, lista);
+      }
+
+      setCasos((filasCasos as FilaCaso[]).map((fc) => aCaso(fc, porCaso.get(fc.id) ?? [])));
+      setListo(true);
     }
-    setListo(true);
+
+    cargar();
+    return () => {
+      cancelado = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- supabase client es estable, se crea una sola vez
   }, []);
 
-  useEffect(() => {
-    if (!listo) return;
-    try {
-      localStorage.setItem(CLAVE, JSON.stringify(casos));
-    } catch {
-      // Ignorado: la persistencia es una comodidad, no un requisito.
-    }
-  }, [casos, listo]);
+  const agregar = useCallback(
+    async (caso: CasoNuevo) => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) throw new Error("No hay sesión activa.");
 
-  const agregar = useCallback((caso: CasoNuevo) => {
-    const nuevo = normalizar(caso);
-    setCasos((actuales) => [...actuales, nuevo]);
-    return nuevo;
-  }, []);
+      const { data, error } = await supabase
+        .from("casos")
+        .insert({
+          user_id: user.id,
+          cliente: caso.cliente,
+          contacto: caso.contacto,
+          empleador: caso.empleador,
+          tipo_reclamo: caso.tipoReclamo,
+          estado: caso.estado,
+          notas: caso.notas ?? "",
+        })
+        .select()
+        .single();
 
-  const actualizar = useCallback((id: string, cambio: (c: Caso) => Caso) => {
-    setCasos((actuales) => actuales.map((c) => (c.id === id ? cambio(c) : c)));
-  }, []);
+      if (error || !data) throw error ?? new Error("No se pudo crear el caso.");
+
+      const nuevo = aCaso(data as FilaCaso, []);
+      setCasos((actuales) => [nuevo, ...actuales]);
+      return nuevo;
+    },
+    [supabase],
+  );
+
+  const actualizar = useCallback(
+    (id: string, cambio: (c: Caso) => Caso) => {
+      setCasos((actuales) => {
+        const actual = actuales.find((c) => c.id === id);
+        if (!actual) return actuales;
+        const nuevo = cambio(actual);
+
+        supabase
+          .from("casos")
+          .update({
+            cliente: nuevo.cliente,
+            contacto: nuevo.contacto,
+            empleador: nuevo.empleador,
+            tipo_reclamo: nuevo.tipoReclamo,
+            estado: nuevo.estado,
+            notas: nuevo.notas,
+          })
+          .eq("id", id)
+          .then(() => {});
+
+        return actuales.map((c) => (c.id === id ? nuevo : c));
+      });
+    },
+    [supabase],
+  );
 
   const agregarVencimiento = useCallback(
     (casoId: string, vencimiento: Omit<Vencimiento, "id" | "cumplido">) => {
-      actualizar(casoId, (c) => ({
-        ...c,
-        vencimientos: [...c.vencimientos, { ...vencimiento, id: crearId(), cumplido: false }],
-      }));
+      supabase
+        .from("vencimientos")
+        .insert({ caso_id: casoId, fecha: vencimiento.fecha, descripcion: vencimiento.descripcion })
+        .select()
+        .single()
+        .then(({ data }) => {
+          if (!data) return;
+          const nuevo = aVencimiento(data as FilaVencimiento);
+          setCasos((actuales) =>
+            actuales.map((c) => (c.id === casoId ? { ...c, vencimientos: [...c.vencimientos, nuevo] } : c)),
+          );
+        });
     },
-    [actualizar],
+    [supabase],
   );
 
   const marcarVencimiento = useCallback(
     (casoId: string, vencimientoId: string, cumplido: boolean) => {
-      actualizar(casoId, (c) => ({
-        ...c,
-        vencimientos: c.vencimientos.map((v) => (v.id === vencimientoId ? { ...v, cumplido } : v)),
-      }));
+      setCasos((actuales) =>
+        actuales.map((c) =>
+          c.id === casoId
+            ? { ...c, vencimientos: c.vencimientos.map((v) => (v.id === vencimientoId ? { ...v, cumplido } : v)) }
+            : c,
+        ),
+      );
+      supabase.from("vencimientos").update({ cumplido }).eq("id", vencimientoId).then(() => {});
     },
-    [actualizar],
+    [supabase],
   );
 
   const quitarVencimiento = useCallback(
     (casoId: string, vencimientoId: string) => {
-      actualizar(casoId, (c) => ({
-        ...c,
-        vencimientos: c.vencimientos.filter((v) => v.id !== vencimientoId),
-      }));
+      setCasos((actuales) =>
+        actuales.map((c) =>
+          c.id === casoId ? { ...c, vencimientos: c.vencimientos.filter((v) => v.id !== vencimientoId) } : c,
+        ),
+      );
+      supabase.from("vencimientos").delete().eq("id", vencimientoId).then(() => {});
     },
-    [actualizar],
+    [supabase],
   );
 
   return (
