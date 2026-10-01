@@ -1,10 +1,14 @@
+import { ListaCasos } from "@/components/casos/ListaCasos";
+import { Header } from "@/components/ui/Header";
+
 export default function Home() {
   return (
-    <main className="flex flex-1 flex-col items-center justify-center gap-4 p-8 text-center">
-      <h1 className="text-3xl font-bold tracking-tight">MyCase</h1>
-      <p className="max-w-md text-gray-600">
-        Punto de partida del proyecto. Todavía no hay nada armado.
-      </p>
-    </main>
+    <>
+      <Header />
+      <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 py-8">
+        <h1 className="text-2xl font-bold tracking-tight text-gray-900">Tus casos</h1>
+        <ListaCasos />
+      </main>
+    </>
   );
 }
