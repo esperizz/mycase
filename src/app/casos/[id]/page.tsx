@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/Button";
 import { SelectField, TextAreaField, TextField } from "@/components/ui/Field";
 import { Header } from "@/components/ui/Header";
 import { useCasos } from "@/lib/casos/CasosProvider";
-import { formatearFecha } from "@/lib/casos/formato";
+import { diasHasta, formatearFecha } from "@/lib/casos/formato";
 import { ESTADO_LABEL, ESTADOS } from "@/lib/casos/tipos";
 
 function Dato({ label, valor }: { label: string; valor: string }) {
@@ -22,7 +22,7 @@ function Dato({ label, valor }: { label: string; valor: string }) {
 
 export default function FichaCasoPage() {
   const { id } = useParams<{ id: string }>();
-  const { casos, listo, actualizar } = useCasos();
+  const { casos, listo, actualizar, agregarVencimiento, marcarVencimiento, quitarVencimiento } = useCasos();
   const caso = casos.find((c) => c.id === id);
 
   const [fechaVto, setFechaVto] = useState("");
@@ -48,13 +48,9 @@ export default function FichaCasoPage() {
   const guardarVencimiento = (e: React.FormEvent) => {
     e.preventDefault();
     if (!fechaVto) return;
-    actualizar(caso.id, (c) => ({ ...c, proximoVencimiento: { fecha: fechaVto, descripcion: descVto } }));
+    agregarVencimiento(caso.id, { fecha: fechaVto, descripcion: descVto });
     setFechaVto("");
     setDescVto("");
-  };
-
-  const quitarVencimiento = () => {
-    actualizar(caso.id, (c) => ({ ...c, proximoVencimiento: null }));
   };
 
   const guardarNotas = () => {
@@ -98,19 +94,42 @@ export default function FichaCasoPage() {
         </section>
 
         <section className="flex flex-col gap-4 rounded-xl border border-gray-200 bg-white p-5">
-          <h2 className="font-semibold text-gray-900">Próximo vencimiento</h2>
-          {caso.proximoVencimiento ? (
-            <div className="flex items-center justify-between rounded-lg bg-amber-50 px-4 py-3">
-              <div>
-                <p className="font-semibold text-gray-900">{formatearFecha(caso.proximoVencimiento.fecha)}</p>
-                <p className="text-sm text-gray-600">{caso.proximoVencimiento.descripcion}</p>
-              </div>
-              <Button variante="secondary" onClick={quitarVencimiento}>
-                Quitar
-              </Button>
-            </div>
-          ) : (
+          <h2 className="font-semibold text-gray-900">Vencimientos</h2>
+          {caso.vencimientos.length === 0 ? (
             <p className="text-sm text-gray-500">No hay ningún vencimiento cargado para este caso.</p>
+          ) : (
+            <ul className="flex flex-col gap-2">
+              {[...caso.vencimientos]
+                .sort((a, b) => a.fecha.localeCompare(b.fecha))
+                .map((v) => {
+                  const dias = diasHasta(v.fecha);
+                  const urgencia = v.cumplido
+                    ? "bg-gray-50 text-gray-400"
+                    : dias < 0
+                      ? "bg-red-50 text-red-700"
+                      : dias <= 3
+                        ? "bg-amber-50 text-amber-800"
+                        : "bg-gray-50 text-gray-700";
+                  return (
+                    <li key={v.id} className={`flex items-center gap-3 rounded-lg px-4 py-3 ${urgencia}`}>
+                      <input
+                        type="checkbox"
+                        checked={v.cumplido}
+                        onChange={(e) => marcarVencimiento(caso.id, v.id, e.target.checked)}
+                        className="size-4"
+                        aria-label={`Marcar "${v.descripcion}" como cumplido`}
+                      />
+                      <div className={`flex-1 ${v.cumplido ? "line-through" : ""}`}>
+                        <p className="font-semibold">{formatearFecha(v.fecha)}</p>
+                        <p className="text-sm">{v.descripcion}</p>
+                      </div>
+                      <Button variante="secondary" onClick={() => quitarVencimiento(caso.id, v.id)}>
+                        Quitar
+                      </Button>
+                    </li>
+                  );
+                })}
+            </ul>
           )}
           <form onSubmit={guardarVencimiento} className="flex flex-col gap-3 sm:flex-row sm:items-end">
             <div className="flex-1">
@@ -124,7 +143,7 @@ export default function FichaCasoPage() {
                 onChange={(e) => setDescVto(e.target.value)}
               />
             </div>
-            <Button type="submit">Guardar</Button>
+            <Button type="submit">Agregar</Button>
           </form>
         </section>
 

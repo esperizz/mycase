@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { ButtonLink } from "@/components/ui/Button";
 import { useCasos } from "@/lib/casos/CasosProvider";
-import { diasHasta, formatearFecha } from "@/lib/casos/formato";
+import { diasHasta, formatearFecha, proximoPendiente } from "@/lib/casos/formato";
 import { EstadoBadge } from "./EstadoBadge";
 
 function Vencimiento({ fecha, descripcion }: { fecha: string; descripcion: string }) {
@@ -43,35 +43,40 @@ export function ListaCasos() {
   }
 
   const ordenados = [...casos].sort((a, b) => {
-    const da = a.proximoVencimiento ? diasHasta(a.proximoVencimiento.fecha) : Infinity;
-    const db = b.proximoVencimiento ? diasHasta(b.proximoVencimiento.fecha) : Infinity;
+    const va = proximoPendiente(a);
+    const vb = proximoPendiente(b);
+    const da = va ? diasHasta(va.fecha) : Infinity;
+    const db = vb ? diasHasta(vb.fecha) : Infinity;
     return da - db;
   });
 
   return (
     <div className="flex flex-col gap-3">
-      {ordenados.map((caso) => (
-        <Link
-          key={caso.id}
-          href={`/casos/${caso.id}`}
-          className="flex flex-col gap-3 rounded-xl border border-gray-200 bg-white p-4 transition-colors hover:border-gray-300 sm:flex-row sm:items-center sm:justify-between"
-        >
-          <div className="flex flex-col gap-1">
-            <div className="flex items-center gap-2">
-              <p className="font-semibold text-gray-900">{caso.cliente}</p>
-              <EstadoBadge estado={caso.estado} />
+      {ordenados.map((caso) => {
+        const vencimiento = proximoPendiente(caso);
+        return (
+          <Link
+            key={caso.id}
+            href={`/casos/${caso.id}`}
+            className="flex flex-col gap-3 rounded-xl border border-gray-200 bg-white p-4 transition-colors hover:border-gray-300 sm:flex-row sm:items-center sm:justify-between"
+          >
+            <div className="flex flex-col gap-1">
+              <div className="flex items-center gap-2">
+                <p className="font-semibold text-gray-900">{caso.cliente}</p>
+                <EstadoBadge estado={caso.estado} />
+              </div>
+              <p className="text-sm text-gray-500">
+                {caso.tipoReclamo} · contra {caso.empleador}
+              </p>
             </div>
-            <p className="text-sm text-gray-500">
-              {caso.tipoReclamo} · contra {caso.empleador}
-            </p>
-          </div>
-          {caso.proximoVencimiento ? (
-            <Vencimiento {...caso.proximoVencimiento} />
-          ) : (
-            <p className="text-sm text-gray-400">Sin vencimiento cargado</p>
-          )}
-        </Link>
-      ))}
+            {vencimiento ? (
+              <Vencimiento fecha={vencimiento.fecha} descripcion={vencimiento.descripcion} />
+            ) : (
+              <p className="text-sm text-gray-400">Sin vencimientos pendientes</p>
+            )}
+          </Link>
+        );
+      })}
     </div>
   );
 }

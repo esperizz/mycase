@@ -11,8 +11,10 @@ export const ESTADO_LABEL: Record<EstadoCaso, string> = {
 };
 
 export interface Vencimiento {
+  id: string;
   fecha: string; // ISO yyyy-mm-dd
   descripcion: string;
+  cumplido: boolean;
 }
 
 export interface Caso {
@@ -23,11 +25,10 @@ export interface Caso {
   tipoReclamo: string;
   estado: EstadoCaso;
   fechaApertura: string; // ISO yyyy-mm-dd
-  proximoVencimiento: Vencimiento | null;
+  vencimientos: Vencimiento[];
   notas: string;
 }
 
-export type CasoNuevo = Omit<Caso, "id" | "fechaApertura" | "proximoVencimiento" | "notas"> & {
-  proximoVencimiento?: Vencimiento | null;
+export type CasoNuevo = Omit<Caso, "id" | "fechaApertura" | "vencimientos" | "notas"> & {
   notas?: string;
 };
