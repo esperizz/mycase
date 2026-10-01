@@ -71,6 +71,13 @@ export default function FichaCasoPage() {
           </div>
         </div>
 
+        <Link
+          href={`/casos/${caso.id}/carta`}
+          className="w-fit rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-900 hover:bg-gray-50"
+        >
+          Generar carta de intimación →
+        </Link>
+
         <section className="grid grid-cols-2 gap-4 rounded-xl border border-gray-200 bg-white p-5">
           <Dato label="Empleador" valor={caso.empleador} />
           <Dato label="Tipo de reclamo" valor={caso.tipoReclamo} />

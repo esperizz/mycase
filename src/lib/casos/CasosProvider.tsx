@@ -37,6 +37,7 @@ function normalizar(caso: Partial<Caso> & { proximoVencimiento?: Vencimiento | n
     fechaApertura: caso.fechaApertura ?? new Date().toISOString().slice(0, 10),
     vencimientos,
     notas: caso.notas ?? "",
+    carta: caso.carta ?? null,
   };
 }
 
