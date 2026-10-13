@@ -127,12 +127,15 @@ export interface OpcionPlazo {
   id: PlazoId;
   titulo: string;
   descripcion: string;
+  /** Para calcular el vencimiento al marcar la carta como enviada. */
+  dias: number;
+  habiles: boolean;
 }
 
 export const PLAZOS: OpcionPlazo[] = [
-  { id: "48h", titulo: "48 horas", descripcion: "Para algo urgente." },
-  { id: "5d", titulo: "5 días hábiles", descripcion: "Una semana, aproximadamente." },
-  { id: "10d", titulo: "10 días hábiles", descripcion: "Dos semanas. El más habitual." },
+  { id: "48h", titulo: "48 horas", descripcion: "Para algo urgente.", dias: 2, habiles: false },
+  { id: "5d", titulo: "5 días hábiles", descripcion: "Una semana, aproximadamente.", dias: 5, habiles: true },
+  { id: "10d", titulo: "10 días hábiles", descripcion: "Dos semanas. El más habitual.", dias: 10, habiles: true },
 ];
 
 export interface OpcionConsecuencia {

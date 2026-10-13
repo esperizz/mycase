@@ -21,6 +21,26 @@ export function diasHasta(iso: string): number {
   return Math.round((fecha.getTime() - hoy.getTime()) / 86_400_000);
 }
 
+/** Suma días a una fecha yyyy-mm-dd; si `habiles`, saltea sábados y domingos (no feriados). */
+export function sumarDias(iso: string, dias: number, habiles = false): string {
+  const [y, m, d] = iso.split("-").map(Number);
+  const fecha = new Date(y, m - 1, d);
+  let restantes = dias;
+  while (restantes > 0) {
+    fecha.setDate(fecha.getDate() + 1);
+    const dia = fecha.getDay();
+    if (!habiles || (dia !== 0 && dia !== 6)) restantes--;
+  }
+  const mm = String(fecha.getMonth() + 1).padStart(2, "0");
+  const dd = String(fecha.getDate()).padStart(2, "0");
+  return `${fecha.getFullYear()}-${mm}-${dd}`;
+}
+
+/** Hoy en formato yyyy-mm-dd (hora local). */
+export function hoyIso(): string {
+  return new Date().toLocaleDateString("en-CA");
+}
+
 const MESES = [
   "enero", "febrero", "marzo", "abril", "mayo", "junio",
   "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre",
