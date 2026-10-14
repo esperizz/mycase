@@ -1,13 +1,15 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { EstadoBadge } from "@/components/casos/EstadoBadge";
-import { ButtonLink } from "@/components/ui/Button";
+import { Button, ButtonLink } from "@/components/ui/Button";
 import { useCasos } from "@/lib/casos/CasosProvider";
 import { proximoFeriado } from "@/lib/casos/feriados";
 import { formatearFecha, hoyIso, textoDias } from "@/lib/casos/formato";
 import { armarPanel, DIAS_SEMANA, type Pendiente } from "@/lib/casos/panel";
 import { ESTADOS, type Caso } from "@/lib/casos/tipos";
+import { CargaRapida } from "./CargaRapida";
 
 function Indicador({ valor, etiqueta, tono }: { valor: number; etiqueta: string; tono: "rojo" | "ambar" | "neutro" }) {
   const color =
@@ -94,18 +96,42 @@ function Tarjeta({ titulo, ayuda, children }: { titulo: string; ayuda?: string; 
   );
 }
 
-function ListaCorta({ casos, destino, accion }: { casos: Caso[]; destino: (c: Caso) => string; accion: string }) {
+const filaCorta = "flex w-full items-center justify-between gap-3 rounded-lg bg-gray-50 px-3 py-2 text-left text-sm hover:bg-gray-100";
+
+function ContenidoFila({ caso, accion }: { caso: Caso; accion: string }) {
+  return (
+    <>
+      <span className="min-w-0 truncate font-medium text-gray-900">{caso.cliente}</span>
+      <span className="shrink-0 font-semibold text-gray-500">{accion} →</span>
+    </>
+  );
+}
+
+/** Lista de casos con una acción: navega a `destino` o, si se pasa `onElegir`, la resuelve ahí mismo. */
+function ListaCorta({
+  casos,
+  accion,
+  destino,
+  onElegir,
+}: {
+  casos: Caso[];
+  accion: string;
+  destino?: (c: Caso) => string;
+  onElegir?: (c: Caso) => void;
+}) {
   return (
     <ul className="flex flex-col gap-2">
       {casos.map((c) => (
         <li key={c.id}>
-          <Link
-            href={destino(c)}
-            className="flex items-center justify-between gap-3 rounded-lg bg-gray-50 px-3 py-2 text-sm hover:bg-gray-100"
-          >
-            <span className="min-w-0 truncate font-medium text-gray-900">{c.cliente}</span>
-            <span className="shrink-0 font-semibold text-gray-500">{accion} →</span>
-          </Link>
+          {onElegir ? (
+            <button type="button" onClick={() => onElegir(c)} className={filaCorta}>
+              <ContenidoFila caso={c} accion={accion} />
+            </button>
+          ) : (
+            <Link href={destino?.(c) ?? `/casos/${c.id}`} className={filaCorta}>
+              <ContenidoFila caso={c} accion={accion} />
+            </Link>
+          )}
         </li>
       ))}
     </ul>
@@ -125,6 +151,16 @@ function resumen(vencidos: number, hoy: number, semana: number): string {
 
 export function Panel() {
   const { casos, listo, marcarVencimiento } = useCasos();
+  /** null: carga rápida cerrada; "": abierta sin caso elegido; si no, el id del caso elegido. */
+  const [carga, setCarga] = useState<string | null>(null);
+  const [aviso, setAviso] = useState("");
+
+  useEffect(() => {
+    if (!aviso) return;
+    const t = setTimeout(() => setAviso(""), 4000);
+    return () => clearTimeout(t);
+  }, [aviso]);
+
   if (!listo) return null;
 
   const hoy = hoyIso();
@@ -146,25 +182,49 @@ export function Panel() {
   const panel = armarPanel(casos, hoy);
   const cumplir = (p: Pendiente) => marcarVencimiento(p.caso.id, p.vencimiento.id, true);
   const feriadoCerca = proximoFeriado(hoy);
+  const casosActivos = casos
+    .filter((c) => c.estado !== "cerrado")
+    .sort((a, b) => a.cliente.localeCompare(b.cliente, "es"));
   const hayAgenda = panel.vencidos.length + panel.hoy.length + panel.semana.length > 0;
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <p className="text-sm font-medium text-gray-500">
-          {fechaTitulo}
-          {feriadoCerca && (
-            <span>
-              {" "}
-              · {feriadoCerca.fecha === hoy ? "Hoy es feriado" : `Próximo feriado: ${formatearFecha(feriadoCerca.fecha)}`}{" "}
-              ({feriadoCerca.nombre})
-            </span>
-          )}
-        </p>
-        <h1 className="text-2xl font-bold tracking-tight text-gray-900">
-          {resumen(panel.vencidos.length, panel.hoy.length, panel.semana.length)}
-        </h1>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p className="text-sm font-medium text-gray-500">
+            {fechaTitulo}
+            {feriadoCerca && (
+              <span>
+                {" "}
+                · {feriadoCerca.fecha === hoy ? "Hoy es feriado" : `Próximo feriado: ${formatearFecha(feriadoCerca.fecha)}`}{" "}
+                ({feriadoCerca.nombre})
+              </span>
+            )}
+          </p>
+          <h1 className="text-2xl font-bold tracking-tight text-gray-900">
+            {resumen(panel.vencidos.length, panel.hoy.length, panel.semana.length)}
+          </h1>
+        </div>
+        {casosActivos.length > 0 && carga === null && (
+          <Button onClick={() => setCarga("")}>+ Cargar vencimiento</Button>
+        )}
       </div>
+
+      {aviso && (
+        <p role="status" className="rounded-lg bg-green-50 px-4 py-3 text-sm font-medium text-green-800">
+          {aviso}
+        </p>
+      )}
+
+      {carga !== null && (
+        <CargaRapida
+          key={carga}
+          casos={casosActivos}
+          casoInicial={carga}
+          onListo={setAviso}
+          onCerrar={() => setCarga(null)}
+        />
+      )}
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <Indicador valor={panel.vencidos.length} etiqueta="Vencidos" tono="rojo" />
@@ -196,7 +256,7 @@ export function Panel() {
               titulo="Sin próximo paso"
               ayuda="Casos activos sin ningún vencimiento pendiente. Cargales el siguiente para no perderlos de vista."
             >
-              <ListaCorta casos={panel.sinProximoPaso} destino={(c) => `/casos/${c.id}`} accion="Cargar" />
+              <ListaCorta casos={panel.sinProximoPaso} onElegir={(c) => setCarga(c.id)} accion="Cargar" />
             </Tarjeta>
           )}
 
