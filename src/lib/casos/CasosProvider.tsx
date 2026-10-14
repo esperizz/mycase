@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
-import type { Caso, CasoNuevo, Vencimiento } from "./tipos";
+import { cartaVacia, type Caso, type CasoNuevo, type Vencimiento } from "./tipos";
 
 const CLAVE = "mycase-casos";
 
@@ -11,6 +11,9 @@ interface Contexto {
   listo: boolean;
   agregar: (caso: CasoNuevo) => Caso;
   actualizar: (id: string, cambio: (c: Caso) => Caso) => void;
+  eliminar: (id: string) => void;
+  /** Suma casos de una copia de seguridad; los que tienen el mismo id se reemplazan. Devuelve cuántos importó. */
+  importar: (datos: unknown) => number;
   agregarVencimiento: (casoId: string, vencimiento: Omit<Vencimiento, "id" | "cumplido">) => void;
   marcarVencimiento: (casoId: string, vencimientoId: string, cumplido: boolean) => void;
   quitarVencimiento: (casoId: string, vencimientoId: string) => void;
@@ -37,7 +40,7 @@ function normalizar(caso: Partial<Caso> & { proximoVencimiento?: Vencimiento | n
     fechaApertura: caso.fechaApertura ?? new Date().toISOString().slice(0, 10),
     vencimientos,
     notas: caso.notas ?? "",
-    carta: caso.carta ?? null,
+    carta: caso.carta ? { ...cartaVacia(), ...caso.carta } : null,
   };
 }
 
@@ -75,6 +78,18 @@ export function CasosProvider({ children }: { children: React.ReactNode }) {
     setCasos((actuales) => actuales.map((c) => (c.id === id ? cambio(c) : c)));
   }, []);
 
+  const eliminar = useCallback((id: string) => {
+    setCasos((actuales) => actuales.filter((c) => c.id !== id));
+  }, []);
+
+  const importar = useCallback((datos: unknown) => {
+    if (!Array.isArray(datos)) throw new Error("El archivo no es una copia de seguridad de MyCase.");
+    const importados = datos.filter((d) => d && typeof d === "object" && "id" in d).map(normalizar);
+    const ids = new Set(importados.map((c) => c.id));
+    setCasos((actuales) => [...actuales.filter((c) => !ids.has(c.id)), ...importados]);
+    return importados.length;
+  }, []);
+
   const agregarVencimiento = useCallback(
     (casoId: string, vencimiento: Omit<Vencimiento, "id" | "cumplido">) => {
       actualizar(casoId, (c) => ({
@@ -107,7 +122,17 @@ export function CasosProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <CasosContext.Provider
-      value={{ casos, listo, agregar, actualizar, agregarVencimiento, marcarVencimiento, quitarVencimiento }}
+      value={{
+        casos,
+        listo,
+        agregar,
+        actualizar,
+        eliminar,
+        importar,
+        agregarVencimiento,
+        marcarVencimiento,
+        quitarVencimiento,
+      }}
     >
       {children}
     </CasosContext.Provider>

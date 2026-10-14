@@ -6,8 +6,16 @@ import { useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { SelectField, TextAreaField, TextField } from "@/components/ui/Field";
 import { Header } from "@/components/ui/Header";
-import { consecuenciasPara, INFO_TIPO, PLAZOS, pedidoPorId, pedidosPara } from "@/lib/casos/cartaCatalogo";
+import {
+  consecuenciasPara,
+  INFO_TIPO,
+  PLAZOS,
+  pedidoPorId,
+  pedidosPara,
+  plazoPorId,
+} from "@/lib/casos/cartaCatalogo";
 import { useCasos } from "@/lib/casos/CasosProvider";
+import { formatearFecha, hoyIso, sumarDias } from "@/lib/casos/formato";
 import { generarCarta } from "@/lib/casos/generarCarta";
 import { cartaVacia, type CartaDatos, type PlazoId } from "@/lib/casos/tipos";
 
@@ -16,8 +24,8 @@ export default function CartaCasoPage() {
   const { casos, listo, actualizar } = useCasos();
   const caso = casos.find((c) => c.id === id);
 
-  const [datos, setDatos] = useState<CartaDatos | null>(null);
   const [copiado, setCopiado] = useState(false);
+  const [fechaEnvio, setFechaEnvio] = useState(hoyIso);
 
   if (!listo) return null;
 
@@ -35,20 +43,40 @@ export default function CartaCasoPage() {
     );
   }
 
-  const d = datos ?? caso.carta ?? cartaVacia();
+  const d = caso.carta ?? cartaVacia();
   const pedidos = pedidosPara(caso.tipoReclamo);
   const pedidoActual = pedidoPorId(caso.tipoReclamo, d.pedidoId) ?? pedidos[0];
   const info = INFO_TIPO[caso.tipoReclamo] ?? INFO_TIPO.Otro;
   const consecuencias = consecuenciasPara(caso.tipoReclamo);
 
-  const cambiar = (cambio: Partial<CartaDatos>) => setDatos({ ...d, ...cambio });
-
-  const guardar = () => actualizar(caso.id, (c) => ({ ...c, carta: d }));
+  // Cada cambio se guarda en el caso al instante: no hay que acordarse de guardar.
+  const cambiar = (cambio: Partial<CartaDatos>) =>
+    actualizar(caso.id, (c) => ({ ...c, carta: { ...(c.carta ?? cartaVacia()), ...cambio } }));
 
   const carta = generarCarta({ ...caso, carta: d });
 
+  const plazo = plazoPorId(d.plazo);
+  const venceEl = fechaEnvio ? sumarDias(fechaEnvio, plazo.dias, plazo.habiles) : "";
+
+  const marcarEnviada = () => {
+    if (!fechaEnvio) return;
+    actualizar(caso.id, (c) => ({
+      ...c,
+      estado: c.estado === "consulta" ? "intimacion" : c.estado,
+      carta: { ...(c.carta ?? cartaVacia()), enviadaEl: fechaEnvio },
+      vencimientos: [
+        ...c.vencimientos,
+        {
+          id: `${Date.now().toString(36)}-carta`,
+          fecha: venceEl,
+          descripcion: `Vence el plazo de la intimación (${plazo.titulo})`,
+          cumplido: false,
+        },
+      ],
+    }));
+  };
+
   const copiar = async () => {
-    guardar();
     try {
       await navigator.clipboard.writeText(carta.cuerpo);
       setCopiado(true);
@@ -59,7 +87,6 @@ export default function CartaCasoPage() {
   };
 
   const descargar = () => {
-    guardar();
     const contenido = ["REMITENTE", carta.remitente, "", "DESTINATARIO", carta.destinatario, "", "TEXTO", carta.cuerpo].join(
       "\n",
     );
@@ -214,6 +241,51 @@ export default function CartaCasoPage() {
               Descargar
             </Button>
           </div>
+        </section>
+
+        <section className="flex flex-col gap-4 rounded-xl border border-gray-200 bg-white p-5">
+          <h2 className="font-semibold text-gray-900">¿Ya la mandaste?</h2>
+          {d.enviadaEl ? (
+            <div className="flex flex-col gap-2 text-sm text-gray-700">
+              <p>
+                Marcada como enviada el <strong>{formatearFecha(d.enviadaEl)}</strong>. El vencimiento del plazo quedó
+                cargado en la ficha del caso.
+              </p>
+              <Link
+                href={`/casos/${caso.id}`}
+                className="w-fit font-semibold text-gray-900 underline underline-offset-2"
+              >
+                Ver el caso
+              </Link>
+            </div>
+          ) : (
+            <>
+              <p className="text-sm text-gray-500">
+                Al marcarla como enviada, el caso pasa a &ldquo;Intimación enviada&rdquo; y se agrega el vencimiento
+                del plazo a la ficha. El plazo corre desde que el empleador la recibe: si la recepción se demora, quitá
+                ese vencimiento en la ficha y cargalo con la fecha correcta.
+              </p>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+                <div className="flex-1">
+                  <TextField
+                    label="Fecha de envío"
+                    type="date"
+                    value={fechaEnvio}
+                    onChange={(e) => setFechaEnvio(e.target.value)}
+                  />
+                </div>
+                <Button onClick={marcarEnviada} disabled={!fechaEnvio}>
+                  Marcar como enviada
+                </Button>
+              </div>
+              {venceEl && (
+                <p className="text-sm text-gray-500">
+                  Vencimiento estimado: <strong>{formatearFecha(venceEl)}</strong> ({plazo.titulo}, sin contar
+                  feriados).
+                </p>
+              )}
+            </>
+          )}
         </section>
       </main>
     </>

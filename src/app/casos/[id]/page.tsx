@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 import { EstadoBadge } from "@/components/casos/EstadoBadge";
+import { FormularioCaso } from "@/components/casos/FormularioCaso";
 import { Button } from "@/components/ui/Button";
 import { SelectField, TextAreaField, TextField } from "@/components/ui/Field";
 import { Header } from "@/components/ui/Header";
@@ -22,12 +23,14 @@ function Dato({ label, valor }: { label: string; valor: string }) {
 
 export default function FichaCasoPage() {
   const { id } = useParams<{ id: string }>();
-  const { casos, listo, actualizar, agregarVencimiento, marcarVencimiento, quitarVencimiento } = useCasos();
+  const router = useRouter();
+  const { casos, listo, actualizar, eliminar, agregarVencimiento, marcarVencimiento, quitarVencimiento } = useCasos();
   const caso = casos.find((c) => c.id === id);
 
   const [fechaVto, setFechaVto] = useState("");
   const [descVto, setDescVto] = useState("");
   const [notas, setNotas] = useState(caso?.notas ?? "");
+  const [editando, setEditando] = useState(false);
 
   if (!listo) return null;
 
@@ -57,6 +60,12 @@ export default function FichaCasoPage() {
     actualizar(caso.id, (c) => ({ ...c, notas }));
   };
 
+  const borrarCaso = () => {
+    if (!window.confirm(`¿Eliminar el caso de ${caso.cliente}? No se puede deshacer.`)) return;
+    eliminar(caso.id);
+    router.push("/");
+  };
+
   return (
     <>
       <Header />
@@ -78,12 +87,33 @@ export default function FichaCasoPage() {
           Generar carta de intimación →
         </Link>
 
-        <section className="grid grid-cols-2 gap-4 rounded-xl border border-gray-200 bg-white p-5">
-          <Dato label="Empleador" valor={caso.empleador} />
-          <Dato label="Tipo de reclamo" valor={caso.tipoReclamo} />
-          <Dato label="Contacto" valor={caso.contacto || "—"} />
-          <Dato label="Caso abierto el" valor={formatearFecha(caso.fechaApertura)} />
-        </section>
+        {editando ? (
+          <section className="rounded-xl border border-gray-200 bg-white p-5">
+            <FormularioCaso
+              inicial={caso}
+              textoBoton="Guardar cambios"
+              onGuardar={(datos) => {
+                actualizar(caso.id, (c) => ({ ...c, ...datos }));
+                setEditando(false);
+              }}
+              onCancelar={() => setEditando(false)}
+            />
+          </section>
+        ) : (
+          <section className="flex flex-col gap-4 rounded-xl border border-gray-200 bg-white p-5">
+            <div className="grid grid-cols-2 gap-4">
+              <Dato label="Empleador" valor={caso.empleador} />
+              <Dato label="Tipo de reclamo" valor={caso.tipoReclamo} />
+              <Dato label="Contacto" valor={caso.contacto || "—"} />
+              <Dato label="Caso abierto el" valor={formatearFecha(caso.fechaApertura)} />
+            </div>
+            <div>
+              <Button variante="secondary" onClick={() => setEditando(true)}>
+                Editar datos
+              </Button>
+            </div>
+          </section>
+        )}
 
         <section className="flex flex-col gap-3 rounded-xl border border-gray-200 bg-white p-5">
           <h2 className="font-semibold text-gray-900">Estado del caso</h2>
@@ -163,6 +193,16 @@ export default function FichaCasoPage() {
             placeholder="Apuntes sobre el caso, conversaciones con el cliente, etc."
           />
         </section>
+
+        <div>
+          <button
+            type="button"
+            onClick={borrarCaso}
+            className="text-sm font-medium text-red-600 hover:text-red-800"
+          >
+            Eliminar este caso
+          </button>
+        </div>
       </main>
     </>
   );

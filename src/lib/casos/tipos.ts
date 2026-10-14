@@ -34,6 +34,8 @@ export interface CartaDatos {
   pedidoDetalle: string;
   plazo: PlazoId;
   consecuencias: string[];
+  /** Fecha (yyyy-mm-dd) en que se marcó como enviada; "" si todavía no se envió. */
+  enviadaEl: string;
 }
 
 export const cartaVacia = (): CartaDatos => ({
@@ -50,6 +52,7 @@ export const cartaVacia = (): CartaDatos => ({
   pedidoDetalle: "",
   plazo: "10d",
   consecuencias: [],
+  enviadaEl: "",
 });
 
 export interface Caso {
