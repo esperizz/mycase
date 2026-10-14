@@ -12,13 +12,26 @@ export function formatearFecha(iso: string): string {
   return new Date(y, m - 1, d).toLocaleDateString("es-AR", { day: "numeric", month: "short", year: "numeric" });
 }
 
+/** Días entre dos fechas yyyy-mm-dd (negativo si `hasta` es anterior a `desde`). */
+export function diasEntre(desde: string, hasta: string): number {
+  const aFecha = (iso: string) => {
+    const [y, m, d] = iso.split("-").map(Number);
+    return new Date(y, m - 1, d).getTime();
+  };
+  return Math.round((aFecha(hasta) - aFecha(desde)) / 86_400_000);
+}
+
+/** -3 → "Venció hace 3 días", 0 → "Vence hoy", 1 → "Vence mañana", 5 → "Vence en 5 días". */
+export function textoDias(dias: number): string {
+  if (dias < 0) return `Venció hace ${-dias} día${dias === -1 ? "" : "s"}`;
+  if (dias === 0) return "Vence hoy";
+  if (dias === 1) return "Vence mañana";
+  return `Vence en ${dias} días`;
+}
+
 /** Días hasta la fecha (negativo si ya pasó). */
 export function diasHasta(iso: string): number {
-  const hoy = new Date();
-  hoy.setHours(0, 0, 0, 0);
-  const [y, m, d] = iso.split("-").map(Number);
-  const fecha = new Date(y, m - 1, d);
-  return Math.round((fecha.getTime() - hoy.getTime()) / 86_400_000);
+  return diasEntre(hoyIso(), iso);
 }
 
 /** Suma días a una fecha yyyy-mm-dd; si `habiles`, saltea sábados y domingos (no feriados). */
