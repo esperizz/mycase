@@ -4,6 +4,7 @@ import Link from "next/link";
 import { EstadoBadge } from "@/components/casos/EstadoBadge";
 import { ButtonLink } from "@/components/ui/Button";
 import { useCasos } from "@/lib/casos/CasosProvider";
+import { proximoFeriado } from "@/lib/casos/feriados";
 import { formatearFecha, hoyIso, textoDias } from "@/lib/casos/formato";
 import { armarPanel, DIAS_SEMANA, type Pendiente } from "@/lib/casos/panel";
 import { ESTADOS, type Caso } from "@/lib/casos/tipos";
@@ -144,12 +145,22 @@ export function Panel() {
 
   const panel = armarPanel(casos, hoy);
   const cumplir = (p: Pendiente) => marcarVencimiento(p.caso.id, p.vencimiento.id, true);
+  const feriadoCerca = proximoFeriado(hoy);
   const hayAgenda = panel.vencidos.length + panel.hoy.length + panel.semana.length > 0;
 
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <p className="text-sm font-medium text-gray-500">{fechaTitulo}</p>
+        <p className="text-sm font-medium text-gray-500">
+          {fechaTitulo}
+          {feriadoCerca && (
+            <span>
+              {" "}
+              · {feriadoCerca.fecha === hoy ? "Hoy es feriado" : `Próximo feriado: ${formatearFecha(feriadoCerca.fecha)}`}{" "}
+              ({feriadoCerca.nombre})
+            </span>
+          )}
+        </p>
         <h1 className="text-2xl font-bold tracking-tight text-gray-900">
           {resumen(panel.vencidos.length, panel.hoy.length, panel.semana.length)}
         </h1>

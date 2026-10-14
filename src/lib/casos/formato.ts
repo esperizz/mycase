@@ -1,3 +1,4 @@
+import { feriado } from "./feriados";
 import type { Caso, Vencimiento } from "./tipos";
 
 /** El vencimiento pendiente más próximo (o más vencido), o null si no hay ninguno sin cumplir. */
@@ -34,19 +35,19 @@ export function diasHasta(iso: string): number {
   return diasEntre(hoyIso(), iso);
 }
 
-/** Suma días a una fecha yyyy-mm-dd; si `habiles`, saltea sábados y domingos (no feriados). */
+/** Suma días a una fecha yyyy-mm-dd; si `habiles`, saltea sábados, domingos y feriados nacionales. */
 export function sumarDias(iso: string, dias: number, habiles = false): string {
   const [y, m, d] = iso.split("-").map(Number);
   const fecha = new Date(y, m - 1, d);
+  const aIso = () =>
+    `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, "0")}-${String(fecha.getDate()).padStart(2, "0")}`;
   let restantes = dias;
   while (restantes > 0) {
     fecha.setDate(fecha.getDate() + 1);
     const dia = fecha.getDay();
-    if (!habiles || (dia !== 0 && dia !== 6)) restantes--;
+    if (!habiles || (dia !== 0 && dia !== 6 && !feriado(aIso()))) restantes--;
   }
-  const mm = String(fecha.getMonth() + 1).padStart(2, "0");
-  const dd = String(fecha.getDate()).padStart(2, "0");
-  return `${fecha.getFullYear()}-${mm}-${dd}`;
+  return aIso();
 }
 
 /** Hoy en formato yyyy-mm-dd (hora local). */

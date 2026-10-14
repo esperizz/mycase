@@ -280,8 +280,8 @@ export default function CartaCasoPage() {
               </div>
               {venceEl && (
                 <p className="text-sm text-gray-500">
-                  Vencimiento estimado: <strong>{formatearFecha(venceEl)}</strong> ({plazo.titulo}, sin contar
-                  feriados).
+                  Vencimiento estimado: <strong>{formatearFecha(venceEl)}</strong> ({plazo.titulo}
+                  {plazo.habiles && ", descontando fines de semana y feriados nacionales"}).
                 </p>
               )}
             </>
