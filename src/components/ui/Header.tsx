@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ButtonLink } from "./Button";
+import { LogoutButton } from "./LogoutButton";
 import { NavLink } from "./NavLink";
 
 export function Header() {
@@ -15,10 +16,13 @@ export function Header() {
             <NavLink href="/casos">Casos</NavLink>
           </nav>
         </div>
-        <ButtonLink href="/casos/nuevo">
-          <span className="sm:hidden">+ Nuevo</span>
-          <span className="hidden sm:inline">Nuevo caso</span>
-        </ButtonLink>
+        <div className="flex items-center gap-2">
+          <ButtonLink href="/casos/nuevo">
+            <span className="sm:hidden">+ Nuevo</span>
+            <span className="hidden sm:inline">Nuevo caso</span>
+          </ButtonLink>
+          <LogoutButton />
+        </div>
       </div>
     </header>
   );
