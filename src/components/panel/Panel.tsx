@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { EstadoBadge } from "@/components/casos/EstadoBadge";
+import { SubirCasosLocales } from "@/components/casos/SubirCasosLocales";
 import { Button, ButtonLink } from "@/components/ui/Button";
 import { useCasos } from "@/lib/casos/CasosProvider";
 import { proximoFeriado } from "@/lib/casos/feriados";
@@ -175,6 +176,9 @@ export function Panel() {
           Cargá tus casos con sus vencimientos y el panel te va a mostrar lo vencido, lo de hoy y lo que viene.
         </p>
         <ButtonLink href="/casos/nuevo">Cargar el primer caso</ButtonLink>
+        <div className="max-w-sm">
+          <SubirCasosLocales />
+        </div>
       </div>
     );
   }

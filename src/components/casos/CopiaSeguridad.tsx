@@ -4,8 +4,9 @@ import { useRef } from "react";
 import { Button } from "@/components/ui/Button";
 import { useCasos } from "@/lib/casos/CasosProvider";
 import { hoyIso } from "@/lib/casos/formato";
+import { SubirCasosLocales } from "./SubirCasosLocales";
 
-/** Los casos viven solo en este navegador: esto permite bajarlos a un archivo y recuperarlos. */
+/** Bajar los casos de la cuenta a un archivo y recuperarlos desde uno. */
 export function CopiaSeguridad() {
   const { casos, listo, importar } = useCasos();
   const input = useRef<HTMLInputElement>(null);
@@ -36,9 +37,9 @@ export function CopiaSeguridad() {
   return (
     <section className="flex flex-col gap-3 rounded-xl border border-gray-200 bg-white p-5">
       <h2 className="font-semibold text-gray-900">Copia de seguridad</h2>
+      <SubirCasosLocales />
       <p className="text-sm text-gray-500">
-        Tus casos se guardan solo en este navegador. Descargá una copia de vez en cuando para no perderlos, o para
-        pasarlos a otra computadora.
+        Tus casos se guardan en tu cuenta. Si querés, podés descargar una copia en un archivo.
       </p>
       <div className="flex flex-col gap-3 sm:flex-row">
         <Button variante="secondary" onClick={descargar} disabled={casos.length === 0}>
