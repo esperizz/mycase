@@ -2,7 +2,11 @@
 
 import { Prototipo } from "./Prototipo";
 
-export default async function PrototipoHojaRuta({ searchParams }: PageProps<"/prototipo/hoja-ruta">) {
+export default async function PrototipoHojaRuta({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
   const { variant } = await searchParams;
   const v = typeof variant === "string" && ["A", "B", "C"].includes(variant) ? variant : "A";
   return <Prototipo variante={v} />;
