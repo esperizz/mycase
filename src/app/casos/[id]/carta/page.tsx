@@ -35,7 +35,7 @@ export default function CartaCasoPage() {
         <Header />
         <main className="mx-auto flex w-full max-w-xl flex-1 flex-col items-center gap-4 px-4 py-16 text-center">
           <p className="text-lg font-semibold text-gray-900">No encontramos ese caso</p>
-          <Link href="/" className="text-sm font-semibold text-gray-900 underline underline-offset-2">
+          <Link href="/casos" className="text-sm font-semibold text-gray-900 underline underline-offset-2">
             Volver a la lista
           </Link>
         </main>
@@ -280,8 +280,8 @@ export default function CartaCasoPage() {
               </div>
               {venceEl && (
                 <p className="text-sm text-gray-500">
-                  Vencimiento estimado: <strong>{formatearFecha(venceEl)}</strong> ({plazo.titulo}, sin contar
-                  feriados).
+                  Vencimiento estimado: <strong>{formatearFecha(venceEl)}</strong> ({plazo.titulo}
+                  {plazo.habiles && ", descontando fines de semana y feriados nacionales"}).
                 </p>
               )}
             </>

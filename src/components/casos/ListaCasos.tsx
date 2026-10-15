@@ -3,21 +3,15 @@
 import Link from "next/link";
 import { ButtonLink } from "@/components/ui/Button";
 import { useCasos } from "@/lib/casos/CasosProvider";
-import { diasHasta, formatearFecha, proximoPendiente } from "@/lib/casos/formato";
+import { diasHasta, formatearFecha, proximoPendiente, textoDias } from "@/lib/casos/formato";
 import { EstadoBadge } from "./EstadoBadge";
 
 function Vencimiento({ fecha, descripcion }: { fecha: string; descripcion: string }) {
   const dias = diasHasta(fecha);
   const color = dias < 0 ? "text-red-600" : dias <= 3 ? "text-amber-600" : "text-gray-600";
-  const texto =
-    dias < 0
-      ? `Venció hace ${Math.abs(dias)} día${Math.abs(dias) === 1 ? "" : "s"}`
-      : dias === 0
-        ? "Vence hoy"
-        : `Vence en ${dias} día${dias === 1 ? "" : "s"}`;
   return (
     <div className={color}>
-      <p className="text-sm font-semibold">{texto}</p>
+      <p className="text-sm font-semibold">{textoDias(dias)}</p>
       <p className="text-xs">
         {descripcion} · {formatearFecha(fecha)}
       </p>

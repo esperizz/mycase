@@ -3,7 +3,7 @@ import Link from "next/link";
 type Variante = "primary" | "secondary";
 
 const base =
-  "inline-flex items-center justify-center gap-2 rounded-lg px-4 h-10 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50";
+  "inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-lg px-4 h-10 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50";
 
 const variantes: Record<Variante, string> = {
   primary: "bg-gray-900 text-white hover:bg-gray-700",

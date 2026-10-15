@@ -40,7 +40,7 @@ export default function FichaCasoPage() {
         <Header />
         <main className="mx-auto flex w-full max-w-xl flex-1 flex-col items-center gap-4 px-4 py-16 text-center">
           <p className="text-lg font-semibold text-gray-900">No encontramos ese caso</p>
-          <Link href="/" className="text-sm font-semibold text-gray-900 underline underline-offset-2">
+          <Link href="/casos" className="text-sm font-semibold text-gray-900 underline underline-offset-2">
             Volver a la lista
           </Link>
         </main>
@@ -63,7 +63,7 @@ export default function FichaCasoPage() {
   const borrarCaso = () => {
     if (!window.confirm(`¿Eliminar el caso de ${caso.cliente}? No se puede deshacer.`)) return;
     eliminar(caso.id);
-    router.push("/");
+    router.push("/casos");
   };
 
   return (
@@ -71,7 +71,7 @@ export default function FichaCasoPage() {
       <Header />
       <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-8 px-4 py-8">
         <div className="flex flex-col gap-3">
-          <Link href="/" className="w-fit text-sm font-medium text-gray-500 hover:text-gray-900">
+          <Link href="/casos" className="w-fit text-sm font-medium text-gray-500 hover:text-gray-900">
             ← Volver a mis casos
           </Link>
           <div className="flex flex-wrap items-center gap-3">

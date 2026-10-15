@@ -29,7 +29,7 @@ export function TextField({
   label,
   opcional,
   ...input
-}: CampoProps & React.InputHTMLAttributes<HTMLInputElement>) {
+}: CampoProps & React.ComponentProps<"input">) {
   const id = useId();
   return (
     <Campo id={id} label={label} opcional={opcional}>
@@ -43,7 +43,7 @@ export function SelectField({
   opcional,
   children,
   ...select
-}: CampoProps & React.SelectHTMLAttributes<HTMLSelectElement>) {
+}: CampoProps & React.ComponentProps<"select">) {
   const id = useId();
   return (
     <Campo id={id} label={label} opcional={opcional}>
@@ -58,7 +58,7 @@ export function TextAreaField({
   label,
   opcional,
   ...area
-}: CampoProps & React.TextareaHTMLAttributes<HTMLTextAreaElement>) {
+}: CampoProps & React.ComponentProps<"textarea">) {
   const id = useId();
   return (
     <Campo id={id} label={label} opcional={opcional}>

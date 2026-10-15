@@ -1,0 +1,75 @@
+import { describe, expect, it } from "vitest";
+import { armarPanel } from "./panel";
+import { cartaVacia, type Caso, type Vencimiento } from "./tipos";
+
+const HOY = "2026-10-14";
+
+function vto(fecha: string, cumplido = false): Vencimiento {
+  return { id: fecha, fecha, descripcion: `Vence ${fecha}`, cumplido };
+}
+
+function caso(parcial: Partial<Caso>): Caso {
+  return {
+    id: Math.random().toString(36),
+    cliente: "Cliente",
+    contacto: "",
+    empleador: "Empleador",
+    tipoReclamo: "Despido sin causa",
+    estado: "consulta",
+    fechaApertura: "2026-10-01",
+    vencimientos: [],
+    notas: "",
+    carta: null,
+    ...parcial,
+  };
+}
+
+describe("armarPanel", () => {
+  it("separa vencidos, hoy y próximos 7 días, ordenados", () => {
+    const panel = armarPanel(
+      [
+        caso({
+          vencimientos: [
+            vto("2026-10-10"),
+            vto("2026-10-12"),
+            vto("2026-10-14"),
+            vto("2026-10-21"),
+            vto("2026-10-22"),
+            vto("2026-10-09", true),
+          ],
+        }),
+      ],
+      HOY,
+    );
+    expect(panel.vencidos.map((p) => p.dias)).toEqual([-4, -2]);
+    expect(panel.hoy.map((p) => p.vencimiento.fecha)).toEqual(["2026-10-14"]);
+    expect(panel.semana.map((p) => p.vencimiento.fecha)).toEqual(["2026-10-21"]);
+  });
+
+  it("ignora los casos cerrados", () => {
+    const panel = armarPanel(
+      [caso({ estado: "cerrado", vencimientos: [vto("2026-10-10")], carta: cartaVacia() })],
+      HOY,
+    );
+    expect(panel.vencidos).toEqual([]);
+    expect(panel.sinProximoPaso).toEqual([]);
+    expect(panel.cartasSinEnviar).toEqual([]);
+    expect(panel.activos).toBe(0);
+    expect(panel.porEtapa.cerrado).toBe(1);
+  });
+
+  it("detecta casos sin próximo paso y cartas sin enviar", () => {
+    const sinNada = caso({ cliente: "A", vencimientos: [vto("2026-10-01", true)] });
+    const conVto = caso({ cliente: "B", vencimientos: [vto("2026-11-30")] });
+    const cartaPendiente = caso({ cliente: "C", vencimientos: [vto("2026-11-30")], carta: cartaVacia() });
+    const cartaEnviada = caso({
+      cliente: "D",
+      vencimientos: [vto("2026-11-30")],
+      carta: { ...cartaVacia(), enviadaEl: "2026-10-01" },
+    });
+    const panel = armarPanel([sinNada, conVto, cartaPendiente, cartaEnviada], HOY);
+    expect(panel.sinProximoPaso.map((c) => c.cliente)).toEqual(["A"]);
+    expect(panel.cartasSinEnviar.map((c) => c.cliente)).toEqual(["C"]);
+    expect(panel.activos).toBe(4);
+  });
+});
