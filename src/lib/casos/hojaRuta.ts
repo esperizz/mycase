@@ -8,6 +8,11 @@ import type { Caso, HojaRuta } from "./tipos";
 
 export const TIPO_ART = "Accidente de trabajo";
 
+/** Los casos de ART siguen la hoja de ruta en vez de los estados de un despido. */
+export function esArt(caso: Caso): boolean {
+  return caso.tipoReclamo === TIPO_ART || caso.hojaRuta !== null;
+}
+
 export interface PasoDef {
   id: string;
   /** Cómo se lo nombra al cliente. */
@@ -197,6 +202,18 @@ export function deshacerPaso(caso: Caso, pasoId: string): Caso {
     .map((v) => (v.id === cerrado ? { ...v, cumplido: false } : v));
 
   return { ...caso, hojaRuta: { ...hoja, cumplidos, avisados, rechazo, vencimientos: enlazados }, vencimientos };
+}
+
+/** La etapa de un caso de ART, según su hoja de ruta. */
+export function etapaArt(caso: Caso): string {
+  if (!caso.hojaRuta) return "Hoja de ruta sin empezar";
+  const actual = pasosDe(caso.hojaRuta).find((p) => p.estado === "actual");
+  return actual ? actual.tecnico : "Todos los pasos cumplidos";
+}
+
+/** Un caso de ART con la hoja de ruta en marcha ya tiene próximo paso, aunque no tenga vencimientos. */
+export function tienePasoPendiente(caso: Caso): boolean {
+  return !!caso.hojaRuta && pasosDe(caso.hojaRuta).some((p) => p.estado === "actual");
 }
 
 function primerNombre(cliente: string) {

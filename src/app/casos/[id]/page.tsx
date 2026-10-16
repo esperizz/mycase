@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
-import { EstadoBadge } from "@/components/casos/EstadoBadge";
+import { EtapaBadge } from "@/components/casos/EstadoBadge";
 import { FormularioCaso } from "@/components/casos/FormularioCaso";
 import { HojaRutaArt } from "@/components/casos/HojaRutaArt";
 import { Button } from "@/components/ui/Button";
@@ -11,7 +11,7 @@ import { SelectField, TextAreaField, TextField } from "@/components/ui/Field";
 import { Header } from "@/components/ui/Header";
 import { useCasos } from "@/lib/casos/CasosProvider";
 import { diasHasta, formatearFecha } from "@/lib/casos/formato";
-import { TIPO_ART } from "@/lib/casos/hojaRuta";
+import { esArt, etapaArt } from "@/lib/casos/hojaRuta";
 import { ESTADO_LABEL, ESTADOS } from "@/lib/casos/tipos";
 
 function Dato({ label, valor }: { label: string; valor: string }) {
@@ -50,6 +50,8 @@ export default function FichaCasoPage() {
     );
   }
 
+  const art = esArt(caso);
+
   const guardarVencimiento = (e: React.FormEvent) => {
     e.preventDefault();
     if (!fechaVto) return;
@@ -78,18 +80,20 @@ export default function FichaCasoPage() {
           </Link>
           <div className="flex flex-wrap items-center gap-3">
             <h1 className="text-2xl font-bold tracking-tight text-gray-900">{caso.cliente}</h1>
-            <EstadoBadge estado={caso.estado} />
+            <EtapaBadge caso={caso} />
           </div>
         </div>
 
-        <Link
-          href={`/casos/${caso.id}/carta`}
-          className="w-fit rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-900 hover:bg-gray-50"
-        >
-          Generar carta de intimación →
-        </Link>
-
-        {(caso.tipoReclamo === TIPO_ART || caso.hojaRuta) && <HojaRutaArt caso={caso} />}
+        {art ? (
+          <HojaRutaArt caso={caso} />
+        ) : (
+          <Link
+            href={`/casos/${caso.id}/carta`}
+            className="w-fit rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-900 hover:bg-gray-50"
+          >
+            Generar carta de intimación →
+          </Link>
+        )}
 
         {editando ? (
           <section className="rounded-xl border border-gray-200 bg-white p-5">
@@ -121,17 +125,35 @@ export default function FichaCasoPage() {
 
         <section className="flex flex-col gap-3 rounded-xl border border-gray-200 bg-white p-5">
           <h2 className="font-semibold text-gray-900">Estado del caso</h2>
-          <SelectField
-            label="Etapa actual"
-            value={caso.estado}
-            onChange={(e) => actualizar(caso.id, (c) => ({ ...c, estado: e.target.value as typeof c.estado }))}
-          >
-            {ESTADOS.map((e) => (
-              <option key={e} value={e}>
-                {ESTADO_LABEL[e]}
-              </option>
-            ))}
-          </SelectField>
+          {art ? (
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-sm text-gray-600">
+                {caso.estado === "cerrado"
+                  ? "Caso cerrado."
+                  : `Etapa: ${etapaArt(caso)}. Avanza sola con la hoja de ruta.`}
+              </p>
+              <Button
+                variante="secondary"
+                onClick={() =>
+                  actualizar(caso.id, (c) => ({ ...c, estado: c.estado === "cerrado" ? "consulta" : "cerrado" }))
+                }
+              >
+                {caso.estado === "cerrado" ? "Reabrir caso" : "Cerrar caso"}
+              </Button>
+            </div>
+          ) : (
+            <SelectField
+              label="Etapa actual"
+              value={caso.estado}
+              onChange={(e) => actualizar(caso.id, (c) => ({ ...c, estado: e.target.value as typeof c.estado }))}
+            >
+              {ESTADOS.map((e) => (
+                <option key={e} value={e}>
+                  {ESTADO_LABEL[e]}
+                </option>
+              ))}
+            </SelectField>
+          )}
         </section>
 
         <section className="flex flex-col gap-4 rounded-xl border border-gray-200 bg-white p-5">
