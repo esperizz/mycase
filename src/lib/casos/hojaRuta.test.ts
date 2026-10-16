@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { cumplirPaso, deshacerPaso, linkWhatsApp, mensajeAviso, pasosDe } from "./hojaRuta";
+import { cumplirPaso, deshacerPaso, linkWhatsApp, mensajeAviso, pasosDe, volverAPaso } from "./hojaRuta";
 import type { Caso } from "./tipos";
 
 function caso(parcial: Partial<Caso> = {}): Caso {
@@ -33,7 +33,7 @@ describe("hoja de ruta de ART", () => {
     let c = cumplirPaso(caso(), "denuncia", "2026-10-13", { crearId });
     expect(c.vencimientos).toHaveLength(1);
     // 10 días hábiles desde el lunes 13/10/2026 (sin feriados en el medio).
-    expect(c.vencimientos[0]).toMatchObject({ fecha: "2026-10-27", descripcion: "La ART tiene que aceptar o rechazar", cumplido: false });
+    expect(c.vencimientos[0]).toMatchObject({ fecha: "2026-10-27", descripcion: "La ART tiene que aceptar o rechazar (estimado)", cumplido: false });
     c = cumplirPaso(c, "respuesta", "2026-10-20", { crearId });
     expect(c.vencimientos[0].cumplido).toBe(true);
   });
@@ -55,6 +55,18 @@ describe("hoja de ruta de ART", () => {
     expect(c.vencimientos[0].cumplido).toBe(false);
     c = deshacerPaso(c, "denuncia");
     expect(c.vencimientos).toHaveLength(0);
+  });
+
+  it("volver a un paso deja pendientes ese y todos los que siguen", () => {
+    let c = cumplirPaso(caso(), "denuncia", "2026-10-13", { crearId });
+    c = cumplirPaso(c, "respuesta", "2026-10-20", { crearId });
+    c = cumplirPaso(c, "tratamiento", "2026-10-21", { crearId });
+    c = cumplirPaso(c, "alta", "2026-11-02", { crearId });
+    expect(c.vencimientos.filter((v) => !v.cumplido)).toHaveLength(1); // plazo para discutir el alta
+    c = volverAPaso(c, "tratamiento");
+    expect(Object.keys(c.hojaRuta!.cumplidos)).toEqual(["denuncia", "respuesta"]);
+    expect(pasosDe(c.hojaRuta!).find((p) => p.estado === "actual")?.id).toBe("tratamiento");
+    expect(c.vencimientos.filter((v) => !v.cumplido)).toHaveLength(0);
   });
 
   it("el aviso cuenta qué pasó, qué sigue y qué tiene que hacer el cliente", () => {

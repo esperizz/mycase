@@ -6,11 +6,12 @@ import { useState } from "react";
 import { EtapaBadge } from "@/components/casos/EstadoBadge";
 import { FormularioCaso } from "@/components/casos/FormularioCaso";
 import { HojaRutaArt } from "@/components/casos/HojaRutaArt";
+import { ItemVencimiento } from "@/components/casos/ItemVencimiento";
 import { Button } from "@/components/ui/Button";
 import { SelectField, TextAreaField, TextField } from "@/components/ui/Field";
 import { Header } from "@/components/ui/Header";
 import { useCasos } from "@/lib/casos/CasosProvider";
-import { diasHasta, formatearFecha } from "@/lib/casos/formato";
+import { formatearFecha } from "@/lib/casos/formato";
 import { esArt, etapaArt } from "@/lib/casos/hojaRuta";
 import { ESTADO_LABEL, ESTADOS } from "@/lib/casos/tipos";
 
@@ -26,7 +27,7 @@ function Dato({ label, valor }: { label: string; valor: string }) {
 export default function FichaCasoPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
-  const { casos, listo, actualizar, eliminar, agregarVencimiento, marcarVencimiento, quitarVencimiento } = useCasos();
+  const { casos, listo, actualizar, eliminar, agregarVencimiento } = useCasos();
   const caso = casos.find((c) => c.id === id);
 
   const [fechaVto, setFechaVto] = useState("");
@@ -164,34 +165,9 @@ export default function FichaCasoPage() {
             <ul className="flex flex-col gap-2">
               {[...caso.vencimientos]
                 .sort((a, b) => a.fecha.localeCompare(b.fecha))
-                .map((v) => {
-                  const dias = diasHasta(v.fecha);
-                  const urgencia = v.cumplido
-                    ? "bg-gray-50 text-gray-400"
-                    : dias < 0
-                      ? "bg-red-50 text-red-700"
-                      : dias <= 3
-                        ? "bg-amber-50 text-amber-800"
-                        : "bg-gray-50 text-gray-700";
-                  return (
-                    <li key={v.id} className={`flex items-center gap-3 rounded-lg px-4 py-3 ${urgencia}`}>
-                      <input
-                        type="checkbox"
-                        checked={v.cumplido}
-                        onChange={(e) => marcarVencimiento(caso.id, v.id, e.target.checked)}
-                        className="size-4"
-                        aria-label={`Marcar "${v.descripcion}" como cumplido`}
-                      />
-                      <div className={`flex-1 ${v.cumplido ? "line-through" : ""}`}>
-                        <p className="font-semibold">{formatearFecha(v.fecha)}</p>
-                        <p className="text-sm">{v.descripcion}</p>
-                      </div>
-                      <Button variante="secondary" onClick={() => quitarVencimiento(caso.id, v.id)}>
-                        Quitar
-                      </Button>
-                    </li>
-                  );
-                })}
+                .map((v) => (
+                  <ItemVencimiento key={v.id} casoId={caso.id} vencimiento={v} />
+                ))}
             </ul>
           )}
           <form onSubmit={guardarVencimiento} className="flex flex-col gap-3 sm:flex-row sm:items-end">

@@ -171,11 +171,32 @@ export function cumplirPaso(
     nueva.vencimientos[paso.id] = id;
     vencimientos = [
       ...vencimientos,
-      { id, fecha: sumarDias(fecha, paso.plazo.dias, true), descripcion: paso.plazo.texto, cumplido: false },
+      { id, fecha: sumarDias(fecha, paso.plazo.dias, true), descripcion: `${paso.plazo.texto} (estimado)`, cumplido: false },
     ];
   }
 
   return { ...caso, hojaRuta: nueva, vencimientos };
+}
+
+/** El paso abre un plazo legal: su fecha es la de notificación, desde la que corre el plazo. */
+export function abrePlazo(pasoId: string): boolean {
+  return PASOS.some((p) => p.plazo?.desde === pasoId);
+}
+
+/**
+ * Vuelve a un paso: lo deja pendiente junto con todos los que vienen después
+ * (por ejemplo, si la comisión anula el alta, el tratamiento continúa).
+ */
+export function volverAPaso(caso: Caso, pasoId: string): Caso {
+  if (!caso.hojaRuta) return caso;
+  const pasos = pasosDe(caso.hojaRuta);
+  const desde = pasos.findIndex((p) => p.id === pasoId);
+  if (desde < 0) return caso;
+  let resultado = caso;
+  for (const paso of pasos.slice(desde).reverse()) {
+    if (resultado.hojaRuta?.cumplidos[paso.id]) resultado = deshacerPaso(resultado, paso.id);
+  }
+  return resultado;
 }
 
 /** Deshace un paso cumplido: borra los plazos que había abierto y destilda el que había cerrado. */

@@ -2,16 +2,18 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
+import { TextField } from "@/components/ui/Field";
 import { useCasos } from "@/lib/casos/CasosProvider";
 import { formatearFecha, diasHasta, hoyIso, textoDias } from "@/lib/casos/formato";
 import {
+  abrePlazo,
   cumplirPaso,
-  deshacerPaso,
   hojaRutaVacia,
   linkWhatsApp,
   mensajeAviso,
   mensajeInicio,
   pasosDe,
+  volverAPaso,
   type Paso,
 } from "@/lib/casos/hojaRuta";
 import type { Caso } from "@/lib/casos/tipos";
@@ -26,9 +28,12 @@ function PasoActual({ caso, paso }: { caso: Caso; paso: Paso }) {
   const esRespuesta = paso.id === "respuesta";
   const [rechazo, setRechazo] = useState(false);
   const [editado, setEditado] = useState<string | null>(null);
-
   const hoy = hoyIso();
-  const borrador = mensajeAviso(cumplirPaso(caso, paso.id, hoy, { rechazo }), paso.id);
+  // En los pasos que abren un plazo legal, el plazo corre desde la notificación, no desde hoy.
+  const [fecha, setFecha] = useState(hoy);
+  const conFecha = abrePlazo(paso.id);
+
+  const borrador = mensajeAviso(cumplirPaso(caso, paso.id, fecha, { rechazo }), paso.id);
   const texto = editado ?? borrador;
 
   const vencimientoId = caso.hojaRuta?.vencimientos[paso.id];
@@ -36,7 +41,7 @@ function PasoActual({ caso, paso }: { caso: Caso; paso: Paso }) {
 
   const cumplir = (avisar: boolean) => {
     actualizar(caso.id, (c) => {
-      const nuevo = cumplirPaso(c, paso.id, hoy, { rechazo });
+      const nuevo = cumplirPaso(c, paso.id, fecha || hoy, { rechazo });
       if (!avisar || !nuevo.hojaRuta) return nuevo;
       return { ...nuevo, hojaRuta: { ...nuevo.hojaRuta, avisados: { ...nuevo.hojaRuta.avisados, [paso.id]: hoy } } };
     });
@@ -77,6 +82,18 @@ function PasoActual({ caso, paso }: { caso: Caso; paso: Paso }) {
               {r ? "La ART rechazó" : "La ART aceptó"}
             </button>
           ))}
+        </div>
+      )}
+      {conFecha && (
+        <div className="max-w-xs">
+          <TextField
+            label="¿Cuándo se notificó?"
+            type="date"
+            max={hoy}
+            value={fecha}
+            onChange={(e) => setFecha(e.target.value)}
+          />
+          <p className="mt-1 text-xs text-gray-500">El plazo legal se cuenta desde esta fecha.</p>
         </div>
       )}
       <label className="flex flex-col gap-1.5 text-sm font-medium text-gray-700">
@@ -129,6 +146,22 @@ export function HojaRutaArt({ caso }: { caso: Caso }) {
   const contarInicio = () => {
     actualizar(caso.id, (c) => (c.hojaRuta ? { ...c, hojaRuta: { ...c.hojaRuta, inicioAvisado: hoy } } : c));
     abrirWhatsApp(caso.contacto, mensajeInicio(caso));
+  };
+
+  const volver = (paso: Paso) => {
+    const i = pasos.findIndex((p) => p.id === paso.id);
+    const posteriores = pasos.slice(i + 1).filter((p) => p.estado === "cumplido").length;
+    const avisos = pasos.slice(i).some((p) => p.avisado);
+    const mensaje = [
+      `¿Volver a "${paso.tecnico}"?`,
+      posteriores > 0
+        ? `Ese paso y los ${posteriores} posteriores quedan pendientes.`
+        : "Ese paso queda pendiente.",
+      avisos ? "Los avisos que ya le mandaste al cliente no se borran de WhatsApp: si hace falta, mandale una aclaración." : "",
+    ]
+      .filter(Boolean)
+      .join("\n\n");
+    if (window.confirm(mensaje)) actualizar(caso.id, (c) => volverAPaso(c, paso.id));
   };
 
   const avisarDespues = (paso: Paso) => {
@@ -187,8 +220,8 @@ export function HojaRutaArt({ caso }: { caso: Caso }) {
                     Avisarle
                   </button>
                 )}
-                <button type="button" onClick={() => actualizar(caso.id, (c) => deshacerPaso(c, p.id))} className="hover:underline">
-                  Deshacer
+                <button type="button" onClick={() => volver(p)} className="hover:underline">
+                  Volver a este paso
                 </button>
               </span>
             )}
