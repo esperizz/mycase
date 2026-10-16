@@ -5,11 +5,13 @@ import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 import { EstadoBadge } from "@/components/casos/EstadoBadge";
 import { FormularioCaso } from "@/components/casos/FormularioCaso";
+import { HojaRutaArt } from "@/components/casos/HojaRutaArt";
 import { Button } from "@/components/ui/Button";
 import { SelectField, TextAreaField, TextField } from "@/components/ui/Field";
 import { Header } from "@/components/ui/Header";
 import { useCasos } from "@/lib/casos/CasosProvider";
 import { diasHasta, formatearFecha } from "@/lib/casos/formato";
+import { TIPO_ART } from "@/lib/casos/hojaRuta";
 import { ESTADO_LABEL, ESTADOS } from "@/lib/casos/tipos";
 
 function Dato({ label, valor }: { label: string; valor: string }) {
@@ -86,6 +88,8 @@ export default function FichaCasoPage() {
         >
           Generar carta de intimación →
         </Link>
+
+        {(caso.tipoReclamo === TIPO_ART || caso.hojaRuta) && <HojaRutaArt caso={caso} />}
 
         {editando ? (
           <section className="rounded-xl border border-gray-200 bg-white p-5">

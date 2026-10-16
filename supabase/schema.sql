@@ -70,3 +70,6 @@ create policy "borrar_vencimientos_de_casos_propios" on public.vencimientos
   for delete using (
     exists (select 1 from public.casos where casos.id = vencimientos.caso_id and casos.user_id = auth.uid())
   );
+
+-- Hoja de ruta de los casos de ART (pasos cumplidos, avisos al cliente; null si no se usa).
+alter table public.casos add column if not exists hoja_ruta jsonb;

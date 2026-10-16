@@ -55,6 +55,20 @@ export const cartaVacia = (): CartaDatos => ({
   enviadaEl: "",
 });
 
+/** Seguimiento de un caso de ART paso a paso (ver hojaRuta.ts). */
+export interface HojaRuta {
+  /** Fecha (yyyy-mm-dd) en que se cumplió cada paso, por id de paso. */
+  cumplidos: Record<string, string>;
+  /** Fecha en que se le avisó al cliente de cada paso cumplido. */
+  avisados: Record<string, string>;
+  /** La ART rechazó el siniestro: se suma la rama de la comisión médica. */
+  rechazo: boolean;
+  /** Fecha en que se le contó al cliente cómo va a ser el caso; "" si todavía no. */
+  inicioAvisado: string;
+  /** Vencimiento del panel creado para el plazo de cada paso, por id de paso. */
+  vencimientos: Record<string, string>;
+}
+
 export interface Caso {
   id: string;
   cliente: string;
@@ -66,8 +80,9 @@ export interface Caso {
   vencimientos: Vencimiento[];
   notas: string;
   carta: CartaDatos | null;
+  hojaRuta: HojaRuta | null;
 }
 
-export type CasoNuevo = Omit<Caso, "id" | "fechaApertura" | "vencimientos" | "notas" | "carta"> & {
+export type CasoNuevo = Omit<Caso, "id" | "fechaApertura" | "vencimientos" | "notas" | "carta" | "hojaRuta"> & {
   notas?: string;
 };
