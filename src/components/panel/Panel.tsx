@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { EstadoBadge } from "@/components/casos/EstadoBadge";
+import { ArtBadge, EstadoBadge } from "@/components/casos/EstadoBadge";
 import { SubirCasosLocales } from "@/components/casos/SubirCasosLocales";
 import { Button, ButtonLink } from "@/components/ui/Button";
 import { useCasos } from "@/lib/casos/CasosProvider";
@@ -280,6 +280,10 @@ export function Panel() {
                   </span>
                 </li>
               ))}
+              <li className="flex items-center justify-between text-sm">
+                <ArtBadge>ART (según hoja de ruta)</ArtBadge>
+                <span className="font-semibold tabular-nums text-gray-900">{panel.art}</span>
+              </li>
             </ul>
           </Tarjeta>
         </div>

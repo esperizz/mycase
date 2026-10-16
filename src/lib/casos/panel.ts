@@ -1,4 +1,5 @@
 import { diasEntre } from "./formato";
+import { esArt, tienePasoPendiente } from "./hojaRuta";
 import { ESTADOS, type Caso, type EstadoCaso, type Vencimiento } from "./tipos";
 
 export interface Pendiente {
@@ -17,7 +18,9 @@ export interface Panel {
   sinProximoPaso: Caso[];
   /** Casos activos con la carta empezada pero sin marcar como enviada. */
   cartasSinEnviar: Caso[];
+  /** Casos por estado; los de ART activos van aparte, porque su etapa sale de la hoja de ruta. */
   porEtapa: Record<EstadoCaso, number>;
+  art: number;
   activos: number;
 }
 
@@ -36,15 +39,20 @@ export function armarPanel(casos: Caso[], hoy: string): Panel {
     .sort((a, b) => a.dias - b.dias);
 
   const porEtapa = Object.fromEntries(ESTADOS.map((e) => [e, 0])) as Record<EstadoCaso, number>;
-  for (const c of casos) porEtapa[c.estado]++;
+  let art = 0;
+  for (const c of casos) {
+    if (esArt(c) && c.estado !== "cerrado") art++;
+    else porEtapa[c.estado]++;
+  }
 
   return {
     vencidos: pendientes.filter((p) => p.dias < 0),
     hoy: pendientes.filter((p) => p.dias === 0),
     semana: pendientes.filter((p) => p.dias > 0 && p.dias <= DIAS_SEMANA),
-    sinProximoPaso: activos.filter((c) => !c.vencimientos.some((v) => !v.cumplido)),
+    sinProximoPaso: activos.filter((c) => !c.vencimientos.some((v) => !v.cumplido) && !tienePasoPendiente(c)),
     cartasSinEnviar: activos.filter((c) => c.carta && !c.carta.enviadaEl),
     porEtapa,
+    art,
     activos: activos.length,
   };
 }
