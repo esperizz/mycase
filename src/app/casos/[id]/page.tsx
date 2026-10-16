@@ -8,6 +8,7 @@ import { FormularioCaso } from "@/components/casos/FormularioCaso";
 import { HojaRutaArt } from "@/components/casos/HojaRutaArt";
 import { ItemVencimiento } from "@/components/casos/ItemVencimiento";
 import { Button } from "@/components/ui/Button";
+import { DialogoConfirmar } from "@/components/ui/DialogoConfirmar";
 import { SelectField, TextAreaField, TextField } from "@/components/ui/Field";
 import { Header } from "@/components/ui/Header";
 import { useCasos } from "@/lib/casos/CasosProvider";
@@ -34,6 +35,7 @@ export default function FichaCasoPage() {
   const [descVto, setDescVto] = useState("");
   const [notas, setNotas] = useState(caso?.notas ?? "");
   const [editando, setEditando] = useState(false);
+  const [borrando, setBorrando] = useState(false);
 
   if (!listo) return null;
 
@@ -66,7 +68,6 @@ export default function FichaCasoPage() {
   };
 
   const borrarCaso = () => {
-    if (!window.confirm(`¿Eliminar el caso de ${caso.cliente}? No se puede deshacer.`)) return;
     eliminar(caso.id);
     router.push("/casos");
   };
@@ -199,12 +200,23 @@ export default function FichaCasoPage() {
         <div>
           <button
             type="button"
-            onClick={borrarCaso}
+            onClick={() => setBorrando(true)}
             className="text-sm font-medium text-red-600 hover:text-red-800"
           >
             Eliminar este caso
           </button>
         </div>
+
+        <DialogoConfirmar
+          abierto={borrando}
+          titulo={`¿Eliminar el caso de ${caso.cliente}?`}
+          textoConfirmar="Eliminar caso"
+          peligro
+          onCancelar={() => setBorrando(false)}
+          onConfirmar={borrarCaso}
+        >
+          <p>Se borran sus datos, vencimientos, carta y hoja de ruta. No se puede deshacer.</p>
+        </DialogoConfirmar>
       </main>
     </>
   );

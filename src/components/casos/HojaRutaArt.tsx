@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
+import { DialogoConfirmar } from "@/components/ui/DialogoConfirmar";
 import { TextField } from "@/components/ui/Field";
 import { useCasos } from "@/lib/casos/CasosProvider";
 import { formatearFecha, diasHasta, hoyIso, textoDias } from "@/lib/casos/formato";
@@ -120,6 +121,8 @@ function PasoActual({ caso, paso }: { caso: Caso; paso: Paso }) {
 /** Seguimiento paso a paso de un caso de ART, con avisos al cliente por WhatsApp. */
 export function HojaRutaArt({ caso }: { caso: Caso }) {
   const { actualizar } = useCasos();
+  /** Id del paso al que se pidió volver, mientras se confirma. */
+  const [volviendo, setVolviendo] = useState<string | null>(null);
 
   if (!caso.hojaRuta) {
     return (
@@ -148,21 +151,10 @@ export function HojaRutaArt({ caso }: { caso: Caso }) {
     abrirWhatsApp(caso.contacto, mensajeInicio(caso));
   };
 
-  const volver = (paso: Paso) => {
-    const i = pasos.findIndex((p) => p.id === paso.id);
-    const posteriores = pasos.slice(i + 1).filter((p) => p.estado === "cumplido").length;
-    const avisos = pasos.slice(i).some((p) => p.avisado);
-    const mensaje = [
-      `¿Volver a "${paso.tecnico}"?`,
-      posteriores > 0
-        ? `Ese paso y los ${posteriores} posteriores quedan pendientes.`
-        : "Ese paso queda pendiente.",
-      avisos ? "Los avisos que ya le mandaste al cliente no se borran de WhatsApp: si hace falta, mandale una aclaración." : "",
-    ]
-      .filter(Boolean)
-      .join("\n\n");
-    if (window.confirm(mensaje)) actualizar(caso.id, (c) => volverAPaso(c, paso.id));
-  };
+  const iVolver = pasos.findIndex((p) => p.id === volviendo);
+  const pasoVolver = iVolver >= 0 ? pasos[iVolver] : null;
+  const posteriores = pasos.slice(iVolver + 1).filter((p) => p.estado === "cumplido").length;
+  const huboAvisos = iVolver >= 0 && pasos.slice(iVolver).some((p) => p.avisado);
 
   const avisarDespues = (paso: Paso) => {
     actualizar(caso.id, (c) =>
@@ -220,7 +212,7 @@ export function HojaRutaArt({ caso }: { caso: Caso }) {
                     Avisarle
                   </button>
                 )}
-                <button type="button" onClick={() => volver(p)} className="hover:underline">
+                <button type="button" onClick={() => setVolviendo(p.id)} className="hover:underline">
                   Volver a este paso
                 </button>
               </span>
@@ -228,6 +220,28 @@ export function HojaRutaArt({ caso }: { caso: Caso }) {
           </li>
         ))}
       </ol>
+
+      <DialogoConfirmar
+        abierto={!!pasoVolver}
+        titulo={pasoVolver ? `¿Volver a “${pasoVolver.tecnico}”?` : ""}
+        textoConfirmar="Volver a este paso"
+        onCancelar={() => setVolviendo(null)}
+        onConfirmar={() => {
+          if (pasoVolver) actualizar(caso.id, (c) => volverAPaso(c, pasoVolver.id));
+          setVolviendo(null);
+        }}
+      >
+        <p>
+          {posteriores > 0
+            ? `Ese paso y ${posteriores === 1 ? "el siguiente" : `los ${posteriores} siguientes`} vuelven a quedar pendientes. Se borran los plazos que habían abierto.`
+            : "Ese paso vuelve a quedar pendiente. Se borran los plazos que había abierto."}
+        </p>
+        {huboAvisos && (
+          <p className="rounded-lg bg-amber-50 p-3 text-amber-900">
+            Los avisos que ya le mandaste al cliente no se borran de WhatsApp. Si hace falta, mandale una aclaración.
+          </p>
+        )}
+      </DialogoConfirmar>
     </section>
   );
 }

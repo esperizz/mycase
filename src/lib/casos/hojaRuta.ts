@@ -237,8 +237,10 @@ export function tienePasoPendiente(caso: Caso): boolean {
   return !!caso.hojaRuta && pasosDe(caso.hojaRuta).some((p) => p.estado === "actual");
 }
 
+/** "juan pérez" → "Juan". */
 function primerNombre(cliente: string) {
-  return cliente.trim().split(/\s+/)[0] ?? "";
+  const nombre = cliente.trim().split(/\s+/)[0] ?? "";
+  return nombre.charAt(0).toUpperCase() + nombre.slice(1).toLowerCase();
 }
 
 /** Mensaje para el cliente al cumplir un paso: qué pasó, qué sigue y qué tiene que hacer. */

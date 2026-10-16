@@ -77,6 +77,11 @@ describe("hoja de ruta de ART", () => {
     expect(texto).toContain("Lo que sigue: la ART decide si acepta.");
   });
 
+  it("saluda al cliente con el nombre en mayúscula aunque esté cargado en minúscula", () => {
+    const c = cumplirPaso(caso({ cliente: "juan pérez" }), "denuncia", "2026-10-13", { crearId });
+    expect(mensajeAviso(c, "denuncia")).toMatch(/^Hola Juan,/);
+  });
+
   it("arma el link de WhatsApp con el teléfono argentino del contacto", () => {
     expect(linkWhatsApp("11 5555-1234", "hola")).toBe("https://wa.me/5491155551234?text=hola");
     expect(linkWhatsApp("+54 9 11 5555-1234", "hola")).toBe("https://wa.me/5491155551234?text=hola");
