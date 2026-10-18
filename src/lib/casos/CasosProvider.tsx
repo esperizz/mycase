@@ -2,7 +2,16 @@
 
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { cartaVacia, type CartaDatos, type Caso, type CasoNuevo, type EstadoCaso, type Vencimiento } from "./tipos";
+import { hojaRutaVacia } from "./hojaRuta";
+import {
+  cartaVacia,
+  type CartaDatos,
+  type Caso,
+  type CasoNuevo,
+  type EstadoCaso,
+  type HojaRuta,
+  type Vencimiento,
+} from "./tipos";
 
 /** Clave donde la versión anterior guardaba los casos en el navegador (para migrarlos). */
 export const CLAVE_LOCAL = "mycase-casos";
@@ -20,6 +29,7 @@ interface FilaCaso {
   fecha_apertura: string;
   notas: string;
   carta: CartaDatos | null;
+  hoja_ruta: HojaRuta | null;
 }
 
 interface FilaVencimiento {
@@ -68,6 +78,7 @@ function normalizar(caso: Partial<Caso> & { proximoVencimiento?: Vencimiento | n
     vencimientos: vencimientos.map((v) => ({ ...v, id: idValido(v.id), cumplido: v.cumplido ?? false })),
     notas: caso.notas ?? "",
     carta: caso.carta ? { ...cartaVacia(), ...caso.carta } : null,
+    hojaRuta: caso.hojaRuta ? { ...hojaRutaVacia(), ...caso.hojaRuta } : null,
   };
 }
 
@@ -82,6 +93,7 @@ function aFilaCaso(c: Caso): FilaCaso {
     fecha_apertura: c.fechaApertura,
     notas: c.notas,
     carta: c.carta,
+    hoja_ruta: c.hojaRuta,
   };
 }
 
@@ -96,6 +108,7 @@ function aCaso(fila: FilaCaso, vencimientos: Vencimiento[]): Caso {
     fechaApertura: fila.fecha_apertura,
     notas: fila.notas,
     carta: fila.carta,
+    hojaRuta: fila.hoja_ruta,
     vencimientos,
   });
 }

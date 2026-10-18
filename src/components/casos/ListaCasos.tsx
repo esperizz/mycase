@@ -4,7 +4,7 @@ import Link from "next/link";
 import { ButtonLink } from "@/components/ui/Button";
 import { useCasos } from "@/lib/casos/CasosProvider";
 import { diasHasta, formatearFecha, proximoPendiente, textoDias } from "@/lib/casos/formato";
-import { EstadoBadge } from "./EstadoBadge";
+import { EtapaBadge } from "./EstadoBadge";
 
 function Vencimiento({ fecha, descripcion }: { fecha: string; descripcion: string }) {
   const dias = diasHasta(fecha);
@@ -57,7 +57,7 @@ export function ListaCasos() {
             <div className="flex flex-col gap-1">
               <div className="flex items-center gap-2">
                 <p className="font-semibold text-gray-900">{caso.cliente}</p>
-                <EstadoBadge estado={caso.estado} />
+                <EtapaBadge caso={caso} />
               </div>
               <p className="text-sm text-gray-500">
                 {caso.tipoReclamo} · contra {caso.empleador}

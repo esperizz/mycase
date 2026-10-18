@@ -20,6 +20,7 @@ function caso(parcial: Partial<Caso>): Caso {
     vencimientos: [],
     notas: "",
     carta: null,
+    hojaRuta: null,
     ...parcial,
   };
 }
@@ -71,5 +72,19 @@ describe("armarPanel", () => {
     expect(panel.sinProximoPaso.map((c) => c.cliente)).toEqual(["A"]);
     expect(panel.cartasSinEnviar.map((c) => c.cliente)).toEqual(["C"]);
     expect(panel.activos).toBe(4);
+  });
+
+  it("cuenta aparte los casos de ART y no los da por perdidos si tienen la hoja de ruta en marcha", () => {
+    const hoja = { cumplidos: { denuncia: "2026-10-01" }, avisados: {}, rechazo: false, inicioAvisado: "", vencimientos: {} };
+    const artEnCurso = caso({ cliente: "ART1", tipoReclamo: "Accidente de trabajo", hojaRuta: hoja });
+    const artSinEmpezar = caso({ cliente: "ART2", tipoReclamo: "Accidente de trabajo" });
+    const artCerrado = caso({ cliente: "ART3", tipoReclamo: "Accidente de trabajo", estado: "cerrado" });
+    const despido = caso({ cliente: "D", estado: "mediacion" });
+    const panel = armarPanel([artEnCurso, artSinEmpezar, artCerrado, despido], HOY);
+    expect(panel.art).toBe(2);
+    expect(panel.porEtapa.cerrado).toBe(1);
+    expect(panel.porEtapa.mediacion).toBe(1);
+    expect(panel.porEtapa.consulta).toBe(0);
+    expect(panel.sinProximoPaso.map((c) => c.cliente)).toEqual(["ART2", "D"]);
   });
 });
