@@ -12,7 +12,19 @@ import { armarPanel, DIAS_SEMANA, type Pendiente } from "@/lib/casos/panel";
 import { ESTADOS, type Caso } from "@/lib/casos/tipos";
 import { CargaRapida } from "./CargaRapida";
 
-function Indicador({ valor, etiqueta, tono }: { valor: number; etiqueta: string; tono: "rojo" | "ambar" | "neutro" }) {
+/** Número resumen. En celular es compacto (los cuatro en una fila) para que "Para hacer" entre en la primera pantalla. */
+function Indicador({
+  valor,
+  etiqueta,
+  corta,
+  tono,
+}: {
+  valor: number;
+  etiqueta: string;
+  /** Etiqueta para celular. */
+  corta: string;
+  tono: "rojo" | "ambar" | "neutro";
+}) {
   const color =
     valor > 0 && tono === "rojo"
       ? "border-red-200 bg-red-50 text-red-700"
@@ -20,9 +32,12 @@ function Indicador({ valor, etiqueta, tono }: { valor: number; etiqueta: string;
         ? "border-amber-200 bg-amber-50 text-amber-800"
         : "border-gray-200 bg-white text-gray-900";
   return (
-    <div className={`flex flex-col gap-1 rounded-xl border p-4 ${color}`}>
-      <p className="text-3xl font-bold tabular-nums">{valor}</p>
-      <p className="text-sm font-medium">{etiqueta}</p>
+    <div className={`flex flex-col gap-0.5 rounded-lg border px-3 py-2 sm:gap-1 sm:rounded-xl sm:p-4 ${color}`}>
+      <p className="text-xl font-bold tabular-nums sm:text-3xl">{valor}</p>
+      <p className="text-xs font-medium sm:text-sm">
+        <span className="sm:hidden">{corta}</span>
+        <span className="hidden sm:inline">{etiqueta}</span>
+      </p>
     </div>
   );
 }
@@ -85,12 +100,26 @@ function Grupo({
   );
 }
 
-function Tarjeta({ titulo, ayuda, children }: { titulo: string; ayuda?: string; children: React.ReactNode }) {
+function Tarjeta({
+  titulo,
+  ayuda,
+  accion,
+  children,
+}: {
+  titulo: string;
+  ayuda?: string;
+  /** Acción propia de la tarjeta, junto al título. */
+  accion?: React.ReactNode;
+  children: React.ReactNode;
+}) {
   return (
     <section className="flex flex-col gap-3 rounded-xl border border-gray-200 bg-white p-5">
-      <div>
-        <h2 className="font-semibold text-gray-900">{titulo}</h2>
-        {ayuda && <p className="text-sm text-gray-500">{ayuda}</p>}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h2 className="font-semibold text-gray-900">{titulo}</h2>
+          {ayuda && <p className="text-sm text-gray-500">{ayuda}</p>}
+        </div>
+        {accion}
       </div>
       {children}
     </section>
@@ -193,53 +222,62 @@ export function Panel() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="text-sm font-medium text-gray-500">
-            {fechaTitulo}
-            {feriadoCerca && (
-              <span>
-                {" "}
-                · {feriadoCerca.fecha === hoy ? "Hoy es feriado" : `Próximo feriado: ${formatearFecha(feriadoCerca.fecha)}`}{" "}
-                ({feriadoCerca.nombre})
-              </span>
-            )}
-          </p>
-          <h1 className="text-2xl font-bold tracking-tight text-gray-900">
-            {resumen(panel.vencidos.length, panel.hoy.length, panel.semana.length)}
-          </h1>
-        </div>
-        {casosActivos.length > 0 && carga === null && (
-          <Button onClick={() => setCarga("")}>+ Cargar vencimiento</Button>
-        )}
+      <div>
+        <p className="text-sm font-medium text-gray-500">
+          {fechaTitulo}
+          {feriadoCerca && (
+            <span>
+              {" "}
+              · {feriadoCerca.fecha === hoy ? "Hoy es feriado" : `Próximo feriado: ${formatearFecha(feriadoCerca.fecha)}`}{" "}
+              ({feriadoCerca.nombre})
+            </span>
+          )}
+        </p>
+        <h1 className="text-2xl font-bold tracking-tight text-gray-900">
+          {resumen(panel.vencidos.length, panel.hoy.length, panel.semana.length)}
+        </h1>
       </div>
 
-      {aviso && (
-        <p role="status" className="rounded-lg bg-green-50 px-4 py-3 text-sm font-medium text-green-800">
-          {aviso}
-        </p>
-      )}
-
-      {carga !== null && (
-        <CargaRapida
-          key={carga}
-          casos={casosActivos}
-          casoInicial={carga}
-          onListo={setAviso}
-          onCerrar={() => setCarga(null)}
+      <div className="grid grid-cols-4 gap-2 sm:gap-3">
+        <Indicador valor={panel.vencidos.length} etiqueta="Vencidos" corta="Vencidos" tono="rojo" />
+        <Indicador valor={panel.hoy.length} etiqueta="Para hoy" corta="Hoy" tono="ambar" />
+        <Indicador
+          valor={panel.semana.length}
+          etiqueta={`Próximos ${DIAS_SEMANA} días`}
+          corta={`${DIAS_SEMANA} días`}
+          tono="neutro"
         />
-      )}
-
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <Indicador valor={panel.vencidos.length} etiqueta="Vencidos" tono="rojo" />
-        <Indicador valor={panel.hoy.length} etiqueta="Para hoy" tono="ambar" />
-        <Indicador valor={panel.semana.length} etiqueta={`Próximos ${DIAS_SEMANA} días`} tono="neutro" />
-        <Indicador valor={panel.activos} etiqueta="Casos activos" tono="neutro" />
+        <Indicador valor={panel.activos} etiqueta="Casos activos" corta="Activos" tono="neutro" />
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2">
-          <Tarjeta titulo="Para hacer" ayuda="Tildá un vencimiento cuando lo cumplas y sale de la lista.">
+          <Tarjeta
+            titulo="Para hacer"
+            ayuda="Tildá un vencimiento cuando lo cumplas y sale de la lista."
+            accion={
+              casosActivos.length > 0 &&
+              carga === null && (
+                <Button variante="secondary" className="self-start" onClick={() => setCarga("")}>
+                  + Cargar vencimiento
+                </Button>
+              )
+            }
+          >
+            {aviso && (
+              <p role="status" className="rounded-lg bg-green-50 px-4 py-3 text-sm font-medium text-green-800">
+                {aviso}
+              </p>
+            )}
+            {carga !== null && (
+              <CargaRapida
+                key={carga}
+                casos={casosActivos}
+                casoInicial={carga}
+                onListo={setAviso}
+                onCerrar={() => setCarga(null)}
+              />
+            )}
             {hayAgenda ? (
               <div className="flex flex-col gap-4">
                 <Grupo titulo="Vencidos" pendientes={panel.vencidos} onCumplir={cumplir} />
