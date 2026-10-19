@@ -1,17 +1,20 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import { ButtonLink } from "@/components/ui/Button";
 import { useCasos } from "@/lib/casos/CasosProvider";
-import { diasHasta, formatearFecha, proximoPendiente, textoDias } from "@/lib/casos/formato";
+import { diasHasta, formatearFecha, proximoPendiente, textoPendiente } from "@/lib/casos/formato";
+import type { Caso, Vencimiento as VencimientoCaso } from "@/lib/casos/tipos";
 import { EtapaBadge } from "./EstadoBadge";
 
-function Vencimiento({ fecha, descripcion }: { fecha: string; descripcion: string }) {
+function Vencimiento({ vencimiento: { fecha, descripcion, tipo } }: { vencimiento: VencimientoCaso }) {
   const dias = diasHasta(fecha);
-  const color = dias < 0 ? "text-red-600" : dias <= 3 ? "text-amber-600" : "text-gray-600";
+  // Rojo solo para plazos vencidos; una tarea atrasada va en ámbar.
+  const color = dias < 0 && tipo === "plazo" ? "text-red-600" : dias <= 3 ? "text-amber-600" : "text-gray-600";
   return (
     <div className={color}>
-      <p className="text-sm font-semibold">{textoDias(dias)}</p>
+      <p className="text-sm font-semibold">{textoPendiente(dias, tipo)}</p>
       <p className="text-xs">
         {descripcion} · {formatearFecha(fecha)}
       </p>
@@ -19,8 +22,11 @@ function Vencimiento({ fecha, descripcion }: { fecha: string; descripcion: strin
   );
 }
 
+type Vista = "activos" | "cerrados";
+
 export function ListaCasos() {
   const { casos, listo } = useCasos();
+  const [vista, setVista] = useState<Vista>("activos");
 
   if (!listo) return null;
 
@@ -36,41 +42,92 @@ export function ListaCasos() {
     );
   }
 
-  const ordenados = [...casos].sort((a, b) => {
+  const cerrados = casos.filter((c) => c.estado === "cerrado").sort((a, b) => a.cliente.localeCompare(b.cliente, "es"));
+  const activos = casos.filter((c) => c.estado !== "cerrado").sort((a, b) => {
     const va = proximoPendiente(a);
     const vb = proximoPendiente(b);
     const da = va ? diasHasta(va.fecha) : Infinity;
     const db = vb ? diasHasta(vb.fecha) : Infinity;
     return da - db;
   });
+  const pestanias: { vista: Vista; etiqueta: string; casos: Caso[] }[] = [
+    { vista: "activos", etiqueta: "Activos", casos: activos },
+    { vista: "cerrados", etiqueta: "Cerrados", casos: cerrados },
+  ];
+  const visibles = vista === "activos" ? activos : cerrados;
 
   return (
-    <div className="flex flex-col gap-3">
-      {ordenados.map((caso) => {
-        const vencimiento = proximoPendiente(caso);
-        return (
-          <Link
-            key={caso.id}
-            href={`/casos/${caso.id}`}
-            className="flex flex-col gap-3 rounded-xl border border-gray-200 bg-white p-4 transition-colors hover:border-gray-300 sm:flex-row sm:items-center sm:justify-between"
-          >
-            <div className="flex flex-col gap-1">
-              <div className="flex items-center gap-2">
-                <p className="font-semibold text-gray-900">{caso.cliente}</p>
-                <EtapaBadge caso={caso} />
-              </div>
-              <p className="text-sm text-gray-500">
-                {caso.tipoReclamo} · contra {caso.empleador}
-              </p>
-            </div>
-            {vencimiento ? (
-              <Vencimiento fecha={vencimiento.fecha} descripcion={vencimiento.descripcion} />
-            ) : (
-              <p className="text-sm text-gray-400">Sin vencimientos pendientes</p>
-            )}
-          </Link>
-        );
-      })}
+    <div className="flex flex-col gap-4">
+      <div
+        role="tablist"
+        aria-label="Casos"
+        className="flex gap-6 border-b border-gray-200"
+        onKeyDown={(e) => {
+          // Flechas izquierda/derecha para moverse entre pestañas (patrón de tabs accesibles).
+          if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+          const otra = vista === "activos" ? "cerrados" : "activos";
+          setVista(otra);
+          document.getElementById(`pestania-${otra}`)?.focus();
+        }}
+      >
+        {pestanias.map((p) => {
+          const elegida = vista === p.vista;
+          return (
+            <button
+              key={p.vista}
+              id={`pestania-${p.vista}`}
+              type="button"
+              role="tab"
+              aria-selected={elegida}
+              aria-controls="lista-casos"
+              tabIndex={elegida ? 0 : -1}
+              onClick={() => setVista(p.vista)}
+              className={`-mb-px border-b-2 pb-2 text-sm font-semibold transition-colors ${
+                elegida ? "border-gray-900 text-gray-900" : "border-transparent text-gray-500 hover:text-gray-900"
+              }`}
+            >
+              {p.etiqueta} <span className="font-normal text-gray-400">({p.casos.length})</span>
+            </button>
+          );
+        })}
+      </div>
+
+      <div id="lista-casos" role="tabpanel" aria-labelledby={`pestania-${vista}`} className="flex flex-col gap-3">
+        {visibles.length === 0 ? (
+          <p className="rounded-xl border border-dashed border-gray-300 py-8 text-center text-sm text-gray-500">
+            {vista === "activos" ? "No tenés casos activos." : "Todavía no cerraste ningún caso."}
+          </p>
+        ) : (
+          visibles.map((caso) => <FilaCaso key={caso.id} caso={caso} />)
+        )}
+      </div>
     </div>
+  );
+}
+
+function FilaCaso({ caso }: { caso: Caso }) {
+  const vencimiento = caso.estado === "cerrado" ? null : proximoPendiente(caso);
+  return (
+    <Link
+      href={`/casos/${caso.id}`}
+      className={`flex flex-col gap-3 rounded-xl border border-gray-200 p-4 transition-colors hover:border-gray-300 sm:flex-row sm:items-center sm:justify-between ${
+        caso.estado === "cerrado" ? "bg-gray-50" : "bg-white"
+      }`}
+    >
+      <div className="flex flex-col gap-1">
+        <div className="flex items-center gap-2">
+          <p className="font-semibold text-gray-900">{caso.cliente}</p>
+          <EtapaBadge caso={caso} />
+        </div>
+        <p className="text-sm text-gray-500">
+          {caso.tipoReclamo} · contra {caso.empleador}
+        </p>
+      </div>
+      {vencimiento ? (
+        <Vencimiento vencimiento={vencimiento} />
+      ) : (
+        caso.estado !== "cerrado" && <p className="text-sm text-gray-400">Sin plazos ni tareas pendientes</p>
+      )}
+    </Link>
   );
 }

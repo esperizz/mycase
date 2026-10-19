@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
+import { DialogoCerrarCaso } from "@/components/casos/CerrarCaso";
 import { DialogoConfirmar } from "@/components/ui/DialogoConfirmar";
 import { TextField } from "@/components/ui/Field";
 import { useCasos } from "@/lib/casos/CasosProvider";
@@ -123,6 +124,7 @@ export function HojaRutaArt({ caso }: { caso: Caso }) {
   const { actualizar } = useCasos();
   /** Id del paso al que se pidió volver, mientras se confirma. */
   const [volviendo, setVolviendo] = useState<string | null>(null);
+  const [cerrando, setCerrando] = useState(false);
 
   if (!caso.hojaRuta) {
     return (
@@ -181,7 +183,19 @@ export function HojaRutaArt({ caso }: { caso: Caso }) {
         </div>
       )}
 
-      {actual ? <PasoActual key={actual.id} caso={caso} paso={actual} /> : <p className="rounded-lg bg-green-50 p-4 text-sm font-semibold text-green-900">Todos los pasos están cumplidos.</p>}
+      {actual ? (
+        <PasoActual key={actual.id} caso={caso} paso={actual} />
+      ) : (
+        <div className="flex flex-col gap-3 rounded-lg bg-green-50 p-4 text-green-900 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="font-semibold">Todos los pasos están cumplidos.</p>
+            {caso.estado !== "cerrado" && (
+              <p className="text-sm">Si no queda nada más por hacer (por ejemplo, cobrar honorarios), cerralo.</p>
+            )}
+          </div>
+          {caso.estado !== "cerrado" && <Button onClick={() => setCerrando(true)}>Cerrar caso</Button>}
+        </div>
+      )}
 
       <ol className="flex flex-col divide-y divide-gray-100">
         {pasos.map((p) => (
@@ -224,6 +238,8 @@ export function HojaRutaArt({ caso }: { caso: Caso }) {
           </li>
         ))}
       </ol>
+
+      <DialogoCerrarCaso caso={caso} abierto={cerrando} onCerrar={() => setCerrando(false)} />
 
       <DialogoConfirmar
         abierto={!!pasoVolver}

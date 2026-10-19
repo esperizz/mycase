@@ -30,6 +30,15 @@ export function textoDias(dias: number): string {
   return `Vence en ${dias} días`;
 }
 
+/** Cuándo es un plazo o una tarea. Las tareas no "vencen": se dice para cuándo son o cuánto se atrasaron. */
+export function textoPendiente(dias: number, tipo: "plazo" | "tarea"): string {
+  if (tipo === "plazo") return textoDias(dias);
+  if (dias < 0) return `Atrasada ${-dias} día${dias === -1 ? "" : "s"}`;
+  if (dias === 0) return "Para hoy";
+  if (dias === 1) return "Para mañana";
+  return `En ${dias} días`;
+}
+
 /** Días hasta la fecha (negativo si ya pasó). */
 export function diasHasta(iso: string): number {
   return diasEntre(hoyIso(), iso);

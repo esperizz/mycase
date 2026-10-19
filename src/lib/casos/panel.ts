@@ -1,5 +1,5 @@
 import { diasEntre } from "./formato";
-import { esArt, tienePasoPendiente } from "./hojaRuta";
+import { esArt, hojaCompleta, tienePasoPendiente } from "./hojaRuta";
 import { ESTADOS, type Caso, type EstadoCaso, type Vencimiento } from "./tipos";
 
 export interface Pendiente {
@@ -24,6 +24,8 @@ export interface Panel {
    * más cercano (sin límite de días). Vacío si no hay plazos pendientes.
    */
   proximosPlazos: Pendiente[];
+  /** Casos de ART con toda la hoja de ruta cumplida que todavía no se cerraron. */
+  listosParaCerrar: Caso[];
   /** Casos activos con la carta empezada pero sin marcar como enviada. */
   cartasSinEnviar: Caso[];
   /** Casos por estado; los de ART activos van aparte, porque su etapa sale de la hoja de ruta. */
@@ -64,7 +66,11 @@ export function armarPanel(casos: Caso[], hoy: string): Panel {
     atrasadas: pendientes.filter((p) => p.dias < 0 && p.vencimiento.tipo === "tarea"),
     hoy: pendientes.filter((p) => p.dias === 0),
     semana: pendientes.filter((p) => p.dias > 0 && p.dias <= DIAS_SEMANA),
-    sinProximoPaso: activos.filter((c) => !c.vencimientos.some((v) => !v.cumplido) && !tienePasoPendiente(c)),
+    // Un caso con la hoja de ruta completa no está olvidado: está para cerrar.
+    sinProximoPaso: activos.filter(
+      (c) => !c.vencimientos.some((v) => !v.cumplido) && !tienePasoPendiente(c) && !hojaCompleta(c),
+    ),
+    listosParaCerrar: activos.filter(hojaCompleta),
     proximosPlazos,
     cartasSinEnviar: activos.filter((c) => c.carta && !c.carta.enviadaEl),
     porEtapa,
@@ -99,4 +105,13 @@ export function titular(panel: Panel): string {
   if (semanaPlazos > 0) return `Esta semana ${vencen}.`;
   if (semanaTareas > 0) return `Esta semana ${tenes}.`;
   return "Estás al día.";
+}
+
+/** Plazos y tareas sin cumplir de un caso: para avisar antes de cerrarlo. */
+export function pendientesDe(caso: Caso): { plazos: number; tareas: number } {
+  const sinCumplir = caso.vencimientos.filter((v) => !v.cumplido);
+  return {
+    plazos: sinCumplir.filter((v) => v.tipo === "plazo").length,
+    tareas: sinCumplir.filter((v) => v.tipo === "tarea").length,
+  };
 }

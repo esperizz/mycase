@@ -8,7 +8,7 @@ import { TipoTag } from "@/components/casos/TipoTag";
 import { Button, ButtonLink } from "@/components/ui/Button";
 import { useCasos } from "@/lib/casos/CasosProvider";
 import { proximoFeriado } from "@/lib/casos/feriados";
-import { formatearFecha, hoyIso, textoDias } from "@/lib/casos/formato";
+import { formatearFecha, hoyIso, textoPendiente } from "@/lib/casos/formato";
 import { armarPanel, DIAS_SEMANA, titular, type Pendiente } from "@/lib/casos/panel";
 import { ESTADOS, type Caso } from "@/lib/casos/tipos";
 import { CargaRapida } from "./CargaRapida";
@@ -62,16 +62,7 @@ function ItemPendiente({ pendiente, onCumplir }: { pendiente: Pendiente; onCumpl
   const tarea = vencimiento.tipo === "tarea";
   // Una tarea atrasada no es grave como un plazo vencido: va en ámbar, no en rojo.
   const color = dias < 0 ? (tarea ? "text-amber-800" : "text-red-700") : dias === 0 ? "text-amber-800" : "text-gray-500";
-  // Las tareas no "vencen": se dice para cuándo son.
-  const cuando = !tarea
-    ? textoDias(dias)
-    : dias < 0
-      ? `Atrasada ${-dias} día${dias === -1 ? "" : "s"}`
-      : dias === 0
-        ? "Para hoy"
-        : dias === 1
-          ? "Para mañana"
-          : `En ${dias} días`;
+  const cuando = textoPendiente(dias, vencimiento.tipo);
   return (
     <li className="flex items-start gap-3 py-3">
       <input
@@ -341,6 +332,15 @@ export function Panel() {
               ayuda="Casos activos sin plazos ni tareas pendientes. Cargales el siguiente para no perderlos de vista."
             >
               <ListaCorta casos={panel.sinProximoPaso} onElegir={(c) => setCarga(c.id)} accion="Cargar" />
+            </Tarjeta>
+          )}
+
+          {panel.listosParaCerrar.length > 0 && (
+            <Tarjeta
+              titulo="Listos para cerrar"
+              ayuda="Casos de ART con todos los pasos cumplidos. Si no queda nada más por hacer, cerralos."
+            >
+              <ListaCorta casos={panel.listosParaCerrar} destino={(c) => `/casos/${c.id}`} accion="Ver" />
             </Tarjeta>
           )}
 
