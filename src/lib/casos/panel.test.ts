@@ -95,6 +95,38 @@ describe("armarPanel", () => {
   });
 });
 
+describe("tarjetas del panel", () => {
+  it("el próximo plazo es el vencido si hay, y si no el del día más cercano, aunque falte mucho", () => {
+    const lejos = armarPanel([caso({ vencimientos: [vto("2026-12-01"), vto("2026-10-20", false, "tarea")] })], HOY);
+    expect(lejos.proximosPlazos.map((p) => p.vencimiento.fecha)).toEqual(["2026-12-01"]);
+
+    const coinciden = armarPanel(
+      [caso({ vencimientos: [vto("2026-10-20"), { ...vto("2026-10-20"), id: "x" }, vto("2026-10-25")] })],
+      HOY,
+    );
+    expect(coinciden.proximosPlazos).toHaveLength(2);
+
+    const vencidos = armarPanel([caso({ vencimientos: [vto("2026-10-01"), vto("2026-10-10"), vto("2026-10-15")] })], HOY);
+    expect(vencidos.proximosPlazos.map((p) => p.vencimiento.fecha)).toEqual(["2026-10-01", "2026-10-10"]);
+
+    expect(armarPanel([caso({})], HOY).proximosPlazos).toEqual([]);
+  });
+
+  it("avisos pendientes: casos de ART con pasos cumplidos sin avisar", () => {
+    const hoja = (avisados: Record<string, string>) => ({
+      cumplidos: { denuncia: "2026-10-01" },
+      avisados,
+      rechazo: false,
+      inicioAvisado: "",
+      vencimientos: {},
+    });
+    const debe = caso({ cliente: "Debe", hojaRuta: hoja({}) });
+    const alDia = caso({ cliente: "AlDia", hojaRuta: hoja({ denuncia: "2026-10-01" }) });
+    const cerrado = caso({ cliente: "Cerrado", estado: "cerrado", hojaRuta: hoja({}) });
+    expect(armarPanel([debe, alDia, cerrado], HOY).avisosPendientes.map((c) => c.cliente)).toEqual(["Debe"]);
+  });
+});
+
 describe("titular", () => {
   const con = (...vtos: Vencimiento[]) => titular(armarPanel([caso({ vencimientos: vtos })], HOY));
 

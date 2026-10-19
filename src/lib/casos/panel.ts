@@ -19,6 +19,13 @@ export interface Panel {
   semana: Pendiente[];
   /** Casos activos sin ningún vencimiento pendiente: nada les recuerda el próximo paso. */
   sinProximoPaso: Caso[];
+  /**
+   * Lo próximo que importa: si hay plazos vencidos, todos ellos; si no, los plazos del día
+   * más cercano (sin límite de días). Vacío si no hay plazos pendientes.
+   */
+  proximosPlazos: Pendiente[];
+  /** Casos de ART con pasos cumplidos de los que todavía no se le avisó al cliente. */
+  avisosPendientes: Caso[];
   /** Casos activos con la carta empezada pero sin marcar como enviada. */
   cartasSinEnviar: Caso[];
   /** Casos por estado; los de ART activos van aparte, porque su etapa sale de la hoja de ruta. */
@@ -48,12 +55,22 @@ export function armarPanel(casos: Caso[], hoy: string): Panel {
     else porEtapa[c.estado]++;
   }
 
+  const plazos = pendientes.filter((p) => p.vencimiento.tipo === "plazo");
+  const primero = plazos[0];
+  const proximosPlazos = !primero
+    ? []
+    : plazos.filter((p) => (primero.dias < 0 ? p.dias < 0 : p.dias === primero.dias));
+
   return {
     vencidos: pendientes.filter((p) => p.dias < 0 && p.vencimiento.tipo === "plazo"),
     atrasadas: pendientes.filter((p) => p.dias < 0 && p.vencimiento.tipo === "tarea"),
     hoy: pendientes.filter((p) => p.dias === 0),
     semana: pendientes.filter((p) => p.dias > 0 && p.dias <= DIAS_SEMANA),
     sinProximoPaso: activos.filter((c) => !c.vencimientos.some((v) => !v.cumplido) && !tienePasoPendiente(c)),
+    proximosPlazos,
+    avisosPendientes: activos.filter(
+      (c) => c.hojaRuta && Object.keys(c.hojaRuta.cumplidos).some((id) => !c.hojaRuta?.avisados[id]),
+    ),
     cartasSinEnviar: activos.filter((c) => c.carta && !c.carta.enviadaEl),
     porEtapa,
     art,
