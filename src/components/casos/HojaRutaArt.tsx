@@ -5,8 +5,9 @@ import { Button } from "@/components/ui/Button";
 import { DialogoCerrarCaso } from "@/components/casos/CerrarCaso";
 import { DialogoConfirmar } from "@/components/ui/DialogoConfirmar";
 import { TextField } from "@/components/ui/Field";
+import { MenuAcciones } from "@/components/ui/MenuAcciones";
 import { useCasos } from "@/lib/casos/CasosProvider";
-import { formatearFecha, diasHasta, hoyIso, textoDias } from "@/lib/casos/formato";
+import { diasHasta, fechaCorta, formatearFecha, hoyIso, textoDias } from "@/lib/casos/formato";
 import {
   abrePlazo,
   cumplirPaso,
@@ -199,9 +200,9 @@ export function HojaRutaArt({ caso }: { caso: Caso }) {
 
       <ol className="flex flex-col divide-y divide-gray-100">
         {pasos.map((p) => (
-          <li key={p.id} className="flex flex-wrap items-center gap-x-3 gap-y-1 py-2 text-sm">
+          <li key={p.id} className="flex items-start gap-3 py-3 text-sm">
             <span
-              className={`flex size-5 items-center justify-center rounded-full text-xs ${
+              className={`mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full text-xs ${
                 p.estado === "cumplido"
                   ? "bg-green-600 text-white"
                   : p.estado === "actual"
@@ -212,28 +213,26 @@ export function HojaRutaArt({ caso }: { caso: Caso }) {
             >
               {p.estado === "cumplido" ? "✓" : ""}
             </span>
-            <span className={`flex-1 ${p.estado === "pendiente" ? "text-gray-400" : "text-tinta"}`}>
-              {p.tecnico}
-              {p.id === "respuesta" && p.fecha && (hoja.rechazo ? " · rechazó" : " · aceptó")}
-            </span>
+            <div className="min-w-0 flex-1">
+              <p className={p.estado === "pendiente" ? "text-gray-400" : "font-medium text-tinta"}>
+                {p.tecnico}
+                {p.id === "respuesta" && p.fecha && (hoja.rechazo ? " · rechazó" : " · aceptó")}
+              </p>
+              {/* Solo datos: cuándo se cumplió y si se le avisó al cliente. Las acciones van en el menú. */}
+              {p.fecha && (
+                <p className="mt-0.5 text-xs text-gray-500">
+                  {fechaCorta(p.fecha)} · {p.avisado ? <span className="text-green-700">Avisado</span> : "No avisado"}
+                </p>
+              )}
+            </div>
             {p.fecha && (
-              <span className="flex items-center gap-3 text-xs text-gray-500">
-                {formatearFecha(p.fecha)}
-                {p.avisado ? (
-                  <span className="text-green-700">Avisado</span>
-                ) : (
-                  // No avisar fue una decisión, no un olvido: se muestra como dato, con la opción de cambiarla.
-                  <span>
-                    No avisado ·{" "}
-                    <button type="button" onClick={() => avisarDespues(p)} className="underline-offset-2 hover:underline">
-                      Avisar igual
-                    </button>
-                  </span>
-                )}
-                <button type="button" onClick={() => setVolviendo(p.id)} className="hover:underline">
-                  Volver a este paso
-                </button>
-              </span>
+              <MenuAcciones
+                etiqueta={`Acciones de “${p.tecnico}”`}
+                acciones={[
+                  ...(p.avisado ? [] : [{ etiqueta: "Avisarle por WhatsApp", onClick: () => avisarDespues(p) }]),
+                  { etiqueta: "Volver a este paso", onClick: () => setVolviendo(p.id) },
+                ]}
+              />
             )}
           </li>
         ))}
