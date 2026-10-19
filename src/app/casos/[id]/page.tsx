@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
+import { DialogoCerrarCaso } from "@/components/casos/CerrarCaso";
 import { EtapaBadge } from "@/components/casos/EstadoBadge";
 import { FormularioCaso } from "@/components/casos/FormularioCaso";
 import { HojaRutaArt } from "@/components/casos/HojaRutaArt";
@@ -37,6 +38,7 @@ export default function FichaCasoPage() {
   const [tipoVto, setTipoVto] = useState<TipoVencimiento>("plazo");
   const [editando, setEditando] = useState(false);
   const [borrando, setBorrando] = useState(false);
+  const [cerrando, setCerrando] = useState(false);
 
   if (!listo) return null;
 
@@ -134,7 +136,9 @@ export default function FichaCasoPage() {
               <Button
                 variante="secondary"
                 onClick={() =>
-                  actualizar(caso.id, (c) => ({ ...c, estado: c.estado === "cerrado" ? "consulta" : "cerrado" }))
+                  caso.estado === "cerrado"
+                    ? actualizar(caso.id, (c) => ({ ...c, estado: "consulta" }))
+                    : setCerrando(true)
                 }
               >
                 {caso.estado === "cerrado" ? "Reabrir caso" : "Cerrar caso"}
@@ -144,7 +148,12 @@ export default function FichaCasoPage() {
             <SelectField
               label="Etapa actual"
               value={caso.estado}
-              onChange={(e) => actualizar(caso.id, (c) => ({ ...c, estado: e.target.value as typeof c.estado }))}
+              onChange={(e) => {
+                const estado = e.target.value as typeof caso.estado;
+                // Cerrar pide confirmación; el resto de las etapas cambia directo.
+                if (estado === "cerrado") setCerrando(true);
+                else actualizar(caso.id, (c) => ({ ...c, estado }));
+              }}
             >
               {ESTADOS.map((e) => (
                 <option key={e} value={e}>
@@ -201,6 +210,8 @@ export default function FichaCasoPage() {
             Eliminar este caso
           </button>
         </div>
+
+        <DialogoCerrarCaso caso={caso} abierto={cerrando} onCerrar={() => setCerrando(false)} />
 
         <DialogoConfirmar
           abierto={borrando}

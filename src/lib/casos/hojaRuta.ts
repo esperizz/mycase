@@ -237,6 +237,11 @@ export function tienePasoPendiente(caso: Caso): boolean {
   return !!caso.hojaRuta && pasosDe(caso.hojaRuta).some((p) => p.estado === "actual");
 }
 
+/** Todos los pasos de la hoja de ruta están cumplidos: el caso está listo para cerrarse. */
+export function hojaCompleta(caso: Caso): boolean {
+  return !!caso.hojaRuta && !pasosDe(caso.hojaRuta).some((p) => p.estado !== "cumplido");
+}
+
 /** "juan pérez" → "Juan". */
 function primerNombre(cliente: string) {
   const nombre = cliente.trim().split(/\s+/)[0] ?? "";

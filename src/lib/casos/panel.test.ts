@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { armarPanel, titular } from "./panel";
+import { armarPanel, pendientesDe, titular } from "./panel";
 import { cartaVacia, type Caso, type Vencimiento } from "./tipos";
 
 const HOY = "2026-10-14";
@@ -113,6 +113,33 @@ describe("tarjetas del panel", () => {
     expect(armarPanel([caso({})], HOY).proximosPlazos).toEqual([]);
   });
 
+});
+
+describe("cierre", () => {
+  const completa = {
+    cumplidos: Object.fromEntries(
+      ["denuncia", "respuesta", "tratamiento", "alta", "comision", "dictamen", "audiencia", "homologacion", "cobro"].map(
+        (id) => [id, "2026-10-01"],
+      ),
+    ),
+    avisados: {},
+    rechazo: false,
+    inicioAvisado: "",
+    vencimientos: {},
+  };
+
+  it("un caso de ART con todo cumplido está para cerrar, no 'sin próximo paso'", () => {
+    const listo = caso({ cliente: "Listo", tipoReclamo: "Accidente de trabajo", hojaRuta: completa });
+    const panel = armarPanel([listo], HOY);
+    expect(panel.sinProximoPaso).toEqual([]);
+    expect(panel.listosParaCerrar.map((c) => c.cliente)).toEqual(["Listo"]);
+    expect(armarPanel([{ ...listo, estado: "cerrado" }], HOY).listosParaCerrar).toEqual([]);
+  });
+
+  it("cuenta los plazos y tareas sin cumplir", () => {
+    const c = caso({ vencimientos: [vto("2026-10-20"), vto("2026-10-21", false, "tarea"), vto("2026-10-22", true)] });
+    expect(pendientesDe(c)).toEqual({ plazos: 1, tareas: 1 });
+  });
 });
 
 describe("titular", () => {
