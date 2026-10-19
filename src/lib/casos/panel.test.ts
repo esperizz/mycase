@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { armarPanel } from "./panel";
+import { armarPanel, titular } from "./panel";
 import { cartaVacia, type Caso, type Vencimiento } from "./tipos";
 
 const HOY = "2026-10-14";
 
-function vto(fecha: string, cumplido = false): Vencimiento {
-  return { id: fecha, fecha, descripcion: `Vence ${fecha}`, cumplido };
+function vto(fecha: string, cumplido = false, tipo: Vencimiento["tipo"] = "plazo"): Vencimiento {
+  return { id: fecha, fecha, descripcion: `Vence ${fecha}`, cumplido, tipo };
 }
 
 function caso(parcial: Partial<Caso>): Caso {
@@ -19,6 +19,7 @@ function caso(parcial: Partial<Caso>): Caso {
     fechaApertura: "2026-10-01",
     vencimientos: [],
     notas: "",
+    historial: [],
     carta: null,
     hojaRuta: null,
     ...parcial,
@@ -86,5 +87,49 @@ describe("armarPanel", () => {
     expect(panel.porEtapa.mediacion).toBe(1);
     expect(panel.porEtapa.consulta).toBe(0);
     expect(panel.sinProximoPaso.map((c) => c.cliente)).toEqual(["ART2", "D"]);
+  });
+
+  it("las tareas pasadas son atrasadas, no vencidos", () => {
+    const panel = armarPanel([caso({ vencimientos: [vto("2026-10-10"), vto("2026-10-11", false, "tarea")] })], HOY);
+    expect(panel.vencidos.map((p) => p.vencimiento.fecha)).toEqual(["2026-10-10"]);
+    expect(panel.atrasadas.map((p) => p.vencimiento.fecha)).toEqual(["2026-10-11"]);
+  });
+});
+
+describe("tarjetas del panel", () => {
+  it("el próximo plazo es el vencido si hay, y si no el del día más cercano, aunque falte mucho", () => {
+    const lejos = armarPanel([caso({ vencimientos: [vto("2026-12-01"), vto("2026-10-20", false, "tarea")] })], HOY);
+    expect(lejos.proximosPlazos.map((p) => p.vencimiento.fecha)).toEqual(["2026-12-01"]);
+
+    const coinciden = armarPanel(
+      [caso({ vencimientos: [vto("2026-10-20"), { ...vto("2026-10-20"), id: "x" }, vto("2026-10-25")] })],
+      HOY,
+    );
+    expect(coinciden.proximosPlazos).toHaveLength(2);
+
+    const vencidos = armarPanel([caso({ vencimientos: [vto("2026-10-01"), vto("2026-10-10"), vto("2026-10-15")] })], HOY);
+    expect(vencidos.proximosPlazos.map((p) => p.vencimiento.fecha)).toEqual(["2026-10-01", "2026-10-10"]);
+
+    expect(armarPanel([caso({})], HOY).proximosPlazos).toEqual([]);
+  });
+
+});
+
+describe("titular", () => {
+  const con = (...vtos: Vencimiento[]) => titular(armarPanel([caso({ vencimientos: vtos })], HOY));
+
+  it("nombra lo más urgente primero", () => {
+    expect(con(vto("2026-10-10"), vto("2026-10-14"))).toBe("Tenés 1 plazo vencido.");
+    expect(con(vto("2026-10-14"), { ...vto("2026-10-14"), id: "otro" })).toBe("Hoy vencen 2 plazos.");
+    expect(con(vto("2026-10-10", false, "tarea"), vto("2026-10-16"))).toBe("Tenés 1 tarea atrasada.");
+  });
+
+  it("resume la semana separando plazos y tareas", () => {
+    expect(con(vto("2026-10-16"), vto("2026-10-17", false, "tarea"), vto("2026-10-18", false, "tarea"))).toBe(
+      "Esta semana vence 1 plazo y tenés 2 tareas.",
+    );
+    expect(con(vto("2026-10-16"), vto("2026-10-17"))).toBe("Esta semana vencen 2 plazos.");
+    expect(con(vto("2026-10-14", false, "tarea"))).toBe("Esta semana tenés 1 tarea.");
+    expect(con()).toBe("Estás al día.");
   });
 });

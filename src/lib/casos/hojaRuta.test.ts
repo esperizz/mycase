@@ -13,6 +13,7 @@ function caso(parcial: Partial<Caso> = {}): Caso {
     fechaApertura: "2026-10-01",
     vencimientos: [],
     notas: "",
+    historial: [],
     carta: null,
     hojaRuta: null,
     ...parcial,

@@ -67,10 +67,11 @@ export default function CartaCasoPage() {
       vencimientos: [
         ...c.vencimientos,
         {
-          id: `${Date.now().toString(36)}-carta`,
+          id: crypto.randomUUID(),
           fecha: venceEl,
           descripcion: `Vence el plazo de la intimación (${plazo.titulo})`,
           cumplido: false,
+          tipo: "plazo",
         },
       ],
     }));

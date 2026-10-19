@@ -171,7 +171,7 @@ export function cumplirPaso(
     nueva.vencimientos[paso.id] = id;
     vencimientos = [
       ...vencimientos,
-      { id, fecha: sumarDias(fecha, paso.plazo.dias, true), descripcion: `${paso.plazo.texto} (estimado)`, cumplido: false },
+      { id, fecha: sumarDias(fecha, paso.plazo.dias, true), descripcion: `${paso.plazo.texto} (estimado)`, cumplido: false, tipo: "plazo" },
     ];
   }
 

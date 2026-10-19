@@ -10,12 +10,22 @@ export const ESTADO_LABEL: Record<EstadoCaso, string> = {
   cerrado: "Cerrado",
 };
 
+/**
+ * Plazo: tiene consecuencias si se pasa (contestar demanda, audiencia).
+ * Tarea: pendiente interno y flexible (llamar al cliente, pedir documentación).
+ */
+export type TipoVencimiento = "plazo" | "tarea";
+
 export interface Vencimiento {
   id: string;
   fecha: string; // ISO yyyy-mm-dd
   descripcion: string;
   cumplido: boolean;
+  tipo: TipoVencimiento;
 }
+
+/** Lo que hace falta para cargar un vencimiento nuevo; si no se dice, es un plazo. */
+export type VencimientoNuevo = Omit<Vencimiento, "id" | "cumplido" | "tipo"> & { tipo?: TipoVencimiento };
 
 export type PlazoId = "48h" | "5d" | "10d";
 
@@ -69,6 +79,14 @@ export interface HojaRuta {
   vencimientos: Record<string, string>;
 }
 
+/** Una entrada del historial de notas del caso. Solo la ve la abogada. */
+export interface Nota {
+  id: string;
+  /** Fecha y hora local, yyyy-mm-ddThh:mm. */
+  fecha: string;
+  texto: string;
+}
+
 export interface Caso {
   id: string;
   cliente: string;
@@ -78,11 +96,13 @@ export interface Caso {
   estado: EstadoCaso;
   fechaApertura: string; // ISO yyyy-mm-dd
   vencimientos: Vencimiento[];
+  /** Texto único de la versión anterior; se migra a `historial` (ver notas.ts). */
   notas: string;
+  historial: Nota[];
   carta: CartaDatos | null;
   hojaRuta: HojaRuta | null;
 }
 
-export type CasoNuevo = Omit<Caso, "id" | "fechaApertura" | "vencimientos" | "notas" | "carta" | "hojaRuta"> & {
+export type CasoNuevo = Omit<Caso, "id" | "fechaApertura" | "vencimientos" | "notas" | "historial" | "carta" | "hojaRuta"> & {
   notas?: string;
 };
