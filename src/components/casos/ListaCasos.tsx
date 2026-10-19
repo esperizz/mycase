@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import { ButtonLink } from "@/components/ui/Button";
 import { useCasos } from "@/lib/casos/CasosProvider";
 import { diasHasta, formatearFecha, proximoPendiente, textoPendiente } from "@/lib/casos/formato";
@@ -21,8 +22,11 @@ function Vencimiento({ vencimiento: { fecha, descripcion, tipo } }: { vencimient
   );
 }
 
+type Vista = "activos" | "cerrados";
+
 export function ListaCasos() {
   const { casos, listo } = useCasos();
+  const [vista, setVista] = useState<Vista>("activos");
 
   if (!listo) return null;
 
@@ -38,42 +42,65 @@ export function ListaCasos() {
     );
   }
 
-  // Los cerrados van aparte, plegados al final: siguen a mano sin ocupar la lista de trabajo.
   const cerrados = casos.filter((c) => c.estado === "cerrado").sort((a, b) => a.cliente.localeCompare(b.cliente, "es"));
-  const ordenados = casos.filter((c) => c.estado !== "cerrado").sort((a, b) => {
+  const activos = casos.filter((c) => c.estado !== "cerrado").sort((a, b) => {
     const va = proximoPendiente(a);
     const vb = proximoPendiente(b);
     const da = va ? diasHasta(va.fecha) : Infinity;
     const db = vb ? diasHasta(vb.fecha) : Infinity;
     return da - db;
   });
+  const pestanias: { vista: Vista; etiqueta: string; casos: Caso[] }[] = [
+    { vista: "activos", etiqueta: "Activos", casos: activos },
+    { vista: "cerrados", etiqueta: "Cerrados", casos: cerrados },
+  ];
+  const visibles = vista === "activos" ? activos : cerrados;
 
   return (
-    <div className="flex flex-col gap-3">
-      {ordenados.length === 0 && (
-        <p className="rounded-xl border border-dashed border-gray-300 py-8 text-center text-sm text-gray-500">
-          No tenés casos activos.
-        </p>
-      )}
-      {ordenados.map((caso) => (
-        <FilaCaso key={caso.id} caso={caso} />
-      ))}
+    <div className="flex flex-col gap-4">
+      <div
+        role="tablist"
+        aria-label="Casos"
+        className="flex gap-6 border-b border-gray-200"
+        onKeyDown={(e) => {
+          // Flechas izquierda/derecha para moverse entre pestañas (patrón de tabs accesibles).
+          if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+          const otra = vista === "activos" ? "cerrados" : "activos";
+          setVista(otra);
+          document.getElementById(`pestania-${otra}`)?.focus();
+        }}
+      >
+        {pestanias.map((p) => {
+          const elegida = vista === p.vista;
+          return (
+            <button
+              key={p.vista}
+              id={`pestania-${p.vista}`}
+              type="button"
+              role="tab"
+              aria-selected={elegida}
+              aria-controls="lista-casos"
+              tabIndex={elegida ? 0 : -1}
+              onClick={() => setVista(p.vista)}
+              className={`-mb-px border-b-2 pb-2 text-sm font-semibold transition-colors ${
+                elegida ? "border-gray-900 text-gray-900" : "border-transparent text-gray-500 hover:text-gray-900"
+              }`}
+            >
+              {p.etiqueta} <span className="font-normal text-gray-400">({p.casos.length})</span>
+            </button>
+          );
+        })}
+      </div>
 
-      {cerrados.length > 0 && (
-        <details className="group mt-3">
-          <summary className="flex cursor-pointer list-none items-center gap-2 py-2 text-sm font-semibold text-gray-500 hover:text-gray-900">
-            <span className="transition-transform group-open:rotate-90" aria-hidden>
-              ›
-            </span>
-            Cerrados ({cerrados.length})
-          </summary>
-          <div className="mt-2 flex flex-col gap-3">
-            {cerrados.map((caso) => (
-              <FilaCaso key={caso.id} caso={caso} />
-            ))}
-          </div>
-        </details>
-      )}
+      <div id="lista-casos" role="tabpanel" aria-labelledby={`pestania-${vista}`} className="flex flex-col gap-3">
+        {visibles.length === 0 ? (
+          <p className="rounded-xl border border-dashed border-gray-300 py-8 text-center text-sm text-gray-500">
+            {vista === "activos" ? "No tenés casos activos." : "Todavía no cerraste ningún caso."}
+          </p>
+        ) : (
+          visibles.map((caso) => <FilaCaso key={caso.id} caso={caso} />)
+        )}
+      </div>
     </div>
   );
 }
