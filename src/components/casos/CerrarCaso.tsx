@@ -30,7 +30,7 @@ export function DialogoCerrarCaso({ caso, abierto, onCerrar }: { caso: Caso; abi
       }}
     >
       {quedan && (
-        <p className="rounded-lg bg-amber-50 p-3 text-amber-900">
+        <p className="rounded-2xl bg-amber-50 p-3 text-amber-900">
           Tiene {quedan} sin cumplir: al cerrarlo {total === 1 ? "deja" : "dejan"} de aparecer en el panel.
         </p>
       )}

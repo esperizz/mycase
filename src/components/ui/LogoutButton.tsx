@@ -20,7 +20,7 @@ export function LogoutButton() {
       onClick={salir}
       aria-label="Salir"
       title="Salir"
-      className="inline-flex size-10 shrink-0 items-center justify-center rounded-lg text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900 sm:h-10 sm:w-auto sm:border sm:border-gray-300 sm:bg-white sm:px-4 sm:text-sm sm:font-semibold sm:text-gray-900 sm:hover:bg-gray-50"
+      className="inline-flex size-10 shrink-0 items-center justify-center rounded-full text-tenue transition-colors hover:bg-fondo hover:text-tinta sm:h-10 sm:w-auto sm:border sm:border-linea sm:bg-white sm:px-5 sm:text-sm sm:font-semibold sm:text-tinta sm:hover:border-tenue"
     >
       <svg
         className="size-5 sm:hidden"

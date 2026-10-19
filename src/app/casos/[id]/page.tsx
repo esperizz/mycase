@@ -23,7 +23,7 @@ function Dato({ label, valor }: { label: string; valor: string }) {
   return (
     <div>
       <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">{label}</p>
-      <p className="text-gray-900">{valor}</p>
+      <p className="text-tinta">{valor}</p>
     </div>
   );
 }
@@ -48,8 +48,8 @@ export default function FichaCasoPage() {
       <>
         <Header />
         <main className="mx-auto flex w-full max-w-xl flex-1 flex-col items-center gap-4 px-4 py-16 text-center">
-          <p className="text-lg font-semibold text-gray-900">No encontramos ese caso</p>
-          <Link href="/casos" className="text-sm font-semibold text-gray-900 underline underline-offset-2">
+          <p className="text-lg font-semibold text-tinta">No encontramos ese caso</p>
+          <Link href="/casos" className="text-sm font-semibold text-tinta underline underline-offset-2">
             Volver a la lista
           </Link>
         </main>
@@ -77,11 +77,13 @@ export default function FichaCasoPage() {
       <Header />
       <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-8 px-4 py-8">
         <div className="flex flex-col gap-3">
-          <Link href="/casos" className="w-fit text-sm font-medium text-gray-500 hover:text-gray-900">
+          <Link href="/casos" className="w-fit text-sm font-medium text-gray-500 hover:text-tinta">
             ← Volver a mis casos
           </Link>
           <div className="flex flex-wrap items-center gap-3">
-            <h1 className="text-2xl font-bold tracking-tight text-gray-900">{caso.cliente}</h1>
+            <h1 className="text-3xl font-semibold tracking-tighter text-tinta sm:text-4xl">
+              {caso.cliente} <span className="text-tenue">contra {caso.empleador}</span>
+            </h1>
             <EtapaBadge caso={caso} />
           </div>
         </div>
@@ -91,14 +93,14 @@ export default function FichaCasoPage() {
         ) : (
           <Link
             href={`/casos/${caso.id}/carta`}
-            className="w-fit rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-900 hover:bg-gray-50"
+            className="w-fit rounded-2xl border border-linea bg-white px-4 py-2 text-sm font-semibold text-tinta hover:bg-fondo"
           >
             Generar carta de intimación →
           </Link>
         )}
 
         {editando ? (
-          <section className="rounded-xl border border-gray-200 bg-white p-5">
+          <section className="rounded-3xl border border-linea bg-white p-5">
             <FormularioCaso
               inicial={caso}
               textoBoton="Guardar cambios"
@@ -110,7 +112,7 @@ export default function FichaCasoPage() {
             />
           </section>
         ) : (
-          <section className="flex flex-col gap-4 rounded-xl border border-gray-200 bg-white p-5">
+          <section className="flex flex-col gap-4 rounded-3xl border border-linea bg-white p-5">
             <div className="grid grid-cols-2 gap-4">
               <Dato label="Empleador" valor={caso.empleador} />
               <Dato label="Tipo de reclamo" valor={caso.tipoReclamo} />
@@ -125,8 +127,8 @@ export default function FichaCasoPage() {
           </section>
         )}
 
-        <section className="flex flex-col gap-3 rounded-xl border border-gray-200 bg-white p-5">
-          <h2 className="font-semibold text-gray-900">Estado del caso</h2>
+        <section className="flex flex-col gap-3 rounded-3xl border border-linea bg-white p-5">
+          <h2 className="font-semibold text-tinta">Estado del caso</h2>
           {art ? (
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <p className="text-sm text-gray-600">
@@ -165,8 +167,8 @@ export default function FichaCasoPage() {
           )}
         </section>
 
-        <section className="flex flex-col gap-4 rounded-xl border border-gray-200 bg-white p-5">
-          <h2 className="font-semibold text-gray-900">Plazos y tareas</h2>
+        <section className="flex flex-col gap-4 rounded-3xl border border-linea bg-white p-5">
+          <h2 className="font-semibold text-tinta">Plazos y tareas</h2>
           {caso.vencimientos.length === 0 ? (
             <p className="text-sm text-gray-500">No hay plazos ni tareas cargados para este caso.</p>
           ) : (

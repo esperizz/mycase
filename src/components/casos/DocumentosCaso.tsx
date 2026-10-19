@@ -118,10 +118,10 @@ export function DocumentosCaso({ caso }: { caso: Caso }) {
   };
 
   return (
-    <section className="flex flex-col gap-4 rounded-xl border border-gray-200 bg-white p-5">
+    <section className="flex flex-col gap-4 rounded-3xl border border-linea bg-white p-5">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h2 className="font-semibold text-gray-900">Documentos</h2>
+          <h2 className="font-semibold text-tinta">Documentos</h2>
           <p className="text-sm text-gray-500">
             DNI, recibos, historia clínica, cartas. Se guardan en un espacio privado: solo los ves vos.
           </p>
@@ -138,7 +138,7 @@ export function DocumentosCaso({ caso }: { caso: Caso }) {
       </div>
 
       {error && (
-        <p role="alert" className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
+        <p role="alert" className="rounded-2xl bg-red-50 px-3 py-2 text-sm text-red-700">
           {error}
         </p>
       )}
@@ -154,7 +154,7 @@ export function DocumentosCaso({ caso }: { caso: Caso }) {
               <button
                 type="button"
                 onClick={() => abrir(d)}
-                className="min-w-0 flex-1 truncate text-left text-sm font-medium text-gray-900 underline-offset-2 hover:underline"
+                className="min-w-0 flex-1 truncate text-left text-sm font-medium text-tinta underline-offset-2 hover:underline"
               >
                 {nombreVisible(d.archivo)}
               </button>

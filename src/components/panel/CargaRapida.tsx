@@ -29,7 +29,7 @@ function Chip({ activo, onClick, children }: { activo: boolean; onClick: () => v
       onClick={onClick}
       aria-pressed={activo}
       className={`rounded-full border px-3 py-1.5 text-sm font-medium transition-colors ${
-        activo ? "border-gray-900 bg-gray-900 text-white" : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+        activo ? "border-tinta bg-tinta text-white" : "border-linea bg-white text-gray-700 hover:bg-fondo"
       }`}
     >
       {children}
@@ -99,13 +99,13 @@ export function CargaRapida({
     <section
       ref={tarjeta}
       aria-labelledby="carga-rapida-titulo"
-      className="flex scroll-mt-4 flex-col gap-4 rounded-xl border border-gray-900 bg-white p-5"
+      className="flex scroll-mt-4 flex-col gap-4 rounded-3xl border border-tinta bg-white p-5"
     >
       <div className="flex items-center justify-between gap-3">
-        <h2 id="carga-rapida-titulo" className="font-semibold text-gray-900">
+        <h2 id="carga-rapida-titulo" className="font-semibold text-tinta">
           Agregar un plazo o una tarea
         </h2>
-        <button type="button" onClick={onCerrar} className="text-sm font-medium text-gray-500 hover:text-gray-900">
+        <button type="button" onClick={onCerrar} className="text-sm font-medium text-gray-500 hover:text-tinta">
           Cerrar
         </button>
       </div>
@@ -120,13 +120,13 @@ export function CargaRapida({
         </SelectField>
 
         <div className="flex flex-col gap-2">
-          <p className="text-sm font-semibold text-gray-900" id="tipo-label">
+          <p className="text-sm font-semibold text-tinta" id="tipo-label">
             Tipo
           </p>
           <div
             role="radiogroup"
             aria-labelledby="tipo-label"
-            className="grid w-full max-w-xs grid-cols-2 rounded-lg border border-gray-300 p-1"
+            className="grid w-full max-w-xs grid-cols-2 rounded-2xl border border-linea p-1"
           >
             {(["plazo", "tarea"] as const).map((t) => (
               <button
@@ -136,7 +136,7 @@ export function CargaRapida({
                 aria-checked={tipo === t}
                 onClick={() => setTipo(t)}
                 className={`rounded-md py-1.5 text-sm font-semibold transition-colors ${
-                  tipo === t ? "bg-gray-900 text-white" : "text-gray-600 hover:bg-gray-50"
+                  tipo === t ? "bg-tinta text-white" : "text-gray-600 hover:bg-fondo"
                 }`}
               >
                 {t === "plazo" ? "Plazo" : "Tarea"}
@@ -175,7 +175,7 @@ export function CargaRapida({
         </div>
 
         <div className="flex flex-col gap-2">
-          <p className="text-sm font-semibold text-gray-900">Cuándo</p>
+          <p className="text-sm font-semibold text-tinta">Cuándo</p>
           <div className="flex flex-wrap gap-2">
             {atajos.map((a) => (
               <Chip key={a.etiqueta} activo={fecha === a.fecha} onClick={() => setFecha(a.fecha)}>

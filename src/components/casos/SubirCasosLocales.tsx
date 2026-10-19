@@ -40,7 +40,7 @@ export function SubirCasosLocales() {
   };
 
   return (
-    <div className="flex flex-col gap-3 rounded-lg bg-amber-50 p-4 text-left text-sm text-amber-900">
+    <div className="flex flex-col gap-3 rounded-2xl bg-amber-50 p-4 text-left text-sm text-amber-900">
       <p>
         Este navegador tiene {locales.length} caso{locales.length === 1 ? "" : "s"} de antes de crear tu cuenta.
         Subilos para tenerlos en cualquier dispositivo.

@@ -34,8 +34,8 @@ export default function CartaCasoPage() {
       <>
         <Header />
         <main className="mx-auto flex w-full max-w-xl flex-1 flex-col items-center gap-4 px-4 py-16 text-center">
-          <p className="text-lg font-semibold text-gray-900">No encontramos ese caso</p>
-          <Link href="/casos" className="text-sm font-semibold text-gray-900 underline underline-offset-2">
+          <p className="text-lg font-semibold text-tinta">No encontramos ese caso</p>
+          <Link href="/casos" className="text-sm font-semibold text-tinta underline underline-offset-2">
             Volver a la lista
           </Link>
         </main>
@@ -104,15 +104,15 @@ export default function CartaCasoPage() {
       <Header />
       <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 px-4 py-8">
         <div className="flex flex-col gap-3">
-          <Link href={`/casos/${caso.id}`} className="w-fit text-sm font-medium text-gray-500 hover:text-gray-900">
+          <Link href={`/casos/${caso.id}`} className="w-fit text-sm font-medium text-gray-500 hover:text-tinta">
             ← Volver al caso
           </Link>
-          <h1 className="text-2xl font-bold tracking-tight text-gray-900">Carta de intimación — {caso.cliente}</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-tinta">Carta de intimación — {caso.cliente}</h1>
           <p className="text-sm text-gray-500">{info.intro}</p>
         </div>
 
-        <section className="flex flex-col gap-4 rounded-xl border border-gray-200 bg-white p-5">
-          <h2 className="font-semibold text-gray-900">Remitente (cliente)</h2>
+        <section className="flex flex-col gap-4 rounded-3xl border border-linea bg-white p-5">
+          <h2 className="font-semibold text-tinta">Remitente (cliente)</h2>
           <div className="grid gap-4 sm:grid-cols-2">
             <TextField
               label="Domicilio"
@@ -132,8 +132,8 @@ export default function CartaCasoPage() {
           </div>
         </section>
 
-        <section className="flex flex-col gap-4 rounded-xl border border-gray-200 bg-white p-5">
-          <h2 className="font-semibold text-gray-900">Destinatario (empleador)</h2>
+        <section className="flex flex-col gap-4 rounded-3xl border border-linea bg-white p-5">
+          <h2 className="font-semibold text-tinta">Destinatario (empleador)</h2>
           <div className="grid gap-4 sm:grid-cols-2">
             <TextField
               label="Domicilio"
@@ -153,8 +153,8 @@ export default function CartaCasoPage() {
           </div>
         </section>
 
-        <section className="flex flex-col gap-4 rounded-xl border border-gray-200 bg-white p-5">
-          <h2 className="font-semibold text-gray-900">¿Qué pasó?</h2>
+        <section className="flex flex-col gap-4 rounded-3xl border border-linea bg-white p-5">
+          <h2 className="font-semibold text-tinta">¿Qué pasó?</h2>
           <TextField
             label="Fecha del hecho"
             opcional
@@ -170,8 +170,8 @@ export default function CartaCasoPage() {
           />
         </section>
 
-        <section className="flex flex-col gap-4 rounded-xl border border-gray-200 bg-white p-5">
-          <h2 className="font-semibold text-gray-900">Qué le pedís</h2>
+        <section className="flex flex-col gap-4 rounded-3xl border border-linea bg-white p-5">
+          <h2 className="font-semibold text-tinta">Qué le pedís</h2>
           <SelectField
             label="Pedido"
             value={pedidoActual?.id ?? ""}
@@ -207,8 +207,8 @@ export default function CartaCasoPage() {
           </SelectField>
         </section>
 
-        <section className="flex flex-col gap-3 rounded-xl border border-gray-200 bg-white p-5">
-          <h2 className="font-semibold text-gray-900">Bajo apercibimiento de...</h2>
+        <section className="flex flex-col gap-3 rounded-3xl border border-linea bg-white p-5">
+          <h2 className="font-semibold text-tinta">Bajo apercibimiento de...</h2>
           <ul className="flex flex-col gap-2">
             {consecuencias.map((c) => (
               <li key={c.id} className="flex items-center gap-3">
@@ -231,9 +231,9 @@ export default function CartaCasoPage() {
           </ul>
         </section>
 
-        <section className="flex flex-col gap-4 rounded-xl border border-gray-200 bg-white p-5">
-          <h2 className="font-semibold text-gray-900">Vista previa</h2>
-          <pre className="whitespace-pre-wrap rounded-lg bg-gray-50 p-4 font-sans text-sm text-gray-900">
+        <section className="flex flex-col gap-4 rounded-3xl border border-linea bg-white p-5">
+          <h2 className="font-semibold text-tinta">Vista previa</h2>
+          <pre className="whitespace-pre-wrap rounded-2xl bg-fondo p-4 font-sans text-sm text-tinta">
             {carta.cuerpo}
           </pre>
           <div className="flex flex-col gap-3 sm:flex-row">
@@ -244,8 +244,8 @@ export default function CartaCasoPage() {
           </div>
         </section>
 
-        <section className="flex flex-col gap-4 rounded-xl border border-gray-200 bg-white p-5">
-          <h2 className="font-semibold text-gray-900">¿Ya la mandaste?</h2>
+        <section className="flex flex-col gap-4 rounded-3xl border border-linea bg-white p-5">
+          <h2 className="font-semibold text-tinta">¿Ya la mandaste?</h2>
           {d.enviadaEl ? (
             <div className="flex flex-col gap-2 text-sm text-gray-700">
               <p>
@@ -254,7 +254,7 @@ export default function CartaCasoPage() {
               </p>
               <Link
                 href={`/casos/${caso.id}`}
-                className="w-fit font-semibold text-gray-900 underline underline-offset-2"
+                className="w-fit font-semibold text-tinta underline underline-offset-2"
               >
                 Ver el caso
               </Link>

@@ -32,8 +32,8 @@ export function ListaCasos() {
 
   if (casos.length === 0) {
     return (
-      <div className="flex flex-col items-center gap-4 rounded-xl border border-dashed border-gray-300 py-16 text-center">
-        <p className="text-lg font-semibold text-gray-900">Todavía no cargaste ningún caso</p>
+      <div className="flex flex-col items-center gap-4 rounded-3xl border border-dashed border-linea py-16 text-center">
+        <p className="text-lg font-semibold text-tinta">Todavía no cargaste ningún caso</p>
         <p className="max-w-sm text-sm text-gray-500">
           Cuando tomás un cliente nuevo, cargalo acá para hacer seguimiento de su estado y sus vencimientos.
         </p>
@@ -61,7 +61,7 @@ export function ListaCasos() {
       <div
         role="tablist"
         aria-label="Casos"
-        className="flex gap-6 border-b border-gray-200"
+        className="flex gap-6 border-b border-linea"
         onKeyDown={(e) => {
           // Flechas izquierda/derecha para moverse entre pestañas (patrón de tabs accesibles).
           if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
@@ -83,7 +83,7 @@ export function ListaCasos() {
               tabIndex={elegida ? 0 : -1}
               onClick={() => setVista(p.vista)}
               className={`-mb-px border-b-2 pb-2 text-sm font-semibold transition-colors ${
-                elegida ? "border-gray-900 text-gray-900" : "border-transparent text-gray-500 hover:text-gray-900"
+                elegida ? "border-tinta text-tinta" : "border-transparent text-gray-500 hover:text-tinta"
               }`}
             >
               {p.etiqueta} <span className="font-normal text-gray-400">({p.casos.length})</span>
@@ -94,7 +94,7 @@ export function ListaCasos() {
 
       <div id="lista-casos" role="tabpanel" aria-labelledby={`pestania-${vista}`} className="flex flex-col gap-3">
         {visibles.length === 0 ? (
-          <p className="rounded-xl border border-dashed border-gray-300 py-8 text-center text-sm text-gray-500">
+          <p className="rounded-3xl border border-dashed border-linea py-8 text-center text-sm text-gray-500">
             {vista === "activos" ? "No tenés casos activos." : "Todavía no cerraste ningún caso."}
           </p>
         ) : (
@@ -110,13 +110,13 @@ function FilaCaso({ caso }: { caso: Caso }) {
   return (
     <Link
       href={`/casos/${caso.id}`}
-      className={`flex flex-col gap-3 rounded-xl border border-gray-200 p-4 transition-colors hover:border-gray-300 sm:flex-row sm:items-center sm:justify-between ${
-        caso.estado === "cerrado" ? "bg-gray-50" : "bg-white"
+      className={`flex flex-col gap-3 rounded-3xl border border-linea p-4 transition-colors hover:border-linea sm:flex-row sm:items-center sm:justify-between ${
+        caso.estado === "cerrado" ? "bg-fondo" : "bg-white"
       }`}
     >
       <div className="flex flex-col gap-1">
         <div className="flex items-center gap-2">
-          <p className="font-semibold text-gray-900">{caso.cliente}</p>
+          <p className="font-semibold text-tinta">{caso.cliente}</p>
           <EtapaBadge caso={caso} />
         </div>
         <p className="text-sm text-gray-500">

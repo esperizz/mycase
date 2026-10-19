@@ -13,7 +13,7 @@ export default function NuevoCasoPage() {
     <>
       <Header />
       <main className="mx-auto flex w-full max-w-xl flex-1 flex-col gap-6 px-4 py-8">
-        <h1 className="text-2xl font-bold tracking-tight text-gray-900">Cargar un caso nuevo</h1>
+        <h1 className="text-2xl font-bold tracking-tight text-tinta">Cargar un caso nuevo</h1>
         <FormularioCaso
           textoBoton="Cargar caso"
           onGuardar={(datos) => {

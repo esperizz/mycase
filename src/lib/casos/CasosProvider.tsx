@@ -321,7 +321,7 @@ export function CasosProvider({ children }: { children: React.ReactNode }) {
       {errorGuardado && (
         <div
           role="alert"
-          className="fixed inset-x-4 bottom-4 z-50 mx-auto flex max-w-md items-center justify-between gap-3 rounded-lg bg-red-600 px-4 py-3 text-sm text-white shadow-lg"
+          className="fixed inset-x-4 bottom-4 z-50 mx-auto flex max-w-md items-center justify-between gap-3 rounded-2xl bg-red-600 px-4 py-3 text-sm text-white shadow-lg"
         >
           <span>No pudimos guardar el último cambio. Revisá tu conexión y recargá la página.</span>
           <button type="button" className="font-semibold underline" onClick={() => setErrorGuardado(false)}>
