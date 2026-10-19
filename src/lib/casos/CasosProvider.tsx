@@ -2,6 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { BUCKET, carpetaDelCaso } from "./documentos";
 import { hojaRutaVacia } from "./hojaRuta";
 import { migrarNotas } from "./notas";
 import {
@@ -244,6 +245,14 @@ export function CasosProvider({ children }: { children: React.ReactNode }) {
         .delete()
         .eq("id", id)
         .then(({ error }) => error && setErrorGuardado(true));
+      // Los documentos no se borran solos: son datos sensibles y no deben quedar huérfanos.
+      void (async () => {
+        const { data: sesion } = await supabase.auth.getUser();
+        if (!sesion.user) return;
+        const carpeta = carpetaDelCaso(sesion.user.id, id);
+        const { data: archivos } = await supabase.storage.from(BUCKET).list(carpeta, { limit: 1000 });
+        if (archivos?.length) await supabase.storage.from(BUCKET).remove(archivos.map((a) => `${carpeta}/${a.name}`));
+      })();
     },
     [supabase],
   );
