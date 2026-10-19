@@ -7,7 +7,7 @@ export default async function PrototipoPanel({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const { variant } = await searchParams;
+  const { variant, datos } = await searchParams;
   const v = typeof variant === "string" && ["A", "B", "C"].includes(variant) ? variant : "A";
-  return <Prototipo variante={v} />;
+  return <Prototipo variante={v} muchos={datos === "muchos"} />;
 }

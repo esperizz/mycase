@@ -116,15 +116,20 @@ function Grupo({
   );
 }
 
-/** PROTOTIPO: pendientes sin cumplir de hoy en adelante, sin límite de días. */
-function todosLosPendientesFuturos(casos: Caso[], hoy: string): Pendiente[] {
+/** PROTOTIPO: todos los pendientes sin cumplir, sin límite de días. */
+function todosLosPendientes(casos: Caso[], hoy: string): Pendiente[] {
   return casos
     .filter((c) => c.estado !== "cerrado")
     .flatMap((caso) =>
       caso.vencimientos
-        .filter((v) => !v.cumplido && v.fecha >= hoy)
+        .filter((v) => !v.cumplido)
         .map((vencimiento) => ({ caso, vencimiento, dias: diasEntre(hoy, vencimiento.fecha) })),
     );
+}
+
+/** PROTOTIPO: "Marta Ríos" / "Marta Ríos y 4 más". */
+function yMas(nombres: string[]): string {
+  return nombres.length > 1 ? `${nombres[0]} y ${nombres.length - 1} más` : (nombres[0] ?? "");
 }
 
 function Tarjeta({
@@ -212,9 +217,14 @@ function Dato({
   etiqueta: string;
   detalle?: string;
   href: string;
-  tono?: "ambar" | "neutro";
+  tono?: "rojo" | "ambar" | "neutro";
 }) {
-  const color = tono === "ambar" ? "border-amber-200 bg-amber-50 text-amber-900" : "border-gray-200 bg-white text-gray-900";
+  const color =
+    tono === "rojo"
+      ? "border-red-200 bg-red-50 text-red-800"
+      : tono === "ambar"
+        ? "border-amber-200 bg-amber-50 text-amber-900"
+        : "border-gray-200 bg-white text-gray-900";
   return (
     <a href={href} className={`flex min-w-0 flex-col gap-0.5 rounded-lg border px-3 py-2 hover:border-gray-400 sm:rounded-xl sm:p-4 ${color}`}>
       <p className="text-xs font-medium sm:text-sm">{etiqueta}</p>
@@ -264,9 +274,14 @@ export function Panel({ indicadores = "actual" }: { indicadores?: VarianteIndica
     .filter((c) => c.estado !== "cerrado")
     .sort((a, b) => a.cliente.localeCompare(b.cliente, "es"));
   // PROTOTIPO: datos para la variante "nuevos".
-  const proximoPlazo = [...panel.hoy, ...panel.semana, ...todosLosPendientesFuturos(casos, hoy)]
+  const plazosPendientes = todosLosPendientes(casos, hoy)
     .filter((p) => p.vencimiento.tipo === "plazo")
-    .sort((a, b) => a.dias - b.dias)[0];
+    .sort((a, b) => a.dias - b.dias);
+  const proximoPlazo = plazosPendientes[0];
+  // Si el primero ya venció, cuenta todos los vencidos; si no, los que caen ese mismo día.
+  const mismoMomento = proximoPlazo
+    ? plazosPendientes.filter((p) => (proximoPlazo.dias < 0 ? p.dias < 0 : p.dias === proximoPlazo.dias))
+    : [];
   const avisosPendientes = casos.filter(
     (c) =>
       c.estado !== "cerrado" &&
@@ -297,11 +312,23 @@ export function Panel({ indicadores = "actual" }: { indicadores?: VarianteIndica
         <div className="grid grid-cols-3 gap-2 sm:gap-3">
           {proximoPlazo ? (
             <Dato
-              etiqueta="Próximo plazo"
-              valor={proximoPlazo.dias === 0 ? "hoy" : proximoPlazo.dias === 1 ? "mañana" : `en ${proximoPlazo.dias} días`}
-              detalle={`${proximoPlazo.vencimiento.descripcion} · ${proximoPlazo.caso.cliente}`}
-              href={`/casos/${proximoPlazo.caso.id}`}
-              tono={proximoPlazo.dias <= 2 ? "ambar" : "neutro"}
+              etiqueta={mismoMomento.length > 1 ? `Próximo plazo · ${mismoMomento.length} plazos` : "Próximo plazo"}
+              valor={
+                proximoPlazo.dias < 0
+                  ? "vencido"
+                  : proximoPlazo.dias === 0
+                    ? "hoy"
+                    : proximoPlazo.dias === 1
+                      ? "mañana"
+                      : `en ${proximoPlazo.dias} días`
+              }
+              detalle={
+                mismoMomento.length > 1
+                  ? yMas(mismoMomento.map((p) => p.caso.cliente))
+                  : `${proximoPlazo.vencimiento.descripcion} · ${proximoPlazo.caso.cliente}`
+              }
+              href={mismoMomento.length > 1 ? "#para-hacer" : `/casos/${proximoPlazo.caso.id}`}
+              tono={proximoPlazo.dias < 0 ? "rojo" : proximoPlazo.dias <= 1 ? "ambar" : "neutro"}
             />
           ) : (
             <Dato etiqueta="Próximo plazo" valor="ninguno" detalle="No hay plazos cargados" href="#para-hacer" />
@@ -309,17 +336,15 @@ export function Panel({ indicadores = "actual" }: { indicadores?: VarianteIndica
           <Dato
             etiqueta="Sin próximo paso"
             valor={`${panel.sinProximoPaso.length} caso${panel.sinProximoPaso.length === 1 ? "" : "s"}`}
-            detalle={panel.sinProximoPaso.length ? "Cargales el siguiente" : "Todos tienen algo"}
+            detalle={panel.sinProximoPaso.length ? yMas(panel.sinProximoPaso.map((c) => c.cliente)) : "Todos tienen algo"}
             href="#sin-proximo-paso"
-            tono={panel.sinProximoPaso.length ? "ambar" : "neutro"}
           />
           {avisosPendientes.length > 0 && (
             <Dato
               etiqueta="Avisos pendientes"
               valor={`${avisosPendientes.length} cliente${avisosPendientes.length === 1 ? "" : "s"}`}
-              detalle={avisosPendientes.map((c) => c.cliente).join(", ")}
-              href={`/casos/${avisosPendientes[0].id}`}
-              tono="ambar"
+              detalle={yMas(avisosPendientes.map((c) => c.cliente))}
+              href="#avisos-pendientes"
             />
           )}
         </div>
@@ -391,6 +416,16 @@ export function Panel({ indicadores = "actual" }: { indicadores?: VarianteIndica
               ayuda="Casos activos sin plazos ni tareas pendientes. Cargales el siguiente para no perderlos de vista."
             >
               <ListaCorta casos={panel.sinProximoPaso} onElegir={(c) => setCarga(c.id)} accion="Cargar" />
+            </Tarjeta>
+          )}
+
+          {indicadores === "nuevos" && avisosPendientes.length > 0 && (
+            <Tarjeta
+              id="avisos-pendientes"
+              titulo="Avisos pendientes"
+              ayuda="Pasos de la hoja de ruta que marcaste cumplidos sin avisarle al cliente."
+            >
+              <ListaCorta casos={avisosPendientes} destino={(c) => `/casos/${c.id}`} accion="Avisarle" />
             </Tarjeta>
           )}
 

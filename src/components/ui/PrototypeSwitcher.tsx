@@ -13,7 +13,12 @@ export function PrototypeSwitcher({ variantes, actual }: { variantes: { clave: s
   useEffect(() => {
     const ir = (paso: number) => {
       const sig = variantes[(i + paso + variantes.length) % variantes.length];
-      router.replace(`${pathname}?variant=${sig.clave}`, { scroll: false });
+      {
+        // Conserva los demás parámetros (por ejemplo ?datos=muchos).
+        const params = new URLSearchParams(window.location.search);
+        params.set("variant", sig.clave);
+        router.replace(`${pathname}?${params}`, { scroll: false });
+      }
     };
     const onKey = (e: KeyboardEvent) => {
       const t = e.target as HTMLElement;
@@ -29,7 +34,12 @@ export function PrototypeSwitcher({ variantes, actual }: { variantes: { clave: s
 
   const ir = (paso: number) => {
     const sig = variantes[(i + paso + variantes.length) % variantes.length];
-    router.replace(`${pathname}?variant=${sig.clave}`, { scroll: false });
+    {
+        // Conserva los demás parámetros (por ejemplo ?datos=muchos).
+        const params = new URLSearchParams(window.location.search);
+        params.set("variant", sig.clave);
+        router.replace(`${pathname}?${params}`, { scroll: false });
+      }
   };
 
   return (
