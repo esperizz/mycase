@@ -57,7 +57,8 @@ interface Contexto {
   quitarVencimiento: (casoId: string, vencimientoId: string) => void;
 }
 
-const CasosContext = createContext<Contexto | null>(null);
+// PROTOTIPO: exportado para que /prototipo/panel use datos de ejemplo.
+export const CasosContext = createContext<Contexto | null>(null);
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 

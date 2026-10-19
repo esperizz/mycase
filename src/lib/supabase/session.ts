@@ -2,7 +2,8 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 /** Rutas accesibles sin haber iniciado sesión. */
-const RUTAS_PUBLICAS = ["/login", "/auth/callback"];
+// PROTOTIPO: /prototipo es público solo en la rama del prototipo (datos de ejemplo, nada guardado).
+const RUTAS_PUBLICAS = ["/login", "/auth/callback", "/prototipo"];
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });

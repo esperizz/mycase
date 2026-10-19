@@ -8,7 +8,7 @@ import { TipoTag } from "@/components/casos/TipoTag";
 import { Button, ButtonLink } from "@/components/ui/Button";
 import { useCasos } from "@/lib/casos/CasosProvider";
 import { proximoFeriado } from "@/lib/casos/feriados";
-import { formatearFecha, hoyIso, textoDias } from "@/lib/casos/formato";
+import { diasEntre, formatearFecha, hoyIso, textoDias } from "@/lib/casos/formato";
 import { armarPanel, DIAS_SEMANA, titular, type Pendiente } from "@/lib/casos/panel";
 import { ESTADOS, type Caso } from "@/lib/casos/tipos";
 import { CargaRapida } from "./CargaRapida";
@@ -116,12 +116,25 @@ function Grupo({
   );
 }
 
+/** PROTOTIPO: pendientes sin cumplir de hoy en adelante, sin límite de días. */
+function todosLosPendientesFuturos(casos: Caso[], hoy: string): Pendiente[] {
+  return casos
+    .filter((c) => c.estado !== "cerrado")
+    .flatMap((caso) =>
+      caso.vencimientos
+        .filter((v) => !v.cumplido && v.fecha >= hoy)
+        .map((vencimiento) => ({ caso, vencimiento, dias: diasEntre(hoy, vencimiento.fecha) })),
+    );
+}
+
 function Tarjeta({
+  id,
   titulo,
   ayuda,
   accion,
   children,
 }: {
+  id?: string;
   titulo: string;
   ayuda?: string;
   /** Acción propia de la tarjeta, junto al título. */
@@ -129,7 +142,7 @@ function Tarjeta({
   children: React.ReactNode;
 }) {
   return (
-    <section className="flex flex-col gap-3 rounded-xl border border-gray-200 bg-white p-5">
+    <section id={id} className="flex scroll-mt-4 flex-col gap-3 rounded-xl border border-gray-200 bg-white p-5">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h2 className="font-semibold text-gray-900">{titulo}</h2>
@@ -184,7 +197,34 @@ function ListaCorta({
   );
 }
 
-export function Panel() {
+/** PROTOTIPO: qué tarjetas de números mostrar arriba del panel. */
+export type VarianteIndicadores = "actual" | "ninguno" | "nuevos";
+
+/** PROTOTIPO: tarjeta con un dato y su detalle, que lleva a la acción al tocarla. */
+function Dato({
+  valor,
+  etiqueta,
+  detalle,
+  href,
+  tono = "neutro",
+}: {
+  valor: string;
+  etiqueta: string;
+  detalle?: string;
+  href: string;
+  tono?: "ambar" | "neutro";
+}) {
+  const color = tono === "ambar" ? "border-amber-200 bg-amber-50 text-amber-900" : "border-gray-200 bg-white text-gray-900";
+  return (
+    <a href={href} className={`flex min-w-0 flex-col gap-0.5 rounded-lg border px-3 py-2 hover:border-gray-400 sm:rounded-xl sm:p-4 ${color}`}>
+      <p className="text-xs font-medium sm:text-sm">{etiqueta}</p>
+      <p className="text-lg font-bold sm:text-2xl">{valor}</p>
+      {detalle && <p className="truncate text-xs text-gray-500">{detalle}</p>}
+    </a>
+  );
+}
+
+export function Panel({ indicadores = "actual" }: { indicadores?: VarianteIndicadores } = {}) {
   const { casos, listo, marcarVencimiento } = useCasos();
   /** null: carga rápida cerrada; "": abierta sin caso elegido; si no, el id del caso elegido. */
   const [carga, setCarga] = useState<string | null>(null);
@@ -223,6 +263,16 @@ export function Panel() {
   const casosActivos = casos
     .filter((c) => c.estado !== "cerrado")
     .sort((a, b) => a.cliente.localeCompare(b.cliente, "es"));
+  // PROTOTIPO: datos para la variante "nuevos".
+  const proximoPlazo = [...panel.hoy, ...panel.semana, ...todosLosPendientesFuturos(casos, hoy)]
+    .filter((p) => p.vencimiento.tipo === "plazo")
+    .sort((a, b) => a.dias - b.dias)[0];
+  const avisosPendientes = casos.filter(
+    (c) =>
+      c.estado !== "cerrado" &&
+      c.hojaRuta &&
+      Object.keys(c.hojaRuta.cumplidos).some((id) => !c.hojaRuta!.avisados[id]),
+  );
   const hayAgenda = panel.vencidos.length + panel.atrasadas.length + panel.hoy.length + panel.semana.length > 0;
 
   return (
@@ -243,6 +293,39 @@ export function Panel() {
         </h1>
       </div>
 
+      {indicadores === "nuevos" && (
+        <div className="grid grid-cols-3 gap-2 sm:gap-3">
+          {proximoPlazo ? (
+            <Dato
+              etiqueta="Próximo plazo"
+              valor={proximoPlazo.dias === 0 ? "hoy" : proximoPlazo.dias === 1 ? "mañana" : `en ${proximoPlazo.dias} días`}
+              detalle={`${proximoPlazo.vencimiento.descripcion} · ${proximoPlazo.caso.cliente}`}
+              href={`/casos/${proximoPlazo.caso.id}`}
+              tono={proximoPlazo.dias <= 2 ? "ambar" : "neutro"}
+            />
+          ) : (
+            <Dato etiqueta="Próximo plazo" valor="ninguno" detalle="No hay plazos cargados" href="#para-hacer" />
+          )}
+          <Dato
+            etiqueta="Sin próximo paso"
+            valor={`${panel.sinProximoPaso.length} caso${panel.sinProximoPaso.length === 1 ? "" : "s"}`}
+            detalle={panel.sinProximoPaso.length ? "Cargales el siguiente" : "Todos tienen algo"}
+            href="#sin-proximo-paso"
+            tono={panel.sinProximoPaso.length ? "ambar" : "neutro"}
+          />
+          {avisosPendientes.length > 0 && (
+            <Dato
+              etiqueta="Avisos pendientes"
+              valor={`${avisosPendientes.length} cliente${avisosPendientes.length === 1 ? "" : "s"}`}
+              detalle={avisosPendientes.map((c) => c.cliente).join(", ")}
+              href={`/casos/${avisosPendientes[0].id}`}
+              tono="ambar"
+            />
+          )}
+        </div>
+      )}
+
+      {indicadores === "actual" && (
       <div className="grid grid-cols-4 gap-2 sm:gap-3">
         <Indicador valor={panel.vencidos.length} etiqueta="Vencidos" corta="Vencidos" tono="rojo" />
         <Indicador valor={panel.hoy.length} etiqueta="Para hoy" corta="Hoy" tono="ambar" />
@@ -254,10 +337,12 @@ export function Panel() {
         />
         <Indicador valor={panel.activos} etiqueta="Casos activos" corta="Activos" tono="neutro" />
       </div>
+      )}
 
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2">
           <Tarjeta
+            id="para-hacer"
             titulo="Para hacer"
             ayuda="Plazos y tareas. Tildalos cuando los cumplas y salen de la lista."
             accion={
@@ -301,6 +386,7 @@ export function Panel() {
         <div className="flex flex-col gap-6">
           {panel.sinProximoPaso.length > 0 && (
             <Tarjeta
+              id="sin-proximo-paso"
               titulo="Sin próximo paso"
               ayuda="Casos activos sin plazos ni tareas pendientes. Cargales el siguiente para no perderlos de vista."
             >
