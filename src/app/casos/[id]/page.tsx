@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 import { DialogoCerrarCaso } from "@/components/casos/CerrarCaso";
+import { DocumentosCaso } from "@/components/casos/DocumentosCaso";
 import { EtapaBadge } from "@/components/casos/EstadoBadge";
 import { FormularioCaso } from "@/components/casos/FormularioCaso";
 import { HojaRutaArt } from "@/components/casos/HojaRutaArt";
@@ -201,6 +202,8 @@ export default function FichaCasoPage() {
 
         <NotasCaso caso={caso} />
 
+        <DocumentosCaso caso={caso} />
+
         <div>
           <button
             type="button"
@@ -221,7 +224,7 @@ export default function FichaCasoPage() {
           onCancelar={() => setBorrando(false)}
           onConfirmar={borrarCaso}
         >
-          <p>Se borran sus datos, vencimientos, carta y hoja de ruta. No se puede deshacer.</p>
+          <p>Se borran sus datos, plazos y tareas, notas, documentos, carta y hoja de ruta. No se puede deshacer.</p>
         </DialogoConfirmar>
       </main>
     </>
