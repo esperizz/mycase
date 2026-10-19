@@ -5,9 +5,9 @@ import { NavLink } from "./NavLink";
 
 export function Header() {
   return (
-    // Barra flotante: una píldora blanca sobre el fondo gris, separada del borde.
-    <header className="px-2 pt-3 sm:px-4 sm:pt-4">
-      <div className="mx-auto flex h-14 max-w-5xl items-center justify-between gap-1 rounded-full border border-linea bg-white pl-4 pr-1.5 sm:h-16 sm:gap-4 sm:pl-6 sm:pr-2">
+    // En celular, barra común de borde a borde (más cómoda); desde sm, píldora flotante sobre el fondo.
+    <header className="border-b border-linea bg-white sm:border-0 sm:bg-transparent sm:px-4 sm:pt-4">
+      <div className="mx-auto flex h-14 max-w-5xl items-center justify-between gap-1 px-4 sm:h-16 sm:gap-4 sm:rounded-full sm:border sm:border-linea sm:bg-white sm:pl-6 sm:pr-2">
         <div className="flex min-w-0 items-center gap-2 sm:gap-6">
           <Link href="/" className="text-base font-bold tracking-tighter text-tinta min-[360px]:text-lg">
             MyCase
