@@ -42,10 +42,10 @@ function Dato({
   return (
     <Link
       href={href}
-      className={`flex min-w-0 flex-col gap-1 rounded-3xl border p-4 transition-colors hover:border-tinta/40 sm:p-6 ${color}`}
+      className={`flex min-w-0 flex-col gap-0.5 rounded-3xl border p-4 transition-colors hover:border-tinta/40 sm:px-5 ${color}`}
     >
       <p className="text-xs font-medium sm:text-sm">{etiqueta}</p>
-      <p className="text-2xl font-semibold tracking-tight sm:text-4xl">{valor}</p>
+      <p className="text-xl font-semibold tracking-tight sm:text-2xl">{valor}</p>
       <p className="truncate text-xs opacity-70 sm:text-sm">{detalle}</p>
     </Link>
   );
@@ -250,7 +250,7 @@ export function Panel() {
             </span>
           )}
         </p>
-        <h1 className="mt-1 max-w-3xl text-3xl font-semibold leading-tight tracking-tighter text-tinta sm:text-5xl">
+        <h1 className="mt-1 max-w-3xl text-2xl font-semibold leading-tight tracking-tight text-tinta sm:text-3xl">
           {titular(panel)}
         </h1>
       </div>

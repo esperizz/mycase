@@ -81,7 +81,7 @@ export default function FichaCasoPage() {
             ← Volver a mis casos
           </Link>
           <div className="flex flex-wrap items-center gap-3">
-            <h1 className="text-3xl font-semibold tracking-tighter text-tinta sm:text-4xl">
+            <h1 className="text-2xl font-semibold tracking-tight text-tinta sm:text-3xl">
               {caso.cliente} <span className="text-tenue">contra {caso.empleador}</span>
             </h1>
             <EtapaBadge caso={caso} />
