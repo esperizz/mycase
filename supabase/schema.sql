@@ -73,3 +73,7 @@ create policy "borrar_vencimientos_de_casos_propios" on public.vencimientos
 
 -- Hoja de ruta de los casos de ART (pasos cumplidos, avisos al cliente; null si no se usa).
 alter table public.casos add column if not exists hoja_ruta jsonb;
+
+-- Plazo (tiene consecuencias si se pasa) o tarea (pendiente interno). Los existentes quedan como plazo.
+alter table public.vencimientos add column if not exists tipo text not null default 'plazo'
+  check (tipo in ('plazo', 'tarea'));

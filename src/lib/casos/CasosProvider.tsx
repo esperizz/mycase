@@ -10,7 +10,9 @@ import {
   type CasoNuevo,
   type EstadoCaso,
   type HojaRuta,
+  type TipoVencimiento,
   type Vencimiento,
+  type VencimientoNuevo,
 } from "./tipos";
 
 /** Clave donde la versión anterior guardaba los casos en el navegador (para migrarlos). */
@@ -38,6 +40,7 @@ interface FilaVencimiento {
   fecha: string;
   descripcion: string;
   cumplido: boolean;
+  tipo: TipoVencimiento;
 }
 
 interface Contexto {
@@ -49,7 +52,7 @@ interface Contexto {
   eliminar: (id: string) => void;
   /** Suma casos de una copia de seguridad; los que tienen el mismo id se reemplazan. Devuelve cuántos importó. */
   importar: (datos: unknown) => number;
-  agregarVencimiento: (casoId: string, vencimiento: Omit<Vencimiento, "id" | "cumplido">) => void;
+  agregarVencimiento: (casoId: string, vencimiento: VencimientoNuevo) => void;
   marcarVencimiento: (casoId: string, vencimientoId: string, cumplido: boolean) => void;
   quitarVencimiento: (casoId: string, vencimientoId: string) => void;
 }
@@ -75,7 +78,12 @@ function normalizar(caso: Partial<Caso> & { proximoVencimiento?: Vencimiento | n
     tipoReclamo: caso.tipoReclamo ?? "",
     estado: caso.estado ?? "consulta",
     fechaApertura: caso.fechaApertura ?? new Date().toISOString().slice(0, 10),
-    vencimientos: vencimientos.map((v) => ({ ...v, id: idValido(v.id), cumplido: v.cumplido ?? false })),
+    vencimientos: vencimientos.map((v) => ({
+      ...v,
+      id: idValido(v.id),
+      cumplido: v.cumplido ?? false,
+      tipo: v.tipo === "tarea" ? "tarea" : "plazo",
+    })),
     notas: caso.notas ?? "",
     carta: caso.carta ? { ...cartaVacia(), ...caso.carta } : null,
     hojaRuta: caso.hojaRuta ? { ...hojaRutaVacia(), ...caso.hojaRuta } : null,
@@ -176,7 +184,7 @@ export function CasosProvider({ children }: { children: React.ReactNode }) {
     const porCaso = new Map<string, Vencimiento[]>();
     for (const fv of (filasVenc ?? []) as FilaVencimiento[]) {
       const lista = porCaso.get(fv.caso_id) ?? [];
-      lista.push({ id: fv.id, fecha: fv.fecha, descripcion: fv.descripcion, cumplido: fv.cumplido });
+      lista.push({ id: fv.id, fecha: fv.fecha, descripcion: fv.descripcion, cumplido: fv.cumplido, tipo: fv.tipo });
       porCaso.set(fv.caso_id, lista);
     }
     const cargados = error ? [] : ((filasCasos ?? []) as FilaCaso[]).map((f) => aCaso(f, porCaso.get(f.id) ?? []));
@@ -248,10 +256,13 @@ export function CasosProvider({ children }: { children: React.ReactNode }) {
   );
 
   const agregarVencimiento = useCallback(
-    (casoId: string, vencimiento: Omit<Vencimiento, "id" | "cumplido">) => {
+    (casoId: string, vencimiento: VencimientoNuevo) => {
       actualizar(casoId, (c) => ({
         ...c,
-        vencimientos: [...c.vencimientos, { ...vencimiento, id: crypto.randomUUID(), cumplido: false }],
+        vencimientos: [
+          ...c.vencimientos,
+          { tipo: "plazo", ...vencimiento, id: crypto.randomUUID(), cumplido: false },
+        ],
       }));
     },
     [actualizar],

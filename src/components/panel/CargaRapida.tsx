@@ -6,9 +6,21 @@ import { SelectField, TextField } from "@/components/ui/Field";
 import { useCasos } from "@/lib/casos/CasosProvider";
 import { feriado } from "@/lib/casos/feriados";
 import { formatearFecha, hoyIso, sumarDias } from "@/lib/casos/formato";
-import type { Caso } from "@/lib/casos/tipos";
+import type { Caso, TipoVencimiento } from "@/lib/casos/tipos";
 
-const SUGERENCIAS = ["Contestar demanda", "Audiencia", "Presentar escrito", "Llamar al cliente", "Pedir documentación"];
+/** Tocar una sugerencia también elige si es plazo o tarea. */
+const SUGERENCIAS: { texto: string; tipo: TipoVencimiento }[] = [
+  { texto: "Contestar demanda", tipo: "plazo" },
+  { texto: "Audiencia", tipo: "plazo" },
+  { texto: "Presentar escrito", tipo: "plazo" },
+  { texto: "Llamar al cliente", tipo: "tarea" },
+  { texto: "Pedir documentación", tipo: "tarea" },
+];
+
+const TEXTOS: Record<TipoVencimiento, { pregunta: string; ejemplo: string; boton: string }> = {
+  plazo: { pregunta: "¿Qué vence?", ejemplo: 'Ej.: "Contestar traslado"', boton: "Agregar plazo" },
+  tarea: { pregunta: "¿Qué hay que hacer?", ejemplo: 'Ej.: "Mandarle el instructivo de escaneo"', boton: "Agregar tarea" },
+};
 
 function Chip({ activo, onClick, children }: { activo: boolean; onClick: () => void; children: React.ReactNode }) {
   return (
@@ -35,7 +47,7 @@ function avisoDiaInhabil(fecha: string): string | null {
   return null;
 }
 
-/** Formulario corto para cargar un vencimiento en cualquier caso sin salir del panel. */
+/** Formulario corto para cargar un plazo o una tarea en cualquier caso sin salir del panel. */
 export function CargaRapida({
   casos,
   casoInicial,
@@ -49,6 +61,7 @@ export function CargaRapida({
 }) {
   const { agregarVencimiento } = useCasos();
   const [casoId, setCasoId] = useState(casoInicial || casos[0]?.id || "");
+  const [tipo, setTipo] = useState<TipoVencimiento>("plazo");
   const [descripcion, setDescripcion] = useState("");
   const [fecha, setFecha] = useState("");
   const tarjeta = useRef<HTMLElement>(null);
@@ -76,7 +89,7 @@ export function CargaRapida({
   const guardar = (e: React.FormEvent) => {
     e.preventDefault();
     if (!caso || !completo) return;
-    agregarVencimiento(caso.id, { fecha, descripcion: descripcion.trim() });
+    agregarVencimiento(caso.id, { fecha, descripcion: descripcion.trim(), tipo });
     onListo(`Listo: "${descripcion.trim()}" para ${caso.cliente}, ${formatearFecha(fecha)}.`);
     setDescripcion("");
     setFecha("");
@@ -90,7 +103,7 @@ export function CargaRapida({
     >
       <div className="flex items-center justify-between gap-3">
         <h2 id="carga-rapida-titulo" className="font-semibold text-gray-900">
-          Cargar un vencimiento
+          Agregar un plazo o una tarea
         </h2>
         <button type="button" onClick={onCerrar} className="text-sm font-medium text-gray-500 hover:text-gray-900">
           Cerrar
@@ -107,17 +120,55 @@ export function CargaRapida({
         </SelectField>
 
         <div className="flex flex-col gap-2">
+          <p className="text-sm font-semibold text-gray-900" id="tipo-label">
+            Tipo
+          </p>
+          <div
+            role="radiogroup"
+            aria-labelledby="tipo-label"
+            className="grid w-full max-w-xs grid-cols-2 rounded-lg border border-gray-300 p-1"
+          >
+            {(["plazo", "tarea"] as const).map((t) => (
+              <button
+                key={t}
+                type="button"
+                role="radio"
+                aria-checked={tipo === t}
+                onClick={() => setTipo(t)}
+                className={`rounded-md py-1.5 text-sm font-semibold transition-colors ${
+                  tipo === t ? "bg-gray-900 text-white" : "text-gray-600 hover:bg-gray-50"
+                }`}
+              >
+                {t === "plazo" ? "Plazo" : "Tarea"}
+              </button>
+            ))}
+          </div>
+          <p className="text-xs text-gray-500">
+            {tipo === "plazo"
+              ? "Tiene consecuencias si se pasa: si vence, aparece en rojo en el panel."
+              : "Un pendiente tuyo, sin consecuencias legales si se atrasa."}
+          </p>
+        </div>
+
+        <div className="flex flex-col gap-2">
           <TextField
             ref={campoDescripcion}
-            label="Qué vence"
-            placeholder='Ej.: "Contestar traslado"'
+            label={TEXTOS[tipo].pregunta}
+            placeholder={TEXTOS[tipo].ejemplo}
             value={descripcion}
             onChange={(e) => setDescripcion(e.target.value)}
           />
           <div className="flex flex-wrap gap-2">
             {SUGERENCIAS.map((s) => (
-              <Chip key={s} activo={descripcion === s} onClick={() => setDescripcion(s)}>
-                {s}
+              <Chip
+                key={s.texto}
+                activo={descripcion === s.texto}
+                onClick={() => {
+                  setDescripcion(s.texto);
+                  setTipo(s.tipo);
+                }}
+              >
+                {s.texto}
               </Chip>
             ))}
           </div>
@@ -143,7 +194,7 @@ export function CargaRapida({
 
         <div>
           <Button type="submit" disabled={!completo}>
-            Agregar vencimiento
+            {TEXTOS[tipo].boton}
           </Button>
         </div>
       </form>

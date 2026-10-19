@@ -8,7 +8,7 @@ import { Button, ButtonLink } from "@/components/ui/Button";
 import { useCasos } from "@/lib/casos/CasosProvider";
 import { proximoFeriado } from "@/lib/casos/feriados";
 import { formatearFecha, hoyIso, textoDias } from "@/lib/casos/formato";
-import { armarPanel, DIAS_SEMANA, type Pendiente } from "@/lib/casos/panel";
+import { armarPanel, DIAS_SEMANA, titular, type Pendiente } from "@/lib/casos/panel";
 import { ESTADOS, type Caso } from "@/lib/casos/tipos";
 import { CargaRapida } from "./CargaRapida";
 
@@ -44,7 +44,19 @@ function Indicador({
 
 function ItemPendiente({ pendiente, onCumplir }: { pendiente: Pendiente; onCumplir: () => void }) {
   const { caso, vencimiento, dias } = pendiente;
-  const color = dias < 0 ? "text-red-700" : dias === 0 ? "text-amber-800" : "text-gray-500";
+  const tarea = vencimiento.tipo === "tarea";
+  // Una tarea atrasada no es grave como un plazo vencido: va en ámbar, no en rojo.
+  const color = dias < 0 ? (tarea ? "text-amber-800" : "text-red-700") : dias === 0 ? "text-amber-800" : "text-gray-500";
+  // Las tareas no "vencen": se dice para cuándo son.
+  const cuando = !tarea
+    ? textoDias(dias)
+    : dias < 0
+      ? `Atrasada ${-dias} día${dias === -1 ? "" : "s"}`
+      : dias === 0
+        ? "Para hoy"
+        : dias === 1
+          ? "Para mañana"
+          : `En ${dias} días`;
   return (
     <li className="flex items-start gap-3 py-3">
       <input
@@ -56,7 +68,14 @@ function ItemPendiente({ pendiente, onCumplir }: { pendiente: Pendiente; onCumpl
       />
       <div className="flex min-w-0 flex-1 flex-col gap-1 sm:flex-row sm:justify-between sm:gap-4">
         <div className="flex min-w-0 flex-col gap-0.5">
-          <p className="font-semibold text-gray-900">{vencimiento.descripcion || "Vencimiento sin descripción"}</p>
+          <p className="font-semibold text-gray-900">
+            {vencimiento.descripcion || (tarea ? "Tarea sin descripción" : "Plazo sin descripción")}
+            {tarea && (
+              <span className="ml-2 rounded-full bg-gray-100 px-2 py-0.5 align-middle text-xs font-medium text-gray-600">
+                Tarea
+              </span>
+            )}
+          </p>
           <p className="text-sm text-gray-500">
             <Link href={`/casos/${caso.id}`} className="font-medium text-gray-700 underline-offset-2 hover:underline">
               {caso.cliente}
@@ -66,7 +85,7 @@ function ItemPendiente({ pendiente, onCumplir }: { pendiente: Pendiente; onCumpl
         </div>
         <div className={`shrink-0 text-sm sm:text-right ${color}`}>
           <p className="font-semibold">
-            {textoDias(dias)}
+            {cuando}
             <span className="font-normal sm:hidden"> · {formatearFecha(vencimiento.fecha)}</span>
           </p>
           <p className="hidden text-xs sm:block">{formatearFecha(vencimiento.fecha)}</p>
@@ -168,17 +187,6 @@ function ListaCorta({
   );
 }
 
-function resumen(vencidos: number, hoy: number, semana: number): string {
-  const partes = [
-    vencidos && `${vencidos} vencido${vencidos === 1 ? "" : "s"}`,
-    hoy && `${hoy} para hoy`,
-    semana && `${semana} en los próximos ${DIAS_SEMANA} días`,
-  ].filter(Boolean) as string[];
-  if (partes.length === 0) return "Estás al día: no hay nada que venza esta semana.";
-  const ultimo = partes.pop();
-  return `Tenés ${partes.length ? `${partes.join(", ")} y ${ultimo}` : ultimo}.`;
-}
-
 export function Panel() {
   const { casos, listo, marcarVencimiento } = useCasos();
   /** null: carga rápida cerrada; "": abierta sin caso elegido; si no, el id del caso elegido. */
@@ -218,7 +226,7 @@ export function Panel() {
   const casosActivos = casos
     .filter((c) => c.estado !== "cerrado")
     .sort((a, b) => a.cliente.localeCompare(b.cliente, "es"));
-  const hayAgenda = panel.vencidos.length + panel.hoy.length + panel.semana.length > 0;
+  const hayAgenda = panel.vencidos.length + panel.atrasadas.length + panel.hoy.length + panel.semana.length > 0;
 
   return (
     <div className="flex flex-col gap-6">
@@ -234,7 +242,7 @@ export function Panel() {
           )}
         </p>
         <h1 className="text-2xl font-bold tracking-tight text-gray-900">
-          {resumen(panel.vencidos.length, panel.hoy.length, panel.semana.length)}
+          {titular(panel)}
         </h1>
       </div>
 
@@ -254,12 +262,12 @@ export function Panel() {
         <div className="lg:col-span-2">
           <Tarjeta
             titulo="Para hacer"
-            ayuda="Tildá un vencimiento cuando lo cumplas y sale de la lista."
+            ayuda="Plazos y tareas. Tildalos cuando los cumplas y salen de la lista."
             accion={
               casosActivos.length > 0 &&
               carga === null && (
                 <Button variante="secondary" className="self-start" onClick={() => setCarga("")}>
-                  + Cargar vencimiento
+                  + Agregar
                 </Button>
               )
             }
@@ -280,13 +288,14 @@ export function Panel() {
             )}
             {hayAgenda ? (
               <div className="flex flex-col gap-4">
-                <Grupo titulo="Vencidos" pendientes={panel.vencidos} onCumplir={cumplir} />
+                <Grupo titulo="Plazos vencidos" pendientes={panel.vencidos} onCumplir={cumplir} />
+                <Grupo titulo="Tareas atrasadas" pendientes={panel.atrasadas} onCumplir={cumplir} />
                 <Grupo titulo="Hoy" pendientes={panel.hoy} onCumplir={cumplir} />
                 <Grupo titulo={`Próximos ${DIAS_SEMANA} días`} pendientes={panel.semana} onCumplir={cumplir} />
               </div>
             ) : (
               <p className="rounded-lg bg-gray-50 px-4 py-6 text-center text-sm text-gray-500">
-                Nada vence en los próximos {DIAS_SEMANA} días.
+                No hay plazos ni tareas en los próximos {DIAS_SEMANA} días.
               </p>
             )}
           </Tarjeta>
@@ -296,7 +305,7 @@ export function Panel() {
           {panel.sinProximoPaso.length > 0 && (
             <Tarjeta
               titulo="Sin próximo paso"
-              ayuda="Casos activos sin ningún vencimiento pendiente. Cargales el siguiente para no perderlos de vista."
+              ayuda="Casos activos sin plazos ni tareas pendientes. Cargales el siguiente para no perderlos de vista."
             >
               <ListaCorta casos={panel.sinProximoPaso} onElegir={(c) => setCarga(c.id)} accion="Cargar" />
             </Tarjeta>

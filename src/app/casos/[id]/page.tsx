@@ -14,7 +14,7 @@ import { Header } from "@/components/ui/Header";
 import { useCasos } from "@/lib/casos/CasosProvider";
 import { formatearFecha } from "@/lib/casos/formato";
 import { esArt, etapaArt } from "@/lib/casos/hojaRuta";
-import { ESTADO_LABEL, ESTADOS } from "@/lib/casos/tipos";
+import { ESTADO_LABEL, ESTADOS, type TipoVencimiento } from "@/lib/casos/tipos";
 
 function Dato({ label, valor }: { label: string; valor: string }) {
   return (
@@ -33,6 +33,7 @@ export default function FichaCasoPage() {
 
   const [fechaVto, setFechaVto] = useState("");
   const [descVto, setDescVto] = useState("");
+  const [tipoVto, setTipoVto] = useState<TipoVencimiento>("plazo");
   const [notas, setNotas] = useState(caso?.notas ?? "");
   const [editando, setEditando] = useState(false);
   const [borrando, setBorrando] = useState(false);
@@ -58,7 +59,7 @@ export default function FichaCasoPage() {
   const guardarVencimiento = (e: React.FormEvent) => {
     e.preventDefault();
     if (!fechaVto) return;
-    agregarVencimiento(caso.id, { fecha: fechaVto, descripcion: descVto });
+    agregarVencimiento(caso.id, { fecha: fechaVto, descripcion: descVto, tipo: tipoVto });
     setFechaVto("");
     setDescVto("");
   };
@@ -159,9 +160,9 @@ export default function FichaCasoPage() {
         </section>
 
         <section className="flex flex-col gap-4 rounded-xl border border-gray-200 bg-white p-5">
-          <h2 className="font-semibold text-gray-900">Vencimientos</h2>
+          <h2 className="font-semibold text-gray-900">Plazos y tareas</h2>
           {caso.vencimientos.length === 0 ? (
-            <p className="text-sm text-gray-500">No hay ningún vencimiento cargado para este caso.</p>
+            <p className="text-sm text-gray-500">No hay plazos ni tareas cargados para este caso.</p>
           ) : (
             <ul className="flex flex-col gap-2">
               {[...caso.vencimientos]
@@ -172,13 +173,19 @@ export default function FichaCasoPage() {
             </ul>
           )}
           <form onSubmit={guardarVencimiento} className="flex flex-col gap-3 sm:flex-row sm:items-end">
+            <div className="sm:w-28">
+              <SelectField label="Tipo" value={tipoVto} onChange={(e) => setTipoVto(e.target.value as TipoVencimiento)}>
+                <option value="plazo">Plazo</option>
+                <option value="tarea">Tarea</option>
+              </SelectField>
+            </div>
             <div className="flex-1">
               <TextField label="Fecha" type="date" value={fechaVto} onChange={(e) => setFechaVto(e.target.value)} />
             </div>
             <div className="flex-[2]">
               <TextField
-                label="Qué vence"
-                placeholder='Ej.: "Contestar demanda"'
+                label={tipoVto === "plazo" ? "Qué vence" : "Qué hay que hacer"}
+                placeholder={tipoVto === "plazo" ? 'Ej.: "Contestar demanda"' : 'Ej.: "Llamar al cliente"'}
                 value={descVto}
                 onChange={(e) => setDescVto(e.target.value)}
               />

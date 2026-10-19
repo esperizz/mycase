@@ -10,12 +10,22 @@ export const ESTADO_LABEL: Record<EstadoCaso, string> = {
   cerrado: "Cerrado",
 };
 
+/**
+ * Plazo: tiene consecuencias si se pasa (contestar demanda, audiencia).
+ * Tarea: pendiente interno y flexible (llamar al cliente, pedir documentación).
+ */
+export type TipoVencimiento = "plazo" | "tarea";
+
 export interface Vencimiento {
   id: string;
   fecha: string; // ISO yyyy-mm-dd
   descripcion: string;
   cumplido: boolean;
+  tipo: TipoVencimiento;
 }
+
+/** Lo que hace falta para cargar un vencimiento nuevo; si no se dice, es un plazo. */
+export type VencimientoNuevo = Omit<Vencimiento, "id" | "cumplido" | "tipo"> & { tipo?: TipoVencimiento };
 
 export type PlazoId = "48h" | "5d" | "10d";
 
