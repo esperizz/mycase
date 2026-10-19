@@ -261,7 +261,7 @@ export function Panel() {
         </h1>
       </div>
 
-      <div className={`grid gap-2 sm:gap-3 ${panel.avisosPendientes.length ? "grid-cols-3" : "grid-cols-2"}`}>
+      <div className="grid grid-cols-2 gap-2 sm:gap-3">
         {proximo ? (
           <Dato
             etiqueta={
@@ -287,14 +287,6 @@ export function Panel() {
           detalle={panel.sinProximoPaso.length ? yMas(panel.sinProximoPaso.map((c) => c.cliente)) : "Todos tienen algo"}
           href={panel.sinProximoPaso.length ? "#sin-proximo-paso" : "/casos"}
         />
-        {panel.avisosPendientes.length > 0 && (
-          <Dato
-            etiqueta="Avisos pendientes"
-            valor={plural(panel.avisosPendientes.length, "cliente", "clientes")}
-            detalle={yMas(panel.avisosPendientes.map((c) => c.cliente))}
-            href="#avisos-pendientes"
-          />
-        )}
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
@@ -349,16 +341,6 @@ export function Panel() {
               ayuda="Casos activos sin plazos ni tareas pendientes. Cargales el siguiente para no perderlos de vista."
             >
               <ListaCorta casos={panel.sinProximoPaso} onElegir={(c) => setCarga(c.id)} accion="Cargar" />
-            </Tarjeta>
-          )}
-
-          {panel.avisosPendientes.length > 0 && (
-            <Tarjeta
-              id="avisos-pendientes"
-              titulo="Avisos pendientes"
-              ayuda="Pasos de la hoja de ruta que marcaste cumplidos sin avisarle al cliente."
-            >
-              <ListaCorta casos={panel.avisosPendientes} destino={(c) => `/casos/${c.id}`} accion="Avisarle" />
             </Tarjeta>
           )}
 

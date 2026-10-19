@@ -112,19 +112,6 @@ describe("tarjetas del panel", () => {
     expect(armarPanel([caso({})], HOY).proximosPlazos).toEqual([]);
   });
 
-  it("avisos pendientes: casos de ART con pasos cumplidos sin avisar", () => {
-    const hoja = (avisados: Record<string, string>) => ({
-      cumplidos: { denuncia: "2026-10-01" },
-      avisados,
-      rechazo: false,
-      inicioAvisado: "",
-      vencimientos: {},
-    });
-    const debe = caso({ cliente: "Debe", hojaRuta: hoja({}) });
-    const alDia = caso({ cliente: "AlDia", hojaRuta: hoja({ denuncia: "2026-10-01" }) });
-    const cerrado = caso({ cliente: "Cerrado", estado: "cerrado", hojaRuta: hoja({}) });
-    expect(armarPanel([debe, alDia, cerrado], HOY).avisosPendientes.map((c) => c.cliente)).toEqual(["Debe"]);
-  });
 });
 
 describe("titular", () => {

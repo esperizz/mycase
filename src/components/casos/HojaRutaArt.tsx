@@ -208,9 +208,13 @@ export function HojaRutaArt({ caso }: { caso: Caso }) {
                 {p.avisado ? (
                   <span className="text-green-700">Avisado</span>
                 ) : (
-                  <button type="button" onClick={() => avisarDespues(p)} className="font-semibold text-gray-900 underline underline-offset-2">
-                    Avisarle
-                  </button>
+                  // No avisar fue una decisión, no un olvido: se muestra como dato, con la opción de cambiarla.
+                  <span>
+                    No avisado ·{" "}
+                    <button type="button" onClick={() => avisarDespues(p)} className="underline-offset-2 hover:underline">
+                      Avisar igual
+                    </button>
+                  </span>
                 )}
                 <button type="button" onClick={() => setVolviendo(p.id)} className="hover:underline">
                   Volver a este paso
