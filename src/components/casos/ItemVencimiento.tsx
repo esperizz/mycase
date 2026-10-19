@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { SelectField, TextField } from "@/components/ui/Field";
 import { useCasos } from "@/lib/casos/CasosProvider";
+import { TipoTag } from "./TipoTag";
 import { diasHasta, formatearFecha } from "@/lib/casos/formato";
 import type { TipoVencimiento, Vencimiento } from "@/lib/casos/tipos";
 
@@ -85,7 +86,7 @@ export function ItemVencimiento({ casoId, vencimiento: v }: { casoId: string; ve
         <p className="font-semibold">{formatearFecha(v.fecha)}</p>
         <p className="text-sm">
           {v.descripcion}
-          {tarea && <span className="ml-2 rounded-full bg-white/70 px-2 py-0.5 text-xs font-medium">Tarea</span>}
+          <TipoTag tipo={v.tipo} />
         </p>
       </div>
       <div className="flex gap-2">

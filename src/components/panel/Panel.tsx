@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { ArtBadge, EstadoBadge } from "@/components/casos/EstadoBadge";
 import { SubirCasosLocales } from "@/components/casos/SubirCasosLocales";
+import { TipoTag } from "@/components/casos/TipoTag";
 import { Button, ButtonLink } from "@/components/ui/Button";
 import { useCasos } from "@/lib/casos/CasosProvider";
 import { proximoFeriado } from "@/lib/casos/feriados";
@@ -70,11 +71,7 @@ function ItemPendiente({ pendiente, onCumplir }: { pendiente: Pendiente; onCumpl
         <div className="flex min-w-0 flex-col gap-0.5">
           <p className="font-semibold text-gray-900">
             {vencimiento.descripcion || (tarea ? "Tarea sin descripción" : "Plazo sin descripción")}
-            {tarea && (
-              <span className="ml-2 rounded-full bg-gray-100 px-2 py-0.5 align-middle text-xs font-medium text-gray-600">
-                Tarea
-              </span>
-            )}
+            <TipoTag tipo={vencimiento.tipo} />
           </p>
           <p className="text-sm text-gray-500">
             <Link href={`/casos/${caso.id}`} className="font-medium text-gray-700 underline-offset-2 hover:underline">
