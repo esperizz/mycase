@@ -3,6 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { hojaRutaVacia } from "./hojaRuta";
+import { migrarNotas } from "./notas";
 import {
   cartaVacia,
   type CartaDatos,
@@ -10,6 +11,7 @@ import {
   type CasoNuevo,
   type EstadoCaso,
   type HojaRuta,
+  type Nota,
   type TipoVencimiento,
   type Vencimiento,
   type VencimientoNuevo,
@@ -32,6 +34,7 @@ interface FilaCaso {
   notas: string;
   carta: CartaDatos | null;
   hoja_ruta: HojaRuta | null;
+  notas_historial: Nota[] | null;
 }
 
 interface FilaVencimiento {
@@ -66,11 +69,11 @@ function idValido(id: string | undefined) {
   return id && UUID.test(id) ? id : crypto.randomUUID();
 }
 
-/** Tolera datos con formas viejas (un solo `proximoVencimiento`, ids no uuid). */
+/** Tolera datos con formas viejas (un solo `proximoVencimiento`, ids no uuid, notas en un solo texto). */
 function normalizar(caso: Partial<Caso> & { proximoVencimiento?: Vencimiento | null }): Caso {
   const vencimientos =
     caso.vencimientos ?? (caso.proximoVencimiento ? [{ ...caso.proximoVencimiento, cumplido: false }] : []);
-  return {
+  return migrarNotas({
     id: idValido(caso.id),
     cliente: caso.cliente ?? "",
     contacto: caso.contacto ?? "",
@@ -85,9 +88,10 @@ function normalizar(caso: Partial<Caso> & { proximoVencimiento?: Vencimiento | n
       tipo: v.tipo === "tarea" ? "tarea" : "plazo",
     })),
     notas: caso.notas ?? "",
+    historial: (caso.historial ?? []).map((n) => ({ ...n, id: idValido(n.id) })),
     carta: caso.carta ? { ...cartaVacia(), ...caso.carta } : null,
     hojaRuta: caso.hojaRuta ? { ...hojaRutaVacia(), ...caso.hojaRuta } : null,
-  };
+  });
 }
 
 function aFilaCaso(c: Caso): FilaCaso {
@@ -100,6 +104,7 @@ function aFilaCaso(c: Caso): FilaCaso {
     estado: c.estado,
     fecha_apertura: c.fechaApertura,
     notas: c.notas,
+    notas_historial: c.historial,
     carta: c.carta,
     hoja_ruta: c.hojaRuta,
   };
@@ -115,6 +120,7 @@ function aCaso(fila: FilaCaso, vencimientos: Vencimiento[]): Caso {
     estado: fila.estado,
     fechaApertura: fila.fecha_apertura,
     notas: fila.notas,
+    historial: fila.notas_historial ?? [],
     carta: fila.carta,
     hojaRuta: fila.hoja_ruta,
     vencimientos,

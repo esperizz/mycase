@@ -7,9 +7,10 @@ import { EtapaBadge } from "@/components/casos/EstadoBadge";
 import { FormularioCaso } from "@/components/casos/FormularioCaso";
 import { HojaRutaArt } from "@/components/casos/HojaRutaArt";
 import { ItemVencimiento } from "@/components/casos/ItemVencimiento";
+import { NotasCaso } from "@/components/casos/NotasCaso";
 import { Button } from "@/components/ui/Button";
 import { DialogoConfirmar } from "@/components/ui/DialogoConfirmar";
-import { SelectField, TextAreaField, TextField } from "@/components/ui/Field";
+import { SelectField, TextField } from "@/components/ui/Field";
 import { Header } from "@/components/ui/Header";
 import { useCasos } from "@/lib/casos/CasosProvider";
 import { formatearFecha } from "@/lib/casos/formato";
@@ -34,7 +35,6 @@ export default function FichaCasoPage() {
   const [fechaVto, setFechaVto] = useState("");
   const [descVto, setDescVto] = useState("");
   const [tipoVto, setTipoVto] = useState<TipoVencimiento>("plazo");
-  const [notas, setNotas] = useState(caso?.notas ?? "");
   const [editando, setEditando] = useState(false);
   const [borrando, setBorrando] = useState(false);
 
@@ -62,10 +62,6 @@ export default function FichaCasoPage() {
     agregarVencimiento(caso.id, { fecha: fechaVto, descripcion: descVto, tipo: tipoVto });
     setFechaVto("");
     setDescVto("");
-  };
-
-  const guardarNotas = () => {
-    actualizar(caso.id, (c) => ({ ...c, notas }));
   };
 
   const borrarCaso = () => {
@@ -194,15 +190,7 @@ export default function FichaCasoPage() {
           </form>
         </section>
 
-        <section className="flex flex-col gap-3 rounded-xl border border-gray-200 bg-white p-5">
-          <TextAreaField
-            label="Notas"
-            value={notas}
-            onChange={(e) => setNotas(e.target.value)}
-            onBlur={guardarNotas}
-            placeholder="Apuntes sobre el caso, conversaciones con el cliente, etc."
-          />
-        </section>
+        <NotasCaso caso={caso} />
 
         <div>
           <button

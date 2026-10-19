@@ -79,6 +79,14 @@ export interface HojaRuta {
   vencimientos: Record<string, string>;
 }
 
+/** Una entrada del historial de notas del caso. Solo la ve la abogada. */
+export interface Nota {
+  id: string;
+  /** Fecha y hora local, yyyy-mm-ddThh:mm. */
+  fecha: string;
+  texto: string;
+}
+
 export interface Caso {
   id: string;
   cliente: string;
@@ -88,11 +96,13 @@ export interface Caso {
   estado: EstadoCaso;
   fechaApertura: string; // ISO yyyy-mm-dd
   vencimientos: Vencimiento[];
+  /** Texto único de la versión anterior; se migra a `historial` (ver notas.ts). */
   notas: string;
+  historial: Nota[];
   carta: CartaDatos | null;
   hojaRuta: HojaRuta | null;
 }
 
-export type CasoNuevo = Omit<Caso, "id" | "fechaApertura" | "vencimientos" | "notas" | "carta" | "hojaRuta"> & {
+export type CasoNuevo = Omit<Caso, "id" | "fechaApertura" | "vencimientos" | "notas" | "historial" | "carta" | "hojaRuta"> & {
   notas?: string;
 };
