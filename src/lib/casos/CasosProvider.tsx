@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { BUCKET, carpetaDelCaso } from "./documentos";
 import { hojaRutaVacia } from "./hojaRuta";
 import { migrarNotas } from "./notas";
+import { cambiosVencimientos, diferencias, fusionar, fusionarCarga, iguales } from "./sincronizacion";
 import {
   cartaVacia,
   type CartaDatos,
@@ -36,6 +37,8 @@ interface FilaCaso {
   carta: CartaDatos | null;
   hoja_ruta: HojaRuta | null;
   notas_historial: Nota[] | null;
+  /** Solo al leer: lo pone un trigger en cada update. */
+  updated_at?: string;
 }
 
 interface FilaVencimiento {
@@ -128,91 +131,222 @@ function aCaso(fila: FilaCaso, vencimientos: Vencimiento[]): Caso {
   });
 }
 
+function aVencimiento(fv: FilaVencimiento): Vencimiento {
+  return { id: fv.id, fecha: fv.fecha, descripcion: fv.descripcion, cumplido: fv.cumplido, tipo: fv.tipo };
+}
+
+/** Anota el `updated_at` de la fila (si la base ya tiene esa columna). */
+function recordarVersion(versiones: Map<string, string>, id: string, fila: { updated_at?: string } | null) {
+  if (fila?.updated_at) versiones.set(id, fila.updated_at);
+}
+
 export function CasosProvider({ children }: { children: React.ReactNode }) {
   const [supabase] = useState(createClient);
   const [casos, setCasos] = useState<Caso[]>([]);
   const [listo, setListo] = useState(false);
   const [errorGuardado, setErrorGuardado] = useState(false);
 
-  /** Última versión que quedó guardada de cada caso, para saber qué vencimientos borrar. */
+  /** Última versión que quedó guardada de cada caso: contra ella se calcula qué mandar. */
   const guardados = useRef(new Map<string, Caso>());
+  /** `updated_at` de la fila de cada caso, para notar si otro dispositivo la cambió antes de guardar. */
+  const versiones = useRef(new Map<string, string>());
   const pendientes = useRef(new Map<string, ReturnType<typeof setTimeout>>());
+  /** Guardado en curso de cada caso: los de un mismo caso van de a uno. */
+  const enCurso = useRef(new Map<string, Promise<void>>());
+  /** Escrituras en vuelo y total empezadas: una recarga que se cruza con una escritura se descarta. */
+  const ocupados = useRef(0);
+  const escrituras = useRef(0);
+  const usuario = useRef<string | null | undefined>(undefined);
+  const cargando = useRef(false);
+  const guardarAhoraRef = useRef<(id: string) => Promise<void>>(async () => {});
   /** Espejo de `casos` para leer la versión vigente desde los timers. */
   const casosRef = useRef(casos);
   useEffect(() => {
     casosRef.current = casos;
   }, [casos]);
 
-  const guardarAhora = useCallback(
+  /** Envuelve una escritura a Supabase para que las recargas sepan que hay algo en vuelo. */
+  const escribiendo = useCallback(async (tarea: () => Promise<void>) => {
+    ocupados.current++;
+    escrituras.current++;
+    try {
+      await tarea();
+    } catch {
+      // Sin conexión, por ejemplo; la cola de guardados de ese caso sigue andando.
+      setErrorGuardado(true);
+    } finally {
+      ocupados.current--;
+    }
+  }, []);
+
+  /** Agenda el guardado de un caso; varios cambios seguidos se guardan juntos. */
+  const programarGuardado = useCallback((id: string) => {
+    clearTimeout(pendientes.current.get(id));
+    pendientes.current.set(
+      id,
+      setTimeout(() => void guardarAhoraRef.current(id), ESPERA_GUARDADO_MS),
+    );
+  }, []);
+
+  /**
+   * Otro dispositivo cambió el caso desde la última vez que lo leímos: se trae la versión de Supabase,
+   * se le aplican encima los cambios de acá y se vuelve a guardar.
+   */
+  const resolverConflicto = useCallback(
+    async (id: string, anterior: Caso) => {
+      const [{ data: fila, error }, { data: filasVenc, error: e }] = await Promise.all([
+        supabase.from("casos").select("*").eq("id", id).maybeSingle(),
+        supabase.from("vencimientos").select("*").eq("caso_id", id).order("created_at"),
+      ]);
+      if (error || e) return setErrorGuardado(true);
+      if (!fila) {
+        // Se borró en otro dispositivo.
+        guardados.current.delete(id);
+        versiones.current.delete(id);
+        setCasos((actuales) => actuales.filter((c) => c.id !== id));
+        return;
+      }
+      const remoto = aCaso(fila as FilaCaso, ((filasVenc ?? []) as FilaVencimiento[]).map(aVencimiento));
+      guardados.current.set(id, remoto);
+      recordarVersion(versiones.current, id, fila as FilaCaso);
+      setCasos((actuales) => actuales.map((c) => (c.id === id ? fusionar(anterior, c, remoto) : c)));
+      programarGuardado(id);
+    },
+    [supabase, programarGuardado],
+  );
+
+  const guardarUnaVez = useCallback(
     async (id: string) => {
-      pendientes.current.delete(id);
       const caso = casosRef.current.find((c) => c.id === id);
       if (!caso) return;
       const anterior = guardados.current.get(id);
 
-      const { error } = await supabase.from("casos").upsert(aFilaCaso(caso));
-      let fallo = !!error;
-      if (!fallo && caso.vencimientos.length > 0) {
-        const { error: e } = await supabase
-          .from("vencimientos")
-          .upsert(caso.vencimientos.map((v) => ({ ...v, caso_id: id })));
-        fallo = !!e;
-      }
-      const vigentes = new Set(caso.vencimientos.map((v) => v.id));
-      const quitados = (anterior?.vencimientos ?? []).filter((v) => !vigentes.has(v.id)).map((v) => v.id);
-      if (!fallo && quitados.length > 0) {
-        const { error: e } = await supabase.from("vencimientos").delete().in("id", quitados);
-        fallo = !!e;
+      // La fila del caso: entera si es nuevo; si no, solo las columnas que cambiaron, y
+      // solo si nadie la tocó desde que la leímos (si la tocaron, primero se fusiona).
+      if (!anterior) {
+        const { data, error } = await supabase.from("casos").upsert(aFilaCaso(caso)).select().single();
+        if (error) return setErrorGuardado(true);
+        recordarVersion(versiones.current, id, data as FilaCaso);
+      } else {
+        const cambios = diferencias(aFilaCaso(caso), aFilaCaso(anterior));
+        if (Object.keys(cambios).length > 0) {
+          let consulta = supabase.from("casos").update(cambios).eq("id", id);
+          const version = versiones.current.get(id);
+          if (version) consulta = consulta.eq("updated_at", version);
+          const { data, error } = await consulta.select();
+          if (error) return setErrorGuardado(true);
+          if (!data?.length) return resolverConflicto(id, anterior);
+          recordarVersion(versiones.current, id, data[0] as FilaCaso);
+        }
       }
 
-      if (fallo) setErrorGuardado(true);
-      else guardados.current.set(id, caso);
+      // Vencimientos: solo los nuevos, los campos tocados de los modificados y los quitados.
+      // Así no se pisa lo que se tildó en otro dispositivo.
+      const { nuevos, modificados, quitados } = cambiosVencimientos(caso, anterior);
+      const resultados = await Promise.all([
+        nuevos.length > 0 ? supabase.from("vencimientos").upsert(nuevos.map((v) => ({ ...v, caso_id: id }))) : null,
+        ...modificados.map((m) => supabase.from("vencimientos").update(m.cambios).eq("id", m.id)),
+        quitados.length > 0 ? supabase.from("vencimientos").delete().in("id", quitados) : null,
+      ]);
+      if (resultados.some((r) => r?.error)) return setErrorGuardado(true);
+
+      guardados.current.set(id, caso);
     },
-    [supabase],
+    [supabase, resolverConflicto],
   );
 
-  /** Agenda el guardado de un caso; varios cambios seguidos se guardan juntos. */
-  const programarGuardado = useCallback(
+  const guardarAhora = useCallback(
     (id: string) => {
-      clearTimeout(pendientes.current.get(id));
-      pendientes.current.set(
-        id,
-        setTimeout(() => void guardarAhora(id), ESPERA_GUARDADO_MS),
-      );
+      pendientes.current.delete(id);
+      const previo = enCurso.current.get(id) ?? Promise.resolve();
+      const tarea = previo.then(() => escribiendo(() => guardarUnaVez(id)));
+      enCurso.current.set(id, tarea);
+      void tarea.finally(() => {
+        if (enCurso.current.get(id) === tarea) enCurso.current.delete(id);
+      });
+      return tarea;
     },
-    [guardarAhora],
+    [escribiendo, guardarUnaVez],
   );
+  useEffect(() => {
+    guardarAhoraRef.current = guardarAhora;
+  }, [guardarAhora]);
 
-  const cargar = useCallback(async () => {
-    const [{ data: filasCasos, error }, { data: filasVenc }] = await Promise.all([
-      supabase.from("casos").select("*").order("created_at"),
-      supabase.from("vencimientos").select("*").order("created_at"),
-    ]);
-    const porCaso = new Map<string, Vencimiento[]>();
-    for (const fv of (filasVenc ?? []) as FilaVencimiento[]) {
-      const lista = porCaso.get(fv.caso_id) ?? [];
-      lista.push({ id: fv.id, fecha: fv.fecha, descripcion: fv.descripcion, cumplido: fv.cumplido, tipo: fv.tipo });
-      porCaso.set(fv.caso_id, lista);
-    }
-    const cargados = error ? [] : ((filasCasos ?? []) as FilaCaso[]).map((f) => aCaso(f, porCaso.get(f.id) ?? []));
-    guardados.current = new Map(cargados.map((c) => [c.id, c]));
-    setCasos(cargados);
-    setListo(true);
-  }, [supabase]);
+  /**
+   * Lee todos los casos de Supabase. Al cambiar de usuario reemplaza todo; al volver a la pestaña
+   * fusiona con lo local, para no perder cambios que todavía no se guardaron.
+   */
+  const cargar = useCallback(
+    async (modo: "reemplazar" | "fusionar") => {
+      const escriturasAlEmpezar = escrituras.current;
+      const [{ data: filasCasos, error }, { data: filasVenc, error: e }] = await Promise.all([
+        supabase.from("casos").select("*").order("created_at"),
+        supabase.from("vencimientos").select("*").order("created_at"),
+      ]);
+      // Si se cruzó con un guardado, lo leído puede ser anterior: se prueba en la próxima vuelta.
+      if (modo === "fusionar" && (error || e || ocupados.current > 0 || escrituras.current !== escriturasAlEmpezar)) {
+        return;
+      }
+      const porCaso = new Map<string, Vencimiento[]>();
+      for (const fv of (filasVenc ?? []) as FilaVencimiento[]) {
+        const lista = porCaso.get(fv.caso_id) ?? [];
+        lista.push(aVencimiento(fv));
+        porCaso.set(fv.caso_id, lista);
+      }
+      const filas = error ? [] : ((filasCasos ?? []) as FilaCaso[]);
+      const remotos = filas.map((f) => aCaso(f, porCaso.get(f.id) ?? []));
+
+      const base = guardados.current;
+      guardados.current = new Map(remotos.map((c) => [c.id, c]));
+      versiones.current = new Map();
+      filas.forEach((f) => recordarVersion(versiones.current, f.id, f));
+
+      if (modo === "reemplazar") {
+        setCasos(remotos);
+      } else {
+        // Lo que había quedado sin guardar (por ejemplo, por un corte de conexión) se vuelve a mandar.
+        const sinGuardar = casosRef.current.filter((c) => !iguales(c, base.get(c.id)));
+        setCasos((actuales) => fusionarCarga(actuales, base, remotos));
+        sinGuardar.forEach((c) => programarGuardado(c.id));
+      }
+      setListo(true);
+    },
+    [supabase, programarGuardado],
+  );
 
   useEffect(() => {
     // Carga al arrancar y cada vez que cambia el usuario (entrar o salir de la cuenta).
     // Supabase repite eventos de sesión al refrescar el token; esos no recargan.
-    let usuario: string | null | undefined;
     const { data } = supabase.auth.onAuthStateChange((_evento, sesion) => {
       const nuevo = sesion?.user.id ?? null;
-      if (nuevo === usuario) return;
-      usuario = nuevo;
+      if (nuevo === usuario.current) return;
+      usuario.current = nuevo;
       // Fuera del callback: llamar a Supabase desde adentro puede trabar la sesión.
-      setTimeout(() => void cargar(), 0);
+      setTimeout(() => void cargar("reemplazar"), 0);
     });
     return () => data.subscription.unsubscribe();
   }, [supabase, cargar]);
+
+  useEffect(() => {
+    // Al volver a la pestaña se traen los cambios hechos en otro dispositivo, si no hay guardados pendientes.
+    const alVolver = async () => {
+      if (document.visibilityState !== "visible" || !usuario.current || cargando.current) return;
+      if (pendientes.current.size > 0 || ocupados.current > 0) return;
+      cargando.current = true;
+      try {
+        await cargar("fusionar");
+      } finally {
+        cargando.current = false;
+      }
+    };
+    const escuchar = () => void alVolver();
+    document.addEventListener("visibilitychange", escuchar);
+    window.addEventListener("focus", escuchar);
+    return () => {
+      document.removeEventListener("visibilitychange", escuchar);
+      window.removeEventListener("focus", escuchar);
+    };
+  }, [cargar]);
 
   const agregar = useCallback(
     (caso: CasoNuevo) => {
@@ -238,13 +372,13 @@ export function CasosProvider({ children }: { children: React.ReactNode }) {
       clearTimeout(pendientes.current.get(id));
       pendientes.current.delete(id);
       guardados.current.delete(id);
+      versiones.current.delete(id);
       setCasos((actuales) => actuales.filter((c) => c.id !== id));
       // Los vencimientos se borran solos (on delete cascade).
-      void supabase
-        .from("casos")
-        .delete()
-        .eq("id", id)
-        .then(({ error }) => error && setErrorGuardado(true));
+      void escribiendo(async () => {
+        const { error } = await supabase.from("casos").delete().eq("id", id);
+        if (error) setErrorGuardado(true);
+      });
       // Los documentos no se borran solos: son datos sensibles y no deben quedar huérfanos.
       void (async () => {
         const { data: sesion } = await supabase.auth.getUser();
@@ -254,7 +388,7 @@ export function CasosProvider({ children }: { children: React.ReactNode }) {
         if (archivos?.length) await supabase.storage.from(BUCKET).remove(archivos.map((a) => `${carpeta}/${a.name}`));
       })();
     },
-    [supabase],
+    [supabase, escribiendo],
   );
 
   const importar = useCallback(
