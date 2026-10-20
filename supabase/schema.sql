@@ -80,3 +80,19 @@ alter table public.vencimientos add column if not exists tipo text not null defa
 
 -- Historial de notas del caso (lista de {id, fecha, texto}). Reemplaza al texto único de "notas".
 alter table public.casos add column if not exists notas_historial jsonb not null default '[]'::jsonb;
+
+-- Última modificación de cada caso: la app la compara antes de guardar para no pisar
+-- lo que se cambió en otro dispositivo (si cambió, fusiona y reintenta).
+alter table public.casos add column if not exists updated_at timestamptz not null default now();
+
+create or replace function public.marcar_updated_at() returns trigger
+  language plpgsql set search_path = '' as $$
+begin
+  new.updated_at := now();
+  return new;
+end;
+$$;
+
+drop trigger if exists casos_updated_at on public.casos;
+create trigger casos_updated_at before update on public.casos
+  for each row execute function public.marcar_updated_at();
