@@ -12,7 +12,7 @@ export interface InfoTipo {
 export const INFO_TIPO: Record<string, InfoTipo> = {
   "Despido sin causa": {
     intro: "Me dirijo a Ud. en mi carácter de ex trabajador/a dependiente, en relación con el despido del que fui objeto.",
-    base: "conforme lo dispuesto por la Ley de Contrato de Trabajo (Ley 20.744) y la Ley 25.323",
+    base: "conforme lo dispuesto por la Ley de Contrato de Trabajo (Ley 20.744)",
     ejemploHechos:
       "Trabajé para la empresa desde marzo de 2023 hasta el 15 de septiembre de 2026, cuando me notificaron el despido sin invocar causa alguna.",
   },
@@ -37,7 +37,7 @@ export const INFO_TIPO: Record<string, InfoTipo> = {
   "Trabajo no registrado": {
     intro:
       "Me dirijo a Ud. en mi carácter de trabajador/a, a fin de intimarlo a regularizar la registración de la relación laboral que nos vincula.",
-    base: "conforme lo dispuesto por la Ley 24.013 de Empleo",
+    base: "conforme lo dispuesto por la Ley de Contrato de Trabajo (Ley 20.744)",
     ejemploHechos:
       "Trabajo para Ud. desde el 1 de febrero de 2025 cumpliendo tareas administrativas, sin que la relación laboral haya sido registrada.",
   },
@@ -145,23 +145,13 @@ export interface OpcionConsecuencia {
   soloTipos?: string[];
 }
 
+// Sin el incremento de la Ley 25.323 ni las multas de la Ley 24.013: las derogó la Ley 27.742
+// (docs/investigacion/cartas-leyes-derogadas.md). Las cartas que las tenían tildadas las omiten.
 export const CONSECUENCIAS: OpcionConsecuencia[] = [
   {
     id: "judicial",
     titulo: "Iniciar demanda laboral",
     texto: "iniciar las acciones judiciales laborales correspondientes",
-  },
-  {
-    id: "ley-25323",
-    titulo: "Reclamar el incremento de la Ley 25.323",
-    texto: "reclamar el incremento indemnizatorio previsto en la Ley 25.323",
-    soloTipos: ["Despido sin causa"],
-  },
-  {
-    id: "ley-24013",
-    titulo: "Reclamar las multas de la Ley 24.013",
-    texto: "reclamar las multas previstas en la Ley 24.013 por la falta de registración",
-    soloTipos: ["Trabajo no registrado"],
   },
   {
     id: "srt",
