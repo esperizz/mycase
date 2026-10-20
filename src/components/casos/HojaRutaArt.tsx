@@ -5,8 +5,9 @@ import { Button } from "@/components/ui/Button";
 import { DialogoCerrarCaso } from "@/components/casos/CerrarCaso";
 import { DialogoConfirmar } from "@/components/ui/DialogoConfirmar";
 import { TextField } from "@/components/ui/Field";
+import { MenuAcciones } from "@/components/ui/MenuAcciones";
 import { useCasos } from "@/lib/casos/CasosProvider";
-import { formatearFecha, diasHasta, hoyIso, textoDias } from "@/lib/casos/formato";
+import { diasHasta, fechaCorta, formatearFecha, hoyIso, textoDias } from "@/lib/casos/formato";
 import {
   abrePlazo,
   cumplirPaso,
@@ -51,10 +52,10 @@ function PasoActual({ caso, paso }: { caso: Caso; paso: Paso }) {
   };
 
   return (
-    <div className="flex flex-col gap-3 rounded-lg border-2 border-gray-900 p-4">
+    <div className="flex flex-col gap-3 rounded-2xl border-2 border-tinta p-4">
       <div>
         <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Paso actual</p>
-        <p className="text-lg font-bold text-gray-900">{paso.tecnico}</p>
+        <p className="text-lg font-bold text-tinta">{paso.tecnico}</p>
       </div>
       {plazo && (
         <p
@@ -78,7 +79,7 @@ function PasoActual({ caso, paso }: { caso: Caso; paso: Paso }) {
                 setEditado(null);
               }}
               className={`rounded-full border px-3 py-1 text-sm font-semibold ${
-                rechazo === r ? "border-gray-900 bg-gray-900 text-white" : "border-gray-300 text-gray-700"
+                rechazo === r ? "border-tinta bg-tinta text-white" : "border-linea text-gray-700"
               }`}
             >
               {r ? "La ART rechazó" : "La ART aceptó"}
@@ -104,7 +105,7 @@ function PasoActual({ caso, paso }: { caso: Caso; paso: Paso }) {
           rows={7}
           value={texto}
           onChange={(e) => setEditado(e.target.value)}
-          className="rounded-lg border border-gray-300 p-3 font-normal text-gray-900 focus:border-gray-900 focus:outline-none"
+          className="rounded-2xl border border-linea p-3 font-normal text-tinta focus:border-tinta focus:outline-none"
         />
       </label>
       <div className="flex flex-col gap-2 sm:flex-row">
@@ -128,8 +129,8 @@ export function HojaRutaArt({ caso }: { caso: Caso }) {
 
   if (!caso.hojaRuta) {
     return (
-      <section className="flex flex-col gap-3 rounded-xl border border-gray-200 bg-white p-5">
-        <h2 className="font-semibold text-gray-900">Hoja de ruta de ART</h2>
+      <section className="flex flex-col gap-3 rounded-3xl border border-linea bg-white p-5">
+        <h2 className="font-semibold text-tinta">Hoja de ruta de ART</h2>
         <p className="text-sm text-gray-500">
           Seguí el reclamo paso a paso, con los plazos legales calculados en días hábiles, y avisale al cliente por
           WhatsApp cuando quieras.
@@ -166,18 +167,18 @@ export function HojaRutaArt({ caso }: { caso: Caso }) {
   };
 
   return (
-    <section className="flex flex-col gap-4 rounded-xl border border-gray-200 bg-white p-5">
-      <h2 className="font-semibold text-gray-900">Hoja de ruta de ART</h2>
+    <section className="flex flex-col gap-4 rounded-3xl border border-linea bg-white p-5">
+      <h2 className="font-semibold text-tinta">Hoja de ruta de ART</h2>
 
       {hoja.inicioAvisado ? (
         <p className="text-sm text-gray-500">
           Le contaste al cliente cómo va a ser el caso el {formatearFecha(hoja.inicioAvisado)}.{" "}
-          <button type="button" onClick={contarInicio} className="font-semibold text-gray-900 underline underline-offset-2">
+          <button type="button" onClick={contarInicio} className="font-semibold text-tinta underline underline-offset-2">
             Volver a mandar
           </button>
         </p>
       ) : (
-        <div className="flex flex-col gap-2 rounded-lg bg-blue-50 p-4 text-sm text-blue-900 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-2 rounded-2xl bg-blue-50 p-4 text-sm text-blue-900 sm:flex-row sm:items-center sm:justify-between">
           <p>Contale al cliente todo el recorrido desde el principio: después, cada paso que se cumple confirma lo que le dijiste.</p>
           <Button onClick={contarInicio}>Contarle por WhatsApp</Button>
         </div>
@@ -186,7 +187,7 @@ export function HojaRutaArt({ caso }: { caso: Caso }) {
       {actual ? (
         <PasoActual key={actual.id} caso={caso} paso={actual} />
       ) : (
-        <div className="flex flex-col gap-3 rounded-lg bg-green-50 p-4 text-green-900 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-3 rounded-2xl bg-green-50 p-4 text-green-900 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="font-semibold">Todos los pasos están cumplidos.</p>
             {caso.estado !== "cerrado" && (
@@ -199,41 +200,39 @@ export function HojaRutaArt({ caso }: { caso: Caso }) {
 
       <ol className="flex flex-col divide-y divide-gray-100">
         {pasos.map((p) => (
-          <li key={p.id} className="flex flex-wrap items-center gap-x-3 gap-y-1 py-2 text-sm">
+          <li key={p.id} className="flex items-start gap-3 py-3 text-sm">
             <span
-              className={`flex size-5 items-center justify-center rounded-full text-xs ${
+              className={`mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full text-xs ${
                 p.estado === "cumplido"
                   ? "bg-green-600 text-white"
                   : p.estado === "actual"
-                    ? "border-2 border-gray-900"
-                    : "border border-gray-300"
+                    ? "border-2 border-tinta"
+                    : "border border-linea"
               }`}
               aria-hidden
             >
               {p.estado === "cumplido" ? "✓" : ""}
             </span>
-            <span className={`flex-1 ${p.estado === "pendiente" ? "text-gray-400" : "text-gray-900"}`}>
-              {p.tecnico}
-              {p.id === "respuesta" && p.fecha && (hoja.rechazo ? " · rechazó" : " · aceptó")}
-            </span>
+            <div className="min-w-0 flex-1">
+              <p className={p.estado === "pendiente" ? "text-gray-400" : "font-medium text-tinta"}>
+                {p.tecnico}
+                {p.id === "respuesta" && p.fecha && (hoja.rechazo ? " · rechazó" : " · aceptó")}
+              </p>
+              {/* Solo datos: cuándo se cumplió y si se le avisó al cliente. Las acciones van en el menú. */}
+              {p.fecha && (
+                <p className="mt-0.5 text-xs text-gray-500">
+                  {fechaCorta(p.fecha)} · {p.avisado ? <span className="text-green-700">Avisado</span> : "No avisado"}
+                </p>
+              )}
+            </div>
             {p.fecha && (
-              <span className="flex items-center gap-3 text-xs text-gray-500">
-                {formatearFecha(p.fecha)}
-                {p.avisado ? (
-                  <span className="text-green-700">Avisado</span>
-                ) : (
-                  // No avisar fue una decisión, no un olvido: se muestra como dato, con la opción de cambiarla.
-                  <span>
-                    No avisado ·{" "}
-                    <button type="button" onClick={() => avisarDespues(p)} className="underline-offset-2 hover:underline">
-                      Avisar igual
-                    </button>
-                  </span>
-                )}
-                <button type="button" onClick={() => setVolviendo(p.id)} className="hover:underline">
-                  Volver a este paso
-                </button>
-              </span>
+              <MenuAcciones
+                etiqueta={`Acciones de “${p.tecnico}”`}
+                acciones={[
+                  ...(p.avisado ? [] : [{ etiqueta: "Avisarle por WhatsApp", onClick: () => avisarDespues(p) }]),
+                  { etiqueta: "Volver a este paso", onClick: () => setVolviendo(p.id) },
+                ]}
+              />
             )}
           </li>
         ))}
@@ -257,7 +256,7 @@ export function HojaRutaArt({ caso }: { caso: Caso }) {
             : "Ese paso vuelve a quedar pendiente. Se borran los plazos que había abierto."}
         </p>
         {huboAvisos && (
-          <p className="rounded-lg bg-amber-50 p-3 text-amber-900">
+          <p className="rounded-2xl bg-amber-50 p-3 text-amber-900">
             Los avisos que ya le mandaste al cliente no se borran de WhatsApp. Si hace falta, mandale una aclaración.
           </p>
         )}

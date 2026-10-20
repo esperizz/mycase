@@ -35,8 +35,8 @@ export function CopiaSeguridad() {
   if (!listo) return null;
 
   return (
-    <section className="flex flex-col gap-3 rounded-xl border border-gray-200 bg-white p-5">
-      <h2 className="font-semibold text-gray-900">Copia de seguridad</h2>
+    <section className="flex flex-col gap-3 rounded-3xl border border-linea bg-white p-5">
+      <h2 className="font-semibold text-tinta">Copia de seguridad</h2>
       <SubirCasosLocales />
       <p className="text-sm text-gray-500">
         Tus casos se guardan en tu cuenta. Si querés, podés descargar una copia en un archivo.

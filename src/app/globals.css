@@ -2,6 +2,19 @@
 
 @theme {
   --font-sans: var(--font-geist), ui-sans-serif, system-ui, sans-serif;
+
+  /*
+   * Estética "estudio": fondo gris frío, superficies blancas, tinta pizarra
+   * y un único acento azul grisáceo para lo que hay que mirar primero.
+   * Rojo y ámbar quedan reservados para vencido / urgente.
+   */
+  --color-fondo: #eef0f3;
+  --color-tinta: #1c1f26;
+  --color-tenue: #9aa1ad; /* segundo tono de los títulos y textos secundarios */
+  --color-linea: #e2e5ea;
+  --color-acento: #b9c3dd;
+  --color-acento-suave: #e4e9f4;
+  --color-acento-tinta: #2e3b5e;
 }
 
 html {
@@ -10,4 +23,10 @@ html {
 
 body {
   font-family: var(--font-sans);
+}
+
+/* Foco visible y consistente en toda la app (teclado). */
+:focus-visible {
+  outline: 2px solid var(--color-acento-tinta);
+  outline-offset: 2px;
 }

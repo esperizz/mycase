@@ -39,10 +39,10 @@ export function DialogoConfirmar({
       onClose={onCancelar}
       onClick={(e) => e.target === ref.current && onCancelar()}
       aria-labelledby="dialogo-titulo"
-      className="m-auto w-[calc(100%-2rem)] max-w-md rounded-xl bg-white p-0 shadow-xl backdrop:bg-gray-900/50"
+      className="m-auto w-[calc(100%-2rem)] max-w-md rounded-3xl bg-white p-0 shadow-xl backdrop:bg-tinta/50"
     >
       <div className="flex flex-col gap-4 p-6">
-        <h2 id="dialogo-titulo" className="text-lg font-bold text-gray-900">
+        <h2 id="dialogo-titulo" className="text-lg font-bold text-tinta">
           {titulo}
         </h2>
         {children && <div className="flex flex-col gap-2 text-sm text-gray-600">{children}</div>}

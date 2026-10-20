@@ -27,7 +27,7 @@ export function ItemVencimiento({ casoId, vencimiento: v }: { casoId: string; ve
       setEditando(false);
     };
     return (
-      <li className="rounded-lg bg-gray-50 px-4 py-3">
+      <li className="rounded-2xl bg-fondo px-4 py-3">
         <form onSubmit={guardar} className="flex flex-col gap-3 sm:flex-row sm:items-end">
           <div className="sm:w-28">
             <SelectField label="Tipo" value={tipo} onChange={(e) => setTipo(e.target.value as TipoVencimiento)}>
@@ -64,17 +64,17 @@ export function ItemVencimiento({ casoId, vencimiento: v }: { casoId: string; ve
   const tarea = v.tipo === "tarea";
   // Una tarea atrasada no es tan grave como un plazo vencido.
   const urgencia = v.cumplido
-    ? "bg-gray-50 text-gray-400"
+    ? "bg-fondo text-gray-400"
     : dias < 0
       ? tarea
         ? "bg-amber-50 text-amber-800"
         : "bg-red-50 text-red-700"
       : dias <= 3
         ? "bg-amber-50 text-amber-800"
-        : "bg-gray-50 text-gray-700";
+        : "bg-fondo text-gray-700";
 
   return (
-    <li className={`flex flex-wrap items-center gap-3 rounded-lg px-4 py-3 ${urgencia}`}>
+    <li className={`flex flex-wrap items-center gap-3 rounded-2xl px-4 py-3 ${urgencia}`}>
       <input
         type="checkbox"
         checked={v.cumplido}

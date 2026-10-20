@@ -13,6 +13,13 @@ export function formatearFecha(iso: string): string {
   return new Date(y, m - 1, d).toLocaleDateString("es-AR", { day: "numeric", month: "short", year: "numeric" });
 }
 
+/** "19 oct"; si es de otro año, "19 oct 2025". Para listas donde la fecha completa no entra. */
+export function fechaCorta(iso: string, hoy: string = hoyIso()): string {
+  const [y, m, d] = iso.split("-").map(Number);
+  const mes = new Date(y, m - 1, d).toLocaleDateString("es-AR", { month: "short" }).replace(".", "");
+  return y === Number(hoy.slice(0, 4)) ? `${d} ${mes}` : `${d} ${mes} ${y}`;
+}
+
 /** Días entre dos fechas yyyy-mm-dd (negativo si `hasta` es anterior a `desde`). */
 export function diasEntre(desde: string, hasta: string): number {
   const aFecha = (iso: string) => {

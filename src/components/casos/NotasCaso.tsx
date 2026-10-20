@@ -58,7 +58,7 @@ function ItemNota({ casoId, nota, onBorrar }: { casoId: string; nota: Nota; onBo
       <div className="flex items-baseline justify-between gap-3">
         <p className="text-xs font-semibold text-gray-500">{cuando(nota.fecha)}</p>
         <div className="flex gap-3 text-xs text-gray-500">
-          <button type="button" onClick={() => setEditando(true)} className="hover:text-gray-900 hover:underline">
+          <button type="button" onClick={() => setEditando(true)} className="hover:text-tinta hover:underline">
             Editar
           </button>
           <button type="button" onClick={onBorrar} className="hover:text-red-700 hover:underline">
@@ -66,7 +66,7 @@ function ItemNota({ casoId, nota, onBorrar }: { casoId: string; nota: Nota; onBo
           </button>
         </div>
       </div>
-      <p className="whitespace-pre-line text-sm text-gray-900">{nota.texto}</p>
+      <p className="whitespace-pre-line text-sm text-tinta">{nota.texto}</p>
     </li>
   );
 }
@@ -90,9 +90,9 @@ export function NotasCaso({ caso }: { caso: Caso }) {
   };
 
   return (
-    <section className="flex flex-col gap-4 rounded-xl border border-gray-200 bg-white p-5">
+    <section className="flex flex-col gap-4 rounded-3xl border border-linea bg-white p-5">
       <div>
-        <h2 className="font-semibold text-gray-900">Notas</h2>
+        <h2 className="font-semibold text-tinta">Notas</h2>
         <p className="text-sm text-gray-500">Lo que te contó el cliente, datos sueltos, cosas a tener en cuenta. Solo lo ves vos.</p>
       </div>
 

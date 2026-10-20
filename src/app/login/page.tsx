@@ -27,10 +27,10 @@ export default function LoginPage() {
 
   return (
     <main className="flex flex-1 flex-col items-center justify-center gap-6 px-4 py-16">
-      <h1 className="text-2xl font-bold tracking-tight text-gray-900">MyCase</h1>
+      <h1 className="text-2xl font-bold tracking-tight text-tinta">MyCase</h1>
       {enviado ? (
         <div className="flex max-w-sm flex-col gap-2 text-center">
-          <p className="font-semibold text-gray-900">Revisá tu email</p>
+          <p className="font-semibold text-tinta">Revisá tu email</p>
           <p className="text-sm text-gray-500">
             Te mandamos un link a <strong>{email}</strong> para entrar. Si no lo ves, revisá spam.
           </p>

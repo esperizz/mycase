@@ -28,22 +28,25 @@ function Dato({
   valor: string;
   detalle: string;
   href: string;
-  tono?: "rojo" | "ambar" | "neutro";
+  /** "acento": el dato que hay que mirar primero cuando no hay urgencia. */
+  tono?: "rojo" | "ambar" | "acento" | "neutro";
 }) {
   const color =
     tono === "rojo"
       ? "border-red-200 bg-red-50 text-red-800"
       : tono === "ambar"
         ? "border-amber-200 bg-amber-50 text-amber-900"
-        : "border-gray-200 bg-white text-gray-900";
+        : tono === "acento"
+          ? "border-acento bg-acento text-acento-tinta"
+          : "border-linea bg-white text-tinta";
   return (
     <Link
       href={href}
-      className={`flex min-w-0 flex-col gap-0.5 rounded-lg border px-3 py-2 transition-colors hover:border-gray-400 sm:rounded-xl sm:p-4 ${color}`}
+      className={`flex min-w-0 flex-col gap-0.5 rounded-3xl border p-4 transition-colors hover:border-tinta/40 sm:px-5 ${color}`}
     >
       <p className="text-xs font-medium sm:text-sm">{etiqueta}</p>
-      <p className="text-lg font-bold sm:text-2xl">{valor}</p>
-      <p className="truncate text-xs text-gray-500">{detalle}</p>
+      <p className="text-xl font-semibold tracking-tight sm:text-2xl">{valor}</p>
+      <p className="truncate text-xs opacity-70 sm:text-sm">{detalle}</p>
     </Link>
   );
 }
@@ -74,7 +77,7 @@ function ItemPendiente({ pendiente, onCumplir }: { pendiente: Pendiente; onCumpl
       />
       <div className="flex min-w-0 flex-1 flex-col gap-1 sm:flex-row sm:justify-between sm:gap-4">
         <div className="flex min-w-0 flex-col gap-0.5">
-          <p className="font-semibold text-gray-900">
+          <p className="font-semibold text-tinta">
             {vencimiento.descripcion || (tarea ? "Tarea sin descripción" : "Plazo sin descripción")}
             <TipoTag tipo={vencimiento.tipo} />
           </p>
@@ -137,10 +140,10 @@ function Tarjeta({
   children: React.ReactNode;
 }) {
   return (
-    <section id={id} className="flex scroll-mt-4 flex-col gap-3 rounded-xl border border-gray-200 bg-white p-5">
+    <section id={id} className="flex scroll-mt-4 flex-col gap-3 rounded-3xl border border-linea bg-white p-5">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h2 className="font-semibold text-gray-900">{titulo}</h2>
+          <h2 className="font-semibold text-tinta">{titulo}</h2>
           {ayuda && <p className="text-sm text-gray-500">{ayuda}</p>}
         </div>
         {accion}
@@ -150,12 +153,12 @@ function Tarjeta({
   );
 }
 
-const filaCorta = "flex w-full items-center justify-between gap-3 rounded-lg bg-gray-50 px-3 py-2 text-left text-sm hover:bg-gray-100";
+const filaCorta = "flex w-full items-center justify-between gap-3 rounded-2xl bg-fondo px-3 py-2 text-left text-sm hover:bg-gray-100";
 
 function ContenidoFila({ caso, accion }: { caso: Caso; accion: string }) {
   return (
     <>
-      <span className="min-w-0 truncate font-medium text-gray-900">{caso.cliente}</span>
+      <span className="min-w-0 truncate font-medium text-tinta">{caso.cliente}</span>
       <span className="shrink-0 font-semibold text-gray-500">{accion} →</span>
     </>
   );
@@ -212,8 +215,8 @@ export function Panel() {
 
   if (casos.length === 0) {
     return (
-      <div className="flex flex-col items-center gap-4 rounded-xl border border-dashed border-gray-300 py-16 text-center">
-        <p className="text-lg font-semibold text-gray-900">Acá vas a ver qué tenés que hacer cada día</p>
+      <div className="flex flex-col items-center gap-4 rounded-3xl border border-dashed border-linea py-16 text-center">
+        <p className="text-lg font-semibold text-tinta">Acá vas a ver qué tenés que hacer cada día</p>
         <p className="max-w-sm text-sm text-gray-500">
           Cargá tus casos con sus vencimientos y el panel te va a mostrar lo vencido, lo de hoy y lo que viene.
         </p>
@@ -247,7 +250,7 @@ export function Panel() {
             </span>
           )}
         </p>
-        <h1 className="text-2xl font-bold tracking-tight text-gray-900">
+        <h1 className="mt-1 max-w-3xl text-2xl font-semibold leading-tight tracking-tight text-tinta sm:text-3xl">
           {titular(panel)}
         </h1>
       </div>
@@ -267,7 +270,7 @@ export function Panel() {
                 : `${proximo.vencimiento.descripcion || "Plazo"} · ${proximo.caso.cliente}`
             }
             href={panel.proximosPlazos.length > 1 ? "#para-hacer" : `/casos/${proximo.caso.id}`}
-            tono={proximo.dias < 0 ? "rojo" : proximo.dias <= 1 ? "ambar" : "neutro"}
+            tono={proximo.dias < 0 ? "rojo" : proximo.dias <= 1 ? "ambar" : "acento"}
           />
         ) : (
           <Dato etiqueta="Próximo plazo" valor="ninguno" detalle="No hay plazos cargados" href="#para-hacer" />
@@ -296,7 +299,7 @@ export function Panel() {
             }
           >
             {aviso && (
-              <p role="status" className="rounded-lg bg-green-50 px-4 py-3 text-sm font-medium text-green-800">
+              <p role="status" className="rounded-2xl bg-green-50 px-4 py-3 text-sm font-medium text-green-800">
                 {aviso}
               </p>
             )}
@@ -317,7 +320,7 @@ export function Panel() {
                 <Grupo titulo={`Próximos ${DIAS_SEMANA} días`} pendientes={panel.semana} onCumplir={cumplir} />
               </div>
             ) : (
-              <p className="rounded-lg bg-gray-50 px-4 py-6 text-center text-sm text-gray-500">
+              <p className="rounded-2xl bg-fondo px-4 py-6 text-center text-sm text-gray-500">
                 No hay plazos ni tareas en los próximos {DIAS_SEMANA} días.
               </p>
             )}
@@ -355,14 +358,14 @@ export function Panel() {
               {ESTADOS.map((e) => (
                 <li key={e} className="flex items-center justify-between text-sm">
                   <EstadoBadge estado={e} />
-                  <span className="font-semibold tabular-nums text-gray-900">
+                  <span className="font-semibold tabular-nums text-tinta">
                     {panel.porEtapa[e]}
                   </span>
                 </li>
               ))}
               <li className="flex items-center justify-between text-sm">
                 <ArtBadge>ART (según hoja de ruta)</ArtBadge>
-                <span className="font-semibold tabular-nums text-gray-900">{panel.art}</span>
+                <span className="font-semibold tabular-nums text-tinta">{panel.art}</span>
               </li>
             </ul>
           </Tarjeta>

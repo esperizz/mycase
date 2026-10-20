@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { sumarDias } from "./formato";
+import { fechaCorta, sumarDias } from "./formato";
+
+describe("fechaCorta", () => {
+  it("muestra el año solo si no es el actual", () => {
+    expect(fechaCorta("2026-10-19", "2026-12-01")).toBe("19 oct");
+    expect(fechaCorta("2025-03-02", "2026-12-01")).toBe("2 mar 2025");
+  });
+});
 
 describe("sumarDias", () => {
   it("suma días corridos", () => {
