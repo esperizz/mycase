@@ -3,7 +3,10 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { SelectField, TextField } from "@/components/ui/Field";
+import { simple } from "@/lib/casos/buscar";
+import { useCasos } from "@/lib/casos/CasosProvider";
 import { TIPOS_RECLAMO } from "@/lib/casos/catalogo";
+import { clientesConocidos } from "@/lib/casos/clientes";
 import type { Caso } from "@/lib/casos/tipos";
 
 export type DatosCaso = Pick<Caso, "cliente" | "contacto" | "empleador" | "tipoReclamo" | "expediente" | "juzgado">;
@@ -27,6 +30,18 @@ export function FormularioCaso({
   const [expediente, setExpediente] = useState(inicial?.expediente ?? "");
   const [juzgado, setJuzgado] = useState(inicial?.juzgado ?? "");
 
+  // Clientes que ya tienen otro caso: se sugieren al escribir el nombre.
+  const { casos } = useCasos();
+  const conocidos = clientesConocidos(casos.filter((c) => c.cliente !== inicial?.cliente));
+  const repetido = conocidos.find((c) => simple(c.nombre) === simple(cliente.trim()));
+
+  const elegirCliente = (nombre: string) => {
+    setCliente(nombre);
+    // Elegir un cliente conocido trae su contacto, si todavía no se escribió uno.
+    const conocido = conocidos.find((c) => c.nombre === nombre);
+    if (conocido && !contacto.trim()) setContacto(conocido.contacto);
+  };
+
   const enviar = (e: React.FormEvent) => {
     e.preventDefault();
     if (!cliente.trim() || !empleador.trim()) return;
@@ -40,7 +55,22 @@ export function FormularioCaso({
 
   return (
     <form onSubmit={enviar} className="flex flex-col gap-5">
-      <TextField label="Nombre del cliente" value={cliente} onChange={(e) => setCliente(e.target.value)} required />
+      <TextField
+        label="Nombre del cliente"
+        value={cliente}
+        onChange={(e) => elegirCliente(e.target.value)}
+        list="clientes-conocidos"
+        autoComplete="off"
+        required
+      />
+      <datalist id="clientes-conocidos">
+        {conocidos.map((c) => (
+          <option key={c.nombre} value={c.nombre} />
+        ))}
+      </datalist>
+      {repetido && (
+        <p className="-mt-3 text-xs text-gray-500">Ya tiene otro caso: se van a ver juntos en la ficha.</p>
+      )}
       <TextField
         label="Teléfono o email del cliente"
         opcional

@@ -1,7 +1,7 @@
 import type { Caso } from "./tipos";
 
 /** Minúsculas y sin tildes, para comparar como lo escribiría cualquiera. */
-function simple(texto: string): string {
+export function simple(texto: string): string {
   return texto
     .normalize("NFD")
     .replace(/[̀-ͯ]/g, "")

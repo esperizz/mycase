@@ -13,11 +13,12 @@ import { HojaRutaArt } from "@/components/casos/HojaRutaArt";
 import { ItemVencimiento } from "@/components/casos/ItemVencimiento";
 import { NotasCaso } from "@/components/casos/NotasCaso";
 import { InformarCliente } from "@/components/casos/InformarCliente";
-import { Button, LinkVolver } from "@/components/ui/Button";
+import { Button, Flecha, LinkVolver } from "@/components/ui/Button";
 import { DialogoConfirmar } from "@/components/ui/DialogoConfirmar";
 import { SelectField, TextField } from "@/components/ui/Field";
 import { Header } from "@/components/ui/Header";
 import { useCasos } from "@/lib/casos/CasosProvider";
+import { otrosCasos } from "@/lib/casos/clientes";
 import { formatearFecha } from "@/lib/casos/formato";
 import { esArt, etapaArt } from "@/lib/casos/hojaRuta";
 import { esCita } from "@/lib/casos/sugerencias";
@@ -64,6 +65,7 @@ export default function FichaCasoPage() {
   }
 
   const art = esArt(caso);
+  const otros = otrosCasos(caso, casos);
 
   const guardarVencimiento = (e: React.FormEvent) => {
     e.preventDefault();
@@ -131,6 +133,30 @@ export default function FichaCasoPage() {
                 Editar datos
               </Button>
             </div>
+          </section>
+        )}
+
+        {otros.length > 0 && (
+          <section className="flex flex-col gap-3 rounded-3xl border border-linea bg-white p-5">
+            <h2 className="font-semibold text-tinta">Otros casos de {caso.cliente}</h2>
+            <ul className="flex flex-col gap-2">
+              {otros.map((o) => (
+                <li key={o.id}>
+                  <Link
+                    href={`/casos/${o.id}`}
+                    className="flex items-center justify-between gap-3 rounded-2xl bg-fondo px-3 py-2 text-sm hover:bg-gray-100"
+                  >
+                    <span className="flex min-w-0 flex-wrap items-center gap-2">
+                      <span className="font-medium text-tinta">
+                        {o.tipoReclamo} <span className="font-normal text-gray-500">· contra {o.empleador}</span>
+                      </span>
+                      <EtapaBadge caso={o} />
+                    </span>
+                    <Flecha variante="secondary" className="size-6" />
+                  </Link>
+                </li>
+              ))}
+            </ul>
           </section>
         )}
 
