@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { hojaRutaVacia } from "./hojaRuta";
-import { MAXIMO_SUGERENCIAS, sugerencias } from "./sugerencias";
+import { esCita, MAXIMO_SUGERENCIAS, sugerencias } from "./sugerencias";
 import type { Caso } from "./tipos";
 
 function caso(parcial: Partial<Caso>): Caso {
@@ -56,11 +56,21 @@ describe("sugerencias", () => {
     const art = caso({ tipoReclamo: "Accidente de trabajo", estado: "demanda" });
     expect(sugerencias(art, "plazo")).toEqual(["Discutir el alta", "Examen en comisión médica"]);
     expect(sugerencias(art, "tarea")).toContain("Pedir número de siniestro");
-    // Un caso con hoja de ruta es de ART aunque el tipo diga otra cosa.
-    expect(sugerencias(caso({ hojaRuta: hojaRutaVacia() }), "plazo")).toEqual(["Discutir el alta", "Examen en comisión médica"]);
+    // Si se le cambió el tipo, deja de ser ART aunque conserve la hoja de ruta.
+    expect(sugerencias(caso({ hojaRuta: hojaRutaVacia() }), "plazo")).not.toContain("Discutir el alta");
   });
 
   it("un tipo sin sugerencias propias usa solo las de la etapa", () => {
     expect(sugerencias(caso({ tipoReclamo: "Otro", estado: "mediacion" }), "plazo")).toEqual(["Audiencia de mediación"]);
+  });
+});
+
+describe("esCita", () => {
+  it("reconoce las sugerencias a las que hay que ir, sin importar mayúsculas", () => {
+    expect(esCita("Audiencia")).toBe(true);
+    expect(esCita("audiencia de mediación")).toBe(true);
+    expect(esCita("Examen en comisión médica")).toBe(true);
+    expect(esCita("Presentar escrito")).toBe(false);
+    expect(esCita("Llamar al cliente")).toBe(false);
   });
 });

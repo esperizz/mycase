@@ -4,8 +4,10 @@ import { useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { SelectField, TextField } from "@/components/ui/Field";
 import { useCasos } from "@/lib/casos/CasosProvider";
+import { CamposHoraLugar } from "./CamposHoraLugar";
 import { TipoTag } from "./TipoTag";
-import { diasHasta, formatearFecha } from "@/lib/casos/formato";
+import { esCita } from "@/lib/casos/sugerencias";
+import { diasHasta, formatearFecha, horaYLugar } from "@/lib/casos/formato";
 import type { TipoVencimiento, Vencimiento } from "@/lib/casos/tipos";
 
 /** Un plazo o tarea de la ficha: se tilda, se edita (tipo, fecha y texto) o se quita. */
@@ -15,6 +17,8 @@ export function ItemVencimiento({ casoId, vencimiento: v }: { casoId: string; ve
   const [fecha, setFecha] = useState(v.fecha);
   const [descripcion, setDescripcion] = useState(v.descripcion);
   const [tipo, setTipo] = useState<TipoVencimiento>(v.tipo);
+  const [hora, setHora] = useState(v.hora ?? "");
+  const [lugar, setLugar] = useState(v.lugar ?? "");
 
   if (editando) {
     const guardar = (e: React.FormEvent) => {
@@ -22,13 +26,13 @@ export function ItemVencimiento({ casoId, vencimiento: v }: { casoId: string; ve
       if (!fecha) return;
       actualizar(casoId, (c) => ({
         ...c,
-        vencimientos: c.vencimientos.map((x) => (x.id === v.id ? { ...x, fecha, descripcion, tipo } : x)),
+        vencimientos: c.vencimientos.map((x) => (x.id === v.id ? { ...x, fecha, descripcion, tipo, hora, lugar: lugar.trim() } : x)),
       }));
       setEditando(false);
     };
     return (
       <li className="rounded-2xl bg-fondo px-4 py-3">
-        <form onSubmit={guardar} className="flex flex-col gap-3 sm:flex-row sm:items-end">
+        <form onSubmit={guardar} className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
           <div className="sm:w-28">
             <SelectField label="Tipo" value={tipo} onChange={(e) => setTipo(e.target.value as TipoVencimiento)}>
               <option value="plazo">Plazo</option>
@@ -41,6 +45,9 @@ export function ItemVencimiento({ casoId, vencimiento: v }: { casoId: string; ve
           <div className="flex-[2]">
             <TextField label={tipo === "plazo" ? "Qué vence" : "Qué hay que hacer"} value={descripcion} onChange={(e) => setDescripcion(e.target.value)} />
           </div>
+          <div className="sm:basis-full">
+            <CamposHoraLugar hora={hora} lugar={lugar} onHora={setHora} onLugar={setLugar} abrir={esCita(descripcion)} />
+          </div>
           <div className="flex gap-2">
             <Button type="submit">Guardar</Button>
             <Button
@@ -49,6 +56,8 @@ export function ItemVencimiento({ casoId, vencimiento: v }: { casoId: string; ve
                 setFecha(v.fecha);
                 setDescripcion(v.descripcion);
                 setTipo(v.tipo);
+                setHora(v.hora ?? "");
+                setLugar(v.lugar ?? "");
                 setEditando(false);
               }}
             >
@@ -83,7 +92,10 @@ export function ItemVencimiento({ casoId, vencimiento: v }: { casoId: string; ve
         aria-label={`Marcar "${v.descripcion}" como cumplido`}
       />
       <div className={`min-w-40 flex-1 ${v.cumplido ? "line-through" : ""}`}>
-        <p className="font-semibold">{formatearFecha(v.fecha)}</p>
+        <p className="font-semibold">
+          {formatearFecha(v.fecha)}
+          {horaYLugar(v) && <span className="font-normal"> · {horaYLugar(v)}</span>}
+        </p>
         <p className="text-sm">
           {v.descripcion}
           <TipoTag tipo={v.tipo} />

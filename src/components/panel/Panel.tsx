@@ -8,7 +8,7 @@ import { TipoTag } from "@/components/casos/TipoTag";
 import { Button, ButtonLink, Flecha } from "@/components/ui/Button";
 import { useCasos } from "@/lib/casos/CasosProvider";
 import { proximoFeriado } from "@/lib/casos/feriados";
-import { formatearFecha, hoyIso, textoPendiente } from "@/lib/casos/formato";
+import { formatearFecha, horaYLugar, hoyIso, textoPendiente } from "@/lib/casos/formato";
 import { armarPanel, DIAS_SEMANA, titular, type Pendiente } from "@/lib/casos/panel";
 import { ESTADOS, type Caso } from "@/lib/casos/tipos";
 import { CargaRapida } from "./CargaRapida";
@@ -62,6 +62,7 @@ function ItemPendiente({ pendiente, onCumplir }: { pendiente: Pendiente; onCumpl
   // Una tarea atrasada no es grave como un plazo vencido: va en ámbar, no en rojo.
   const color = dias < 0 ? (tarea ? "text-amber-800" : "text-red-700") : dias === 0 ? "text-amber-800" : "text-gray-500";
   const cuando = textoPendiente(dias, vencimiento.tipo);
+  const cuandoExacto = [formatearFecha(vencimiento.fecha), horaYLugar(vencimiento)].filter(Boolean).join(" · ");
   return (
     <li className="flex items-start gap-3 py-3">
       <input
@@ -87,9 +88,9 @@ function ItemPendiente({ pendiente, onCumplir }: { pendiente: Pendiente; onCumpl
         <div className={`shrink-0 text-sm sm:text-right ${color}`}>
           <p className="font-semibold">
             {cuando}
-            <span className="font-normal sm:hidden"> · {formatearFecha(vencimiento.fecha)}</span>
+            <span className="font-normal sm:hidden"> · {cuandoExacto}</span>
           </p>
-          <p className="hidden text-xs sm:block">{formatearFecha(vencimiento.fecha)}</p>
+          <p className="hidden text-xs sm:block">{cuandoExacto}</p>
         </div>
       </div>
     </li>

@@ -43,3 +43,11 @@ export function sugerencias(caso: Caso, tipo: TipoVencimiento): string[] {
   const propias = POR_TIPO[caso.tipoReclamo]?.[tipo] ?? [];
   return [...new Set([...etapa, ...propias])].slice(0, MAXIMO_SUGERENCIAS);
 }
+
+/** Sugerencias a las que hay que ir: para estas se piden hora y lugar. */
+const CITAS = ["Audiencia", "Audiencia de mediación", "Examen en comisión médica"];
+
+export function esCita(descripcion: string): boolean {
+  const d = descripcion.trim().toLowerCase();
+  return CITAS.some((c) => c.toLowerCase() === d);
+}

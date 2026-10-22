@@ -6,7 +6,8 @@ import { SelectField, TextField } from "@/components/ui/Field";
 import { useCasos } from "@/lib/casos/CasosProvider";
 import { feriado } from "@/lib/casos/feriados";
 import { formatearFecha, hoyIso, sumarDias } from "@/lib/casos/formato";
-import { sugerencias } from "@/lib/casos/sugerencias";
+import { esCita, sugerencias } from "@/lib/casos/sugerencias";
+import { CamposHoraLugar } from "@/components/casos/CamposHoraLugar";
 import type { Caso, TipoVencimiento } from "@/lib/casos/tipos";
 
 const TEXTOS: Record<TipoVencimiento, { pregunta: string; ejemplo: string; boton: string }> = {
@@ -56,6 +57,8 @@ export function CargaRapida({
   const [tipo, setTipo] = useState<TipoVencimiento>("plazo");
   const [descripcion, setDescripcion] = useState("");
   const [fecha, setFecha] = useState("");
+  const [hora, setHora] = useState("");
+  const [lugar, setLugar] = useState("");
   const tarjeta = useRef<HTMLElement>(null);
   const campoDescripcion = useRef<HTMLInputElement>(null);
 
@@ -81,10 +84,12 @@ export function CargaRapida({
   const guardar = (e: React.FormEvent) => {
     e.preventDefault();
     if (!caso || !completo) return;
-    agregarVencimiento(caso.id, { fecha, descripcion: descripcion.trim(), tipo });
+    agregarVencimiento(caso.id, { fecha, descripcion: descripcion.trim(), tipo, hora, lugar: lugar.trim() });
     onListo(`Listo: "${descripcion.trim()}" para ${caso.cliente}, ${formatearFecha(fecha)}.`);
     setDescripcion("");
     setFecha("");
+    setHora("");
+    setLugar("");
   };
 
   return (
@@ -137,8 +142,8 @@ export function CargaRapida({
           </div>
           <p className="text-xs text-gray-500">
             {tipo === "plazo"
-              ? "Tiene consecuencias si se pasa: si vence, aparece en rojo en el panel."
-              : "Un pendiente tuyo, sin consecuencias legales si se atrasa."}
+              ? "Lo fija la ley o el juzgado y tiene consecuencias si se pasa. Si vence, aparece en rojo en el panel."
+              : "Algo que te anotás para no olvidarte, como llamar al cliente. Si se atrasa no pasa nada grave: aparece en amarillo."}
           </p>
         </div>
 
@@ -185,6 +190,8 @@ export function CargaRapida({
             </p>
           )}
         </div>
+
+        <CamposHoraLugar hora={hora} lugar={lugar} onHora={setHora} onLugar={setLugar} abrir={esCita(descripcion)} />
 
         <div>
           <Button type="submit" disabled={!completo}>

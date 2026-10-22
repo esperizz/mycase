@@ -31,6 +31,8 @@ interface FilaCaso {
   contacto: string;
   empleador: string;
   tipo_reclamo: string;
+  expediente?: string;
+  juzgado?: string;
   estado: EstadoCaso;
   fecha_apertura: string;
   notas: string;
@@ -48,6 +50,8 @@ interface FilaVencimiento {
   descripcion: string;
   cumplido: boolean;
   tipo: TipoVencimiento;
+  hora?: string;
+  lugar?: string;
 }
 
 interface Contexto {
@@ -83,6 +87,8 @@ function normalizar(caso: Partial<Caso> & { proximoVencimiento?: Vencimiento | n
     contacto: caso.contacto ?? "",
     empleador: caso.empleador ?? "",
     tipoReclamo: caso.tipoReclamo ?? "",
+    expediente: caso.expediente ?? "",
+    juzgado: caso.juzgado ?? "",
     estado: caso.estado ?? "consulta",
     fechaApertura: caso.fechaApertura ?? new Date().toISOString().slice(0, 10),
     vencimientos: vencimientos.map((v) => ({
@@ -90,6 +96,8 @@ function normalizar(caso: Partial<Caso> & { proximoVencimiento?: Vencimiento | n
       id: idValido(v.id),
       cumplido: v.cumplido ?? false,
       tipo: v.tipo === "tarea" ? "tarea" : "plazo",
+      hora: v.hora ?? "",
+      lugar: v.lugar ?? "",
     })),
     notas: caso.notas ?? "",
     historial: (caso.historial ?? []).map((n) => ({ ...n, id: idValido(n.id) })),
@@ -105,6 +113,8 @@ function aFilaCaso(c: Caso): FilaCaso {
     contacto: c.contacto,
     empleador: c.empleador,
     tipo_reclamo: c.tipoReclamo,
+    expediente: c.expediente ?? "",
+    juzgado: c.juzgado ?? "",
     estado: c.estado,
     fecha_apertura: c.fechaApertura,
     notas: c.notas,
@@ -121,6 +131,8 @@ function aCaso(fila: FilaCaso, vencimientos: Vencimiento[]): Caso {
     contacto: fila.contacto,
     empleador: fila.empleador,
     tipoReclamo: fila.tipo_reclamo,
+    expediente: fila.expediente,
+    juzgado: fila.juzgado,
     estado: fila.estado,
     fechaApertura: fila.fecha_apertura,
     notas: fila.notas,
@@ -132,7 +144,15 @@ function aCaso(fila: FilaCaso, vencimientos: Vencimiento[]): Caso {
 }
 
 function aVencimiento(fv: FilaVencimiento): Vencimiento {
-  return { id: fv.id, fecha: fv.fecha, descripcion: fv.descripcion, cumplido: fv.cumplido, tipo: fv.tipo };
+  return {
+    id: fv.id,
+    fecha: fv.fecha,
+    descripcion: fv.descripcion,
+    cumplido: fv.cumplido,
+    tipo: fv.tipo,
+    hora: fv.hora ?? "",
+    lugar: fv.lugar ?? "",
+  };
 }
 
 /** Anota el `updated_at` de la fila (si la base ya tiene esa columna). */
