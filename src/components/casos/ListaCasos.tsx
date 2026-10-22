@@ -3,12 +3,15 @@
 import Link from "next/link";
 import { useState } from "react";
 import { ButtonLink } from "@/components/ui/Button";
+import { TextField } from "@/components/ui/Field";
+import { coincide } from "@/lib/casos/buscar";
 import { useCasos } from "@/lib/casos/CasosProvider";
-import { diasHasta, formatearFecha, proximoPendiente, textoPendiente } from "@/lib/casos/formato";
+import { diasHasta, formatearFecha, horaYLugar, proximoPendiente, textoPendiente } from "@/lib/casos/formato";
 import type { Caso, Vencimiento as VencimientoCaso } from "@/lib/casos/tipos";
 import { EtapaBadge } from "./EstadoBadge";
 
-function Vencimiento({ vencimiento: { fecha, descripcion, tipo } }: { vencimiento: VencimientoCaso }) {
+function Vencimiento({ vencimiento }: { vencimiento: VencimientoCaso }) {
+  const { fecha, descripcion, tipo } = vencimiento;
   const dias = diasHasta(fecha);
   // Rojo solo para plazos vencidos; una tarea atrasada va en ámbar.
   const color = dias < 0 && tipo === "plazo" ? "text-red-600" : dias <= 3 ? "text-amber-600" : "text-gray-600";
@@ -16,7 +19,7 @@ function Vencimiento({ vencimiento: { fecha, descripcion, tipo } }: { vencimient
     <div className={color}>
       <p className="text-sm font-semibold">{textoPendiente(dias, tipo)}</p>
       <p className="text-xs">
-        {descripcion} · {formatearFecha(fecha)}
+        {[descripcion, formatearFecha(fecha), horaYLugar(vencimiento)].filter(Boolean).join(" · ")}
       </p>
     </div>
   );
@@ -27,6 +30,7 @@ type Vista = "activos" | "cerrados";
 export function ListaCasos() {
   const { casos, listo } = useCasos();
   const [vista, setVista] = useState<Vista>("activos");
+  const [busqueda, setBusqueda] = useState("");
 
   if (!listo) return null;
 
@@ -42,8 +46,9 @@ export function ListaCasos() {
     );
   }
 
-  const cerrados = casos.filter((c) => c.estado === "cerrado").sort((a, b) => a.cliente.localeCompare(b.cliente, "es"));
-  const activos = casos.filter((c) => c.estado !== "cerrado").sort((a, b) => {
+  const encontrados = casos.filter((c) => coincide(c, busqueda));
+  const cerrados = encontrados.filter((c) => c.estado === "cerrado").sort((a, b) => a.cliente.localeCompare(b.cliente, "es"));
+  const activos = encontrados.filter((c) => c.estado !== "cerrado").sort((a, b) => {
     const va = proximoPendiente(a);
     const vb = proximoPendiente(b);
     const da = va ? diasHasta(va.fecha) : Infinity;
@@ -58,6 +63,13 @@ export function ListaCasos() {
 
   return (
     <div className="flex flex-col gap-4">
+      <TextField
+        label="Buscar"
+        type="search"
+        placeholder="Cliente, empleador o expediente"
+        value={busqueda}
+        onChange={(e) => setBusqueda(e.target.value)}
+      />
       <div
         role="tablist"
         aria-label="Casos"
@@ -95,7 +107,11 @@ export function ListaCasos() {
       <div id="lista-casos" role="tabpanel" aria-labelledby={`pestania-${vista}`} className="flex flex-col gap-3">
         {visibles.length === 0 ? (
           <p className="rounded-3xl border border-dashed border-linea py-8 text-center text-sm text-gray-500">
-            {vista === "activos" ? "No tenés casos activos." : "Todavía no cerraste ningún caso."}
+            {busqueda.trim()
+              ? `No hay casos ${vista} que coincidan con "${busqueda.trim()}".`
+              : vista === "activos"
+                ? "No tenés casos activos."
+                : "Todavía no cerraste ningún caso."}
           </p>
         ) : (
           visibles.map((caso) => <FilaCaso key={caso.id} caso={caso} />)

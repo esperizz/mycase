@@ -96,3 +96,9 @@ $$;
 drop trigger if exists casos_updated_at on public.casos;
 create trigger casos_updated_at before update on public.casos
   for each row execute function public.marcar_updated_at();
+
+-- Datos del juicio del caso, y hora y lugar de cada plazo o tarea (para audiencias y citas).
+alter table public.casos add column if not exists expediente text not null default '';
+alter table public.casos add column if not exists juzgado text not null default '';
+alter table public.vencimientos add column if not exists hora text not null default '';
+alter table public.vencimientos add column if not exists lugar text not null default '';

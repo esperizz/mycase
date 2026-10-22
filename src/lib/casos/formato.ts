@@ -123,3 +123,9 @@ export function enumerar(items: string[]): string {
   if (items.length <= 1) return items.join("");
   return `${items.slice(0, -1).join(", ")} y ${items[items.length - 1]}`;
 }
+
+/** "9:30 · Juzgado 45", con lo que haya cargado de un plazo o tarea; "" si nada. */
+export function horaYLugar({ hora, lugar }: { hora?: string; lugar?: string }): string {
+  const h = hora?.replace(/^0(\d):/, "$1:") ?? "";
+  return [h, lugar?.trim() ?? ""].filter(Boolean).join(" · ");
+}

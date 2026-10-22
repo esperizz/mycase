@@ -56,6 +56,8 @@ export function CargaRapida({
   const [tipo, setTipo] = useState<TipoVencimiento>("plazo");
   const [descripcion, setDescripcion] = useState("");
   const [fecha, setFecha] = useState("");
+  const [hora, setHora] = useState("");
+  const [lugar, setLugar] = useState("");
   const tarjeta = useRef<HTMLElement>(null);
   const campoDescripcion = useRef<HTMLInputElement>(null);
 
@@ -81,10 +83,12 @@ export function CargaRapida({
   const guardar = (e: React.FormEvent) => {
     e.preventDefault();
     if (!caso || !completo) return;
-    agregarVencimiento(caso.id, { fecha, descripcion: descripcion.trim(), tipo });
+    agregarVencimiento(caso.id, { fecha, descripcion: descripcion.trim(), tipo, hora, lugar: lugar.trim() });
     onListo(`Listo: "${descripcion.trim()}" para ${caso.cliente}, ${formatearFecha(fecha)}.`);
     setDescripcion("");
     setFecha("");
+    setHora("");
+    setLugar("");
   };
 
   return (
@@ -184,6 +188,17 @@ export function CargaRapida({
               {aviso && ` · ${aviso} Revisá si corresponde.`}
             </p>
           )}
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-[9rem_1fr]">
+          <TextField label="Hora" opcional type="time" value={hora} onChange={(e) => setHora(e.target.value)} />
+          <TextField
+            label="Lugar"
+            opcional
+            placeholder='Ej.: "Juzgado 45" o "por Zoom"'
+            value={lugar}
+            onChange={(e) => setLugar(e.target.value)}
+          />
         </div>
 
         <div>

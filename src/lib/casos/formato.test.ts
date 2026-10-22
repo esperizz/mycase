@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { fechaCorta, sumarDias } from "./formato";
+import { fechaCorta, horaYLugar, sumarDias } from "./formato";
 
 describe("fechaCorta", () => {
   it("muestra el año solo si no es el actual", () => {
@@ -36,5 +36,14 @@ describe("sumarDias", () => {
 
   it("no saltea feriados en días corridos", () => {
     expect(sumarDias("2026-07-08", 2)).toBe("2026-07-10");
+  });
+});
+
+describe("horaYLugar", () => {
+  it("junta la hora y el lugar que haya", () => {
+    expect(horaYLugar({ hora: "09:30", lugar: "Juzgado 45" })).toBe("9:30 · Juzgado 45");
+    expect(horaYLugar({ hora: "14:00" })).toBe("14:00");
+    expect(horaYLugar({ lugar: " SECLO " })).toBe("SECLO");
+    expect(horaYLugar({})).toBe("");
   });
 });

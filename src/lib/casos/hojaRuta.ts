@@ -8,9 +8,12 @@ import type { Caso, HojaRuta } from "./tipos";
 
 export const TIPO_ART = "Accidente de trabajo";
 
-/** Los casos de ART siguen la hoja de ruta en vez de los estados de un despido. */
+/**
+ * Los casos de ART siguen la hoja de ruta en vez de los estados de un despido. Depende solo
+ * del tipo: si se cambia, la hoja de ruta queda guardada por si se vuelve a ART.
+ */
 export function esArt(caso: Caso): boolean {
-  return caso.tipoReclamo === TIPO_ART || caso.hojaRuta !== null;
+  return caso.tipoReclamo === TIPO_ART;
 }
 
 export interface PasoDef {
@@ -234,12 +237,12 @@ export function etapaArt(caso: Caso): string {
 
 /** Un caso de ART con la hoja de ruta en marcha ya tiene próximo paso, aunque no tenga vencimientos. */
 export function tienePasoPendiente(caso: Caso): boolean {
-  return !!caso.hojaRuta && pasosDe(caso.hojaRuta).some((p) => p.estado === "actual");
+  return esArt(caso) && !!caso.hojaRuta && pasosDe(caso.hojaRuta).some((p) => p.estado === "actual");
 }
 
 /** Todos los pasos de la hoja de ruta están cumplidos: el caso está listo para cerrarse. */
 export function hojaCompleta(caso: Caso): boolean {
-  return !!caso.hojaRuta && !pasosDe(caso.hojaRuta).some((p) => p.estado !== "cumplido");
+  return esArt(caso) && !!caso.hojaRuta && !pasosDe(caso.hojaRuta).some((p) => p.estado !== "cumplido");
 }
 
 /** "juan pérez" → "Juan". */

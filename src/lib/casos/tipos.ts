@@ -22,6 +22,9 @@ export interface Vencimiento {
   descripcion: string;
   cumplido: boolean;
   tipo: TipoVencimiento;
+  /** Hora (hh:mm) y lugar, para audiencias y citas. "" o ausente si no se cargaron. */
+  hora?: string;
+  lugar?: string;
 }
 
 /** Lo que hace falta para cargar un vencimiento nuevo; si no se dice, es un plazo. */
@@ -93,6 +96,9 @@ export interface Caso {
   contacto: string;
   empleador: string;
   tipoReclamo: string;
+  /** Datos del juicio, cuando lo hay. "" o ausente si no se cargaron. */
+  expediente?: string;
+  juzgado?: string;
   estado: EstadoCaso;
   fechaApertura: string; // ISO yyyy-mm-dd
   vencimientos: Vencimiento[];

@@ -56,8 +56,8 @@ describe("sugerencias", () => {
     const art = caso({ tipoReclamo: "Accidente de trabajo", estado: "demanda" });
     expect(sugerencias(art, "plazo")).toEqual(["Discutir el alta", "Examen en comisión médica"]);
     expect(sugerencias(art, "tarea")).toContain("Pedir número de siniestro");
-    // Un caso con hoja de ruta es de ART aunque el tipo diga otra cosa.
-    expect(sugerencias(caso({ hojaRuta: hojaRutaVacia() }), "plazo")).toEqual(["Discutir el alta", "Examen en comisión médica"]);
+    // Si se le cambió el tipo, deja de ser ART aunque conserve la hoja de ruta.
+    expect(sugerencias(caso({ hojaRuta: hojaRutaVacia() }), "plazo")).not.toContain("Discutir el alta");
   });
 
   it("un tipo sin sugerencias propias usa solo las de la etapa", () => {

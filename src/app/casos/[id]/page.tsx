@@ -38,6 +38,8 @@ export default function FichaCasoPage() {
   const [fechaVto, setFechaVto] = useState("");
   const [descVto, setDescVto] = useState("");
   const [tipoVto, setTipoVto] = useState<TipoVencimiento>("plazo");
+  const [horaVto, setHoraVto] = useState("");
+  const [lugarVto, setLugarVto] = useState("");
   const [editando, setEditando] = useState(false);
   const [borrando, setBorrando] = useState(false);
   const [cerrando, setCerrando] = useState(false);
@@ -63,9 +65,17 @@ export default function FichaCasoPage() {
   const guardarVencimiento = (e: React.FormEvent) => {
     e.preventDefault();
     if (!fechaVto) return;
-    agregarVencimiento(caso.id, { fecha: fechaVto, descripcion: descVto, tipo: tipoVto });
+    agregarVencimiento(caso.id, {
+      fecha: fechaVto,
+      descripcion: descVto,
+      tipo: tipoVto,
+      hora: horaVto,
+      lugar: lugarVto.trim(),
+    });
     setFechaVto("");
     setDescVto("");
+    setHoraVto("");
+    setLugarVto("");
   };
 
   const borrarCaso = () => {
@@ -116,6 +126,8 @@ export default function FichaCasoPage() {
               <Dato label="Tipo de reclamo" valor={caso.tipoReclamo} />
               <Dato label="Contacto" valor={caso.contacto || "—"} />
               <Dato label="Caso abierto el" valor={formatearFecha(caso.fechaApertura)} />
+              {caso.expediente && <Dato label="Expediente" valor={caso.expediente} />}
+              {caso.juzgado && <Dato label="Juzgado" valor={caso.juzgado} />}
             </div>
             <div>
               <Button variante="secondary" onClick={() => setEditando(true)}>
@@ -180,25 +192,41 @@ export default function FichaCasoPage() {
                 ))}
             </ul>
           )}
-          <form onSubmit={guardarVencimiento} className="flex flex-col gap-3 sm:flex-row sm:items-end">
-            <div className="sm:w-28">
-              <SelectField label="Tipo" value={tipoVto} onChange={(e) => setTipoVto(e.target.value as TipoVencimiento)}>
-                <option value="plazo">Plazo</option>
-                <option value="tarea">Tarea</option>
-              </SelectField>
+          <form onSubmit={guardarVencimiento} className="flex flex-col gap-3">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+              <div className="sm:w-28">
+                <SelectField label="Tipo" value={tipoVto} onChange={(e) => setTipoVto(e.target.value as TipoVencimiento)}>
+                  <option value="plazo">Plazo</option>
+                  <option value="tarea">Tarea</option>
+                </SelectField>
+              </div>
+              <div className="flex-1">
+                <TextField label="Fecha" type="date" value={fechaVto} onChange={(e) => setFechaVto(e.target.value)} />
+              </div>
+              <div className="flex-[2]">
+                <TextField
+                  label={tipoVto === "plazo" ? "Qué vence" : "Qué hay que hacer"}
+                  placeholder={tipoVto === "plazo" ? 'Ej.: "Contestar traslado"' : 'Ej.: "Llamar al cliente"'}
+                  value={descVto}
+                  onChange={(e) => setDescVto(e.target.value)}
+                />
+              </div>
             </div>
-            <div className="flex-1">
-              <TextField label="Fecha" type="date" value={fechaVto} onChange={(e) => setFechaVto(e.target.value)} />
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+              <div className="sm:w-36">
+                <TextField label="Hora" opcional type="time" value={horaVto} onChange={(e) => setHoraVto(e.target.value)} />
+              </div>
+              <div className="flex-1">
+                <TextField
+                  label="Lugar"
+                  opcional
+                  placeholder='Ej.: "Juzgado 45" o "por Zoom"'
+                  value={lugarVto}
+                  onChange={(e) => setLugarVto(e.target.value)}
+                />
+              </div>
+              <Button type="submit">Agregar</Button>
             </div>
-            <div className="flex-[2]">
-              <TextField
-                label={tipoVto === "plazo" ? "Qué vence" : "Qué hay que hacer"}
-                placeholder={tipoVto === "plazo" ? 'Ej.: "Contestar traslado"' : 'Ej.: "Llamar al cliente"'}
-                value={descVto}
-                onChange={(e) => setDescVto(e.target.value)}
-              />
-            </div>
-            <Button type="submit">Agregar</Button>
           </form>
         </section>
 

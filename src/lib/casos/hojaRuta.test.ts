@@ -1,5 +1,15 @@
 import { describe, expect, it } from "vitest";
-import { cumplirPaso, deshacerPaso, linkWhatsApp, mensajeAviso, pasosDe, volverAPaso } from "./hojaRuta";
+import {
+  cumplirPaso,
+  deshacerPaso,
+  esArt,
+  hojaCompleta,
+  linkWhatsApp,
+  mensajeAviso,
+  pasosDe,
+  tienePasoPendiente,
+  volverAPaso,
+} from "./hojaRuta";
 import type { Caso } from "./tipos";
 
 function caso(parcial: Partial<Caso> = {}): Caso {
@@ -87,5 +97,17 @@ describe("hoja de ruta de ART", () => {
     expect(linkWhatsApp("11 5555-1234", "hola")).toBe("https://wa.me/5491155551234?text=hola");
     expect(linkWhatsApp("+54 9 11 5555-1234", "hola")).toBe("https://wa.me/5491155551234?text=hola");
     expect(linkWhatsApp("marta@mail.com", "hola")).toBe("https://wa.me/?text=hola");
+  });
+});
+
+describe("esArt", () => {
+  it("depende del tipo de reclamo: cambiar el tipo saca la hoja de ruta, que queda guardada", () => {
+    const art = cumplirPaso(caso({}), "denuncia", "2026-10-01", { crearId: () => "v" });
+    expect(esArt(art)).toBe(true);
+    const despido = { ...art, tipoReclamo: "Despido sin causa" };
+    expect(esArt(despido)).toBe(false);
+    expect(tienePasoPendiente(despido)).toBe(false);
+    expect(hojaCompleta(despido)).toBe(false);
+    expect(despido.hojaRuta?.cumplidos.denuncia).toBe("2026-10-01");
   });
 });
