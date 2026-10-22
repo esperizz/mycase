@@ -13,6 +13,7 @@ export function DialogoConfirmar({
   children,
   textoConfirmar,
   peligro = false,
+  confirmarDeshabilitado = false,
   onConfirmar,
   onCancelar,
 }: {
@@ -21,6 +22,8 @@ export function DialogoConfirmar({
   children?: React.ReactNode;
   textoConfirmar: string;
   peligro?: boolean;
+  /** Mientras falte algo para poder confirmar. */
+  confirmarDeshabilitado?: boolean;
   onConfirmar: () => void;
   onCancelar: () => void;
 }) {
@@ -50,7 +53,7 @@ export function DialogoConfirmar({
           <Button variante="secondary" onClick={onCancelar} autoFocus>
             Cancelar
           </Button>
-          <Button className={peligro ? "bg-red-600 hover:bg-red-700" : undefined} onClick={onConfirmar}>
+          <Button className={peligro ? "bg-red-600 hover:bg-red-700" : undefined} onClick={onConfirmar} disabled={confirmarDeshabilitado}>
             {textoConfirmar}
           </Button>
         </div>

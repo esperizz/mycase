@@ -1,13 +1,11 @@
+import { oracion } from "./formato";
 import { esArt, pasosDe, primerNombre } from "./hojaRuta";
 import type { Caso, EstadoCaso } from "./tipos";
 
 /**
- * Respuesta de un toque a "¿cómo va mi caso?" (la consulta más común, ver
- * docs/entrevistas/insights.md): no hay novedades y en qué etapa está, sin términos técnicos.
+ * Mensaje para contestarle al cliente "¿cómo va mi caso?" (la consulta más común, ver
+ * docs/entrevistas/insights.md): la novedad, si la hay, y en qué etapa está, sin términos técnicos.
  */
-
-/** Lo que queda en el historial del caso al mandarla. */
-export const NOTA_SIN_NOVEDADES = "Le avisé: sin novedades.";
 
 /** La etapa de un caso que no es de ART, contada al cliente. */
 const ETAPA_CLIENTE: Record<Exclude<EstadoCaso, "cerrado">, string> = {
@@ -27,12 +25,18 @@ function etapa(caso: Caso): string {
   return caso.estado === "cerrado" ? "" : ETAPA_CLIENTE[caso.estado];
 }
 
-export function mensajeSinNovedades(caso: Caso): string {
-  return [
-    `Hola ${primerNombre(caso.cliente)}, revisé tu caso y no hay novedades.`,
-    etapa(caso),
-    "Apenas haya algo te aviso.",
-  ]
-    .filter(Boolean)
-    .join("\n\n");
+/** Sin `novedad` (o en blanco), el mensaje es "revisé tu caso y no hay novedades". */
+export function mensajeParaCliente(caso: Caso, novedad = ""): string {
+  const nombre = primerNombre(caso.cliente);
+  const lineas = novedad.trim()
+    ? [`Hola ${nombre}, te cuento cómo va tu caso.`, oracion(novedad), etapa(caso), "Te voy contando."]
+    : [`Hola ${nombre}, revisé tu caso y no hay novedades.`, etapa(caso), "Apenas haya algo te aviso."];
+  return lineas.filter(Boolean).join("\n\n");
+}
+
+/** Lo que queda en el historial del caso al mandarlo. */
+export function notaInforme(novedad = ""): string {
+  const t = novedad.trim().replace(/\s+/g, " ");
+  if (!t) return "Le informé: sin novedades.";
+  return `Le informé: ${t}${/[.!?]$/.test(t) ? "" : "."}`;
 }
