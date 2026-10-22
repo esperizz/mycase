@@ -11,7 +11,7 @@ import { HojaRutaArt } from "@/components/casos/HojaRutaArt";
 import { ItemVencimiento } from "@/components/casos/ItemVencimiento";
 import { NotasCaso } from "@/components/casos/NotasCaso";
 import { InformarCliente } from "@/components/casos/InformarCliente";
-import { Button, ButtonLink } from "@/components/ui/Button";
+import { Button, ButtonLink, LinkVolver } from "@/components/ui/Button";
 import { DialogoConfirmar } from "@/components/ui/DialogoConfirmar";
 import { SelectField, TextField } from "@/components/ui/Field";
 import { Header } from "@/components/ui/Header";
@@ -78,9 +78,9 @@ export default function FichaCasoPage() {
       <Header />
       <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-8 px-4 py-8">
         <div className="flex flex-col gap-3">
-          <Link href="/casos" className="w-fit text-sm font-medium text-gray-500 hover:text-tinta">
-            ← Volver a mis casos
-          </Link>
+          <LinkVolver href="/casos">
+            Volver a mis casos
+          </LinkVolver>
           <div className="flex flex-wrap items-center gap-3">
             <h1 className="text-2xl font-semibold tracking-tight text-tinta sm:text-3xl">
               {caso.cliente} <span className="text-tenue">contra {caso.empleador}</span>
