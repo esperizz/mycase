@@ -22,15 +22,33 @@ function clases({ variante = "primary", className, flecha }: Props) {
   return [base, variantes[variante], flecha && "pr-1.5", className].filter(Boolean).join(" ");
 }
 
-function Flecha({ variante = "primary" }: { variante?: Variante }) {
+/**
+ * Flecha en círculo. Se usa sola en filas que llevan a otra pantalla, con `className` para el
+ * tamaño; `atras` la da vuelta para los links de volver.
+ */
+export function Flecha({
+  variante = "primary",
+  className = "ml-1 size-7",
+  atras = false,
+}: {
+  variante?: Variante;
+  className?: string;
+  atras?: boolean;
+}) {
   return (
     <span
       aria-hidden
-      className={`ml-1 flex size-7 items-center justify-center rounded-full ${
+      className={`flex shrink-0 items-center justify-center rounded-full ${className} ${
         variante === "primary" ? "bg-white text-tinta" : "bg-tinta text-white"
       }`}
     >
-      <svg viewBox="0 0 16 16" className="size-3.5" fill="none" stroke="currentColor" strokeWidth={2}>
+      <svg
+        viewBox="0 0 16 16"
+        className={`size-3.5 ${atras ? "rotate-180" : ""}`}
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={2}
+      >
         <path d="M3 8h10M9 4l4 4-4 4" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
     </span>
@@ -63,6 +81,16 @@ export function ButtonLink({
     <Link href={href} className={clases({ variante, className, flecha })}>
       {children}
       {flecha && <Flecha variante={variante} />}
+    </Link>
+  );
+}
+
+/** Link para volver a la pantalla anterior, con la flecha en círculo hacia atrás. */
+export function LinkVolver({ href, children }: { href: string; children: React.ReactNode }) {
+  return (
+    <Link href={href} className="flex w-fit items-center gap-2 text-sm font-medium text-gray-500 hover:text-tinta">
+      <Flecha variante="secondary" className="size-6" atras />
+      {children}
     </Link>
   );
 }

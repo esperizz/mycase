@@ -2,8 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
-import { DialogoCerrarCaso } from "@/components/casos/CerrarCaso";
-import { DialogoConfirmar } from "@/components/ui/DialogoConfirmar";
+import { DialogoCerrarCaso } from "@/components/casos/CerrarCaso";import { DialogoConfirmar } from "@/components/ui/DialogoConfirmar";
 import { TextField } from "@/components/ui/Field";
 import { MenuAcciones } from "@/components/ui/MenuAcciones";
 import { useCasos } from "@/lib/casos/CasosProvider";
@@ -100,20 +99,20 @@ function PasoActual({ caso, paso }: { caso: Caso; paso: Paso }) {
         </div>
       )}
       <label className="flex flex-col gap-1.5 text-sm font-medium text-gray-700">
-        Aviso para el cliente (podés editarlo)
+        Mensaje para el cliente (podés editarlo)
         <textarea
           rows={7}
           value={texto}
           onChange={(e) => setEditado(e.target.value)}
-          className="rounded-2xl border border-linea p-3 font-normal text-tinta focus:border-tinta focus:outline-none"
+          className="field-sizing-content min-h-40 rounded-2xl border border-linea p-3 font-normal text-tinta focus:border-tinta focus:outline-none"
         />
       </label>
       <div className="flex flex-col gap-2 sm:flex-row">
         <Button className="bg-green-700 hover:bg-green-800" onClick={() => cumplir(true)}>
-          Cumplido y avisarle por WhatsApp
+          Cumplido e informarle por WhatsApp
         </Button>
         <Button variante="secondary" onClick={() => cumplir(false)}>
-          Cumplido, sin avisar
+          Cumplido, sin informarle
         </Button>
       </div>
     </div>
@@ -132,7 +131,7 @@ export function HojaRutaArt({ caso }: { caso: Caso }) {
       <section className="flex flex-col gap-3 rounded-3xl border border-linea bg-white p-5">
         <h2 className="font-semibold text-tinta">Hoja de ruta de ART</h2>
         <p className="text-sm text-gray-500">
-          Seguí el reclamo paso a paso, con los plazos legales calculados en días hábiles, y avisale al cliente por
+          Seguí el reclamo paso a paso, con los plazos legales calculados en días hábiles, e informale al cliente por
           WhatsApp cuando quieras.
         </p>
         <div>
@@ -172,15 +171,15 @@ export function HojaRutaArt({ caso }: { caso: Caso }) {
 
       {hoja.inicioAvisado ? (
         <p className="text-sm text-gray-500">
-          Le contaste al cliente cómo va a ser el caso el {formatearFecha(hoja.inicioAvisado)}.{" "}
+          Le informaste al cliente cómo va a ser el caso el {formatearFecha(hoja.inicioAvisado)}.{" "}
           <button type="button" onClick={contarInicio} className="font-semibold text-tinta underline underline-offset-2">
             Volver a mandar
           </button>
         </p>
       ) : (
         <div className="flex flex-col gap-2 rounded-2xl bg-blue-50 p-4 text-sm text-blue-900 sm:flex-row sm:items-center sm:justify-between">
-          <p>Contale al cliente todo el recorrido desde el principio: después, cada paso que se cumple confirma lo que le dijiste.</p>
-          <Button onClick={contarInicio}>Contarle por WhatsApp</Button>
+          <p>Informale al cliente todo el recorrido desde el principio: después, cada paso que se cumple confirma lo que le dijiste.</p>
+          <Button onClick={contarInicio}>Informarle el recorrido por WhatsApp</Button>
         </div>
       )}
 
@@ -221,7 +220,7 @@ export function HojaRutaArt({ caso }: { caso: Caso }) {
               {/* Solo datos: cuándo se cumplió y si se le avisó al cliente. Las acciones van en el menú. */}
               {p.fecha && (
                 <p className="mt-0.5 text-xs text-gray-500">
-                  {fechaCorta(p.fecha)} · {p.avisado ? <span className="text-green-700">Avisado</span> : "No avisado"}
+                  {fechaCorta(p.fecha)} · {p.avisado ? <span className="text-green-700">Informado</span> : "No informado"}
                 </p>
               )}
             </div>
@@ -229,7 +228,7 @@ export function HojaRutaArt({ caso }: { caso: Caso }) {
               <MenuAcciones
                 etiqueta={`Acciones de “${p.tecnico}”`}
                 acciones={[
-                  ...(p.avisado ? [] : [{ etiqueta: "Avisarle por WhatsApp", onClick: () => avisarDespues(p) }]),
+                  ...(p.avisado ? [] : [{ etiqueta: "Informarle por WhatsApp", onClick: () => avisarDespues(p) }]),
                   { etiqueta: "Volver a este paso", onClick: () => setVolviendo(p.id) },
                 ]}
               />
@@ -257,7 +256,7 @@ export function HojaRutaArt({ caso }: { caso: Caso }) {
         </p>
         {huboAvisos && (
           <p className="rounded-2xl bg-amber-50 p-3 text-amber-900">
-            Los avisos que ya le mandaste al cliente no se borran de WhatsApp. Si hace falta, mandale una aclaración.
+            Los mensajes que ya le mandaste al cliente no se borran de WhatsApp. Si hace falta, mandale una aclaración.
           </p>
         )}
       </DialogoConfirmar>

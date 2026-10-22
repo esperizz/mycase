@@ -6,16 +6,8 @@ import { SelectField, TextField } from "@/components/ui/Field";
 import { useCasos } from "@/lib/casos/CasosProvider";
 import { feriado } from "@/lib/casos/feriados";
 import { formatearFecha, hoyIso, sumarDias } from "@/lib/casos/formato";
+import { sugerencias } from "@/lib/casos/sugerencias";
 import type { Caso, TipoVencimiento } from "@/lib/casos/tipos";
-
-/** Tocar una sugerencia también elige si es plazo o tarea. */
-const SUGERENCIAS: { texto: string; tipo: TipoVencimiento }[] = [
-  { texto: "Contestar demanda", tipo: "plazo" },
-  { texto: "Audiencia", tipo: "plazo" },
-  { texto: "Presentar escrito", tipo: "plazo" },
-  { texto: "Llamar al cliente", tipo: "tarea" },
-  { texto: "Pedir documentación", tipo: "tarea" },
-];
 
 const TEXTOS: Record<TipoVencimiento, { pregunta: string; ejemplo: string; boton: string }> = {
   plazo: { pregunta: "¿Qué vence?", ejemplo: 'Ej.: "Contestar traslado"', boton: "Agregar plazo" },
@@ -159,16 +151,18 @@ export function CargaRapida({
             onChange={(e) => setDescripcion(e.target.value)}
           />
           <div className="flex flex-wrap gap-2">
-            {SUGERENCIAS.map((s) => (
+            {(caso ? sugerencias(caso, tipo) : []).map((s) => (
               <Chip
-                key={s.texto}
-                activo={descripcion === s.texto}
+                key={s}
+                activo={descripcion === s}
                 onClick={() => {
-                  setDescripcion(s.texto);
-                  setTipo(s.tipo);
+                  // Tocar el elegido lo desmarca y deja el campo listo para escribir otro motivo.
+                  if (descripcion !== s) return setDescripcion(s);
+                  setDescripcion("");
+                  campoDescripcion.current?.focus();
                 }}
               >
-                {s.texto}
+                {s}
               </Chip>
             ))}
           </div>
@@ -178,7 +172,7 @@ export function CargaRapida({
           <p className="text-sm font-semibold text-tinta">Cuándo</p>
           <div className="flex flex-wrap gap-2">
             {atajos.map((a) => (
-              <Chip key={a.etiqueta} activo={fecha === a.fecha} onClick={() => setFecha(a.fecha)}>
+              <Chip key={a.etiqueta} activo={fecha === a.fecha} onClick={() => setFecha(fecha === a.fecha ? "" : a.fecha)}>
                 {a.etiqueta}
               </Chip>
             ))}

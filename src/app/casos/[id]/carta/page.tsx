@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useState } from "react";
-import { Button } from "@/components/ui/Button";
+import { Button, LinkVolver } from "@/components/ui/Button";
 import { SelectField, TextAreaField, TextField } from "@/components/ui/Field";
 import { Header } from "@/components/ui/Header";
 import {
@@ -104,9 +104,9 @@ export default function CartaCasoPage() {
       <Header />
       <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 px-4 py-8">
         <div className="flex flex-col gap-3">
-          <Link href={`/casos/${caso.id}`} className="w-fit text-sm font-medium text-gray-500 hover:text-tinta">
-            ← Volver al caso
-          </Link>
+          <LinkVolver href={`/casos/${caso.id}`}>
+            Volver al caso
+          </LinkVolver>
           <h1 className="text-2xl font-bold tracking-tight text-tinta">Carta de intimación — {caso.cliente}</h1>
           <p className="text-sm text-gray-500">{info.intro}</p>
         </div>

@@ -54,13 +54,13 @@ describe("armarPanel", () => {
       HOY,
     );
     expect(panel.vencidos).toEqual([]);
-    expect(panel.sinProximoPaso).toEqual([]);
+    expect(panel.sinNadaCargado).toEqual([]);
     expect(panel.cartasSinEnviar).toEqual([]);
     expect(panel.activos).toBe(0);
     expect(panel.porEtapa.cerrado).toBe(1);
   });
 
-  it("detecta casos sin próximo paso y cartas sin enviar", () => {
+  it("detecta casos sin nada cargado y cartas sin enviar", () => {
     const sinNada = caso({ cliente: "A", vencimientos: [vto("2026-10-01", true)] });
     const conVto = caso({ cliente: "B", vencimientos: [vto("2026-11-30")] });
     const cartaPendiente = caso({ cliente: "C", vencimientos: [vto("2026-11-30")], carta: cartaVacia() });
@@ -70,9 +70,18 @@ describe("armarPanel", () => {
       carta: { ...cartaVacia(), enviadaEl: "2026-10-01" },
     });
     const panel = armarPanel([sinNada, conVto, cartaPendiente, cartaEnviada], HOY);
-    expect(panel.sinProximoPaso.map((c) => c.cliente)).toEqual(["A"]);
+    expect(panel.sinNadaCargado.map((c) => c.cliente)).toEqual(["A"]);
     expect(panel.cartasSinEnviar.map((c) => c.cliente)).toEqual(["C"]);
     expect(panel.activos).toBe(4);
+  });
+
+  it("no da por olvidados los casos con la carta a medias ni los abiertos en la última semana", () => {
+    const viejo = caso({ cliente: "Viejo", fechaApertura: "2026-10-06" });
+    const nuevo = caso({ cliente: "Nuevo", fechaApertura: "2026-10-08" });
+    const conCarta = caso({ cliente: "Carta", carta: cartaVacia() });
+    const cartaEnviada = caso({ cliente: "Enviada", carta: { ...cartaVacia(), enviadaEl: "2026-10-01" } });
+    const panel = armarPanel([viejo, nuevo, conCarta, cartaEnviada], HOY);
+    expect(panel.sinNadaCargado.map((c) => c.cliente)).toEqual(["Viejo", "Enviada"]);
   });
 
   it("cuenta aparte los casos de ART y no los da por perdidos si tienen la hoja de ruta en marcha", () => {
@@ -86,7 +95,7 @@ describe("armarPanel", () => {
     expect(panel.porEtapa.cerrado).toBe(1);
     expect(panel.porEtapa.mediacion).toBe(1);
     expect(panel.porEtapa.consulta).toBe(0);
-    expect(panel.sinProximoPaso.map((c) => c.cliente)).toEqual(["ART2", "D"]);
+    expect(panel.sinNadaCargado.map((c) => c.cliente)).toEqual(["ART2", "D"]);
   });
 
   it("las tareas pasadas son atrasadas, no vencidos", () => {
@@ -128,10 +137,10 @@ describe("cierre", () => {
     vencimientos: {},
   };
 
-  it("un caso de ART con todo cumplido está para cerrar, no 'sin próximo paso'", () => {
+  it("un caso de ART con todo cumplido está para cerrar, no 'sin nada cargado'", () => {
     const listo = caso({ cliente: "Listo", tipoReclamo: "Accidente de trabajo", hojaRuta: completa });
     const panel = armarPanel([listo], HOY);
-    expect(panel.sinProximoPaso).toEqual([]);
+    expect(panel.sinNadaCargado).toEqual([]);
     expect(panel.listosParaCerrar.map((c) => c.cliente)).toEqual(["Listo"]);
     expect(armarPanel([{ ...listo, estado: "cerrado" }], HOY).listosParaCerrar).toEqual([]);
   });

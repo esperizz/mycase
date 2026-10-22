@@ -10,7 +10,8 @@ import { FormularioCaso } from "@/components/casos/FormularioCaso";
 import { HojaRutaArt } from "@/components/casos/HojaRutaArt";
 import { ItemVencimiento } from "@/components/casos/ItemVencimiento";
 import { NotasCaso } from "@/components/casos/NotasCaso";
-import { Button } from "@/components/ui/Button";
+import { InformarCliente } from "@/components/casos/InformarCliente";
+import { Button, ButtonLink, LinkVolver } from "@/components/ui/Button";
 import { DialogoConfirmar } from "@/components/ui/DialogoConfirmar";
 import { SelectField, TextField } from "@/components/ui/Field";
 import { Header } from "@/components/ui/Header";
@@ -77,9 +78,9 @@ export default function FichaCasoPage() {
       <Header />
       <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-8 px-4 py-8">
         <div className="flex flex-col gap-3">
-          <Link href="/casos" className="w-fit text-sm font-medium text-gray-500 hover:text-tinta">
-            ← Volver a mis casos
-          </Link>
+          <LinkVolver href="/casos">
+            Volver a mis casos
+          </LinkVolver>
           <div className="flex flex-wrap items-center gap-3">
             <h1 className="text-2xl font-semibold tracking-tight text-tinta sm:text-3xl">
               {caso.cliente} <span className="text-tenue">contra {caso.empleador}</span>
@@ -91,12 +92,9 @@ export default function FichaCasoPage() {
         {art ? (
           <HojaRutaArt caso={caso} />
         ) : (
-          <Link
-            href={`/casos/${caso.id}/carta`}
-            className="w-fit rounded-2xl border border-linea bg-white px-4 py-2 text-sm font-semibold text-tinta hover:bg-fondo"
-          >
-            Generar carta de intimación →
-          </Link>
+          <ButtonLink href={`/casos/${caso.id}/carta`} className="self-start" flecha>
+            Generar carta de intimación
+          </ButtonLink>
         )}
 
         {editando ? (
@@ -165,6 +163,8 @@ export default function FichaCasoPage() {
               ))}
             </SelectField>
           )}
+          {/* En ART no: la hoja de ruta ya arma el mensaje de cada paso. */}
+          {!art && caso.estado !== "cerrado" && <InformarCliente caso={caso} />}
         </section>
 
         <section className="flex flex-col gap-4 rounded-3xl border border-linea bg-white p-5">
@@ -193,7 +193,7 @@ export default function FichaCasoPage() {
             <div className="flex-[2]">
               <TextField
                 label={tipoVto === "plazo" ? "Qué vence" : "Qué hay que hacer"}
-                placeholder={tipoVto === "plazo" ? 'Ej.: "Contestar demanda"' : 'Ej.: "Llamar al cliente"'}
+                placeholder={tipoVto === "plazo" ? 'Ej.: "Contestar traslado"' : 'Ej.: "Llamar al cliente"'}
                 value={descVto}
                 onChange={(e) => setDescVto(e.target.value)}
               />
