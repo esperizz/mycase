@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
+import { CamposHoraLugar } from "@/components/casos/CamposHoraLugar";
 import { DialogoCerrarCaso } from "@/components/casos/CerrarCaso";
 import { DocumentosCaso } from "@/components/casos/DocumentosCaso";
 import { EtapaBadge } from "@/components/casos/EstadoBadge";
@@ -18,6 +19,7 @@ import { Header } from "@/components/ui/Header";
 import { useCasos } from "@/lib/casos/CasosProvider";
 import { formatearFecha } from "@/lib/casos/formato";
 import { esArt, etapaArt } from "@/lib/casos/hojaRuta";
+import { esCita } from "@/lib/casos/sugerencias";
 import { ESTADO_LABEL, ESTADOS, type TipoVencimiento } from "@/lib/casos/tipos";
 
 function Dato({ label, valor }: { label: string; valor: string }) {
@@ -212,19 +214,14 @@ export default function FichaCasoPage() {
                 />
               </div>
             </div>
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
-              <div className="sm:w-36">
-                <TextField label="Hora" opcional type="time" value={horaVto} onChange={(e) => setHoraVto(e.target.value)} />
-              </div>
-              <div className="flex-1">
-                <TextField
-                  label="Lugar"
-                  opcional
-                  placeholder='Ej.: "Juzgado 45" o "por Zoom"'
-                  value={lugarVto}
-                  onChange={(e) => setLugarVto(e.target.value)}
-                />
-              </div>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+              <CamposHoraLugar
+                hora={horaVto}
+                lugar={lugarVto}
+                onHora={setHoraVto}
+                onLugar={setLugarVto}
+                abrir={esCita(descVto)}
+              />
               <Button type="submit">Agregar</Button>
             </div>
           </form>

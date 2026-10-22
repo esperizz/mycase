@@ -6,7 +6,8 @@ import { SelectField, TextField } from "@/components/ui/Field";
 import { useCasos } from "@/lib/casos/CasosProvider";
 import { feriado } from "@/lib/casos/feriados";
 import { formatearFecha, hoyIso, sumarDias } from "@/lib/casos/formato";
-import { sugerencias } from "@/lib/casos/sugerencias";
+import { esCita, sugerencias } from "@/lib/casos/sugerencias";
+import { CamposHoraLugar } from "@/components/casos/CamposHoraLugar";
 import type { Caso, TipoVencimiento } from "@/lib/casos/tipos";
 
 const TEXTOS: Record<TipoVencimiento, { pregunta: string; ejemplo: string; boton: string }> = {
@@ -190,16 +191,7 @@ export function CargaRapida({
           )}
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-[9rem_1fr]">
-          <TextField label="Hora" opcional type="time" value={hora} onChange={(e) => setHora(e.target.value)} />
-          <TextField
-            label="Lugar"
-            opcional
-            placeholder='Ej.: "Juzgado 45" o "por Zoom"'
-            value={lugar}
-            onChange={(e) => setLugar(e.target.value)}
-          />
-        </div>
+        <CamposHoraLugar hora={hora} lugar={lugar} onHora={setHora} onLugar={setLugar} abrir={esCita(descripcion)} />
 
         <div>
           <Button type="submit" disabled={!completo}>

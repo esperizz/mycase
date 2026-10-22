@@ -4,7 +4,9 @@ import { useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { SelectField, TextField } from "@/components/ui/Field";
 import { useCasos } from "@/lib/casos/CasosProvider";
+import { CamposHoraLugar } from "./CamposHoraLugar";
 import { TipoTag } from "./TipoTag";
+import { esCita } from "@/lib/casos/sugerencias";
 import { diasHasta, formatearFecha, horaYLugar } from "@/lib/casos/formato";
 import type { TipoVencimiento, Vencimiento } from "@/lib/casos/tipos";
 
@@ -43,11 +45,8 @@ export function ItemVencimiento({ casoId, vencimiento: v }: { casoId: string; ve
           <div className="flex-[2]">
             <TextField label={tipo === "plazo" ? "Qué vence" : "Qué hay que hacer"} value={descripcion} onChange={(e) => setDescripcion(e.target.value)} />
           </div>
-          <div className="sm:w-32">
-            <TextField label="Hora" opcional type="time" value={hora} onChange={(e) => setHora(e.target.value)} />
-          </div>
-          <div className="flex-1">
-            <TextField label="Lugar" opcional value={lugar} onChange={(e) => setLugar(e.target.value)} />
+          <div className="sm:basis-full">
+            <CamposHoraLugar hora={hora} lugar={lugar} onHora={setHora} onLugar={setLugar} abrir={esCita(descripcion)} />
           </div>
           <div className="flex gap-2">
             <Button type="submit">Guardar</Button>
