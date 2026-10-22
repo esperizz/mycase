@@ -141,8 +141,8 @@ export function CargaRapida({
           </div>
           <p className="text-xs text-gray-500">
             {tipo === "plazo"
-              ? "Tiene consecuencias si se pasa: si vence, aparece en rojo en el panel."
-              : "Un pendiente tuyo, sin consecuencias legales si se atrasa."}
+              ? "Lo fija la ley o el juzgado y tiene consecuencias si se pasa. Si vence, aparece en rojo en el panel."
+              : "Algo que te anotás para no olvidarte, como llamar al cliente. Si se atrasa no pasa nada grave: aparece en amarillo."}
           </p>
         </div>
 
