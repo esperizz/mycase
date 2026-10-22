@@ -216,7 +216,7 @@ export function TextAreaField({
   const id = useId();
   return (
     <Campo id={id} label={label} opcional={opcional}>
-      <textarea id={id} className={`${control} h-auto min-h-24 py-2`} {...area} />
+      <textarea id={id} className={`${control} field-sizing-content h-auto min-h-24 py-2`} {...area} />
     </Campo>
   );
 }

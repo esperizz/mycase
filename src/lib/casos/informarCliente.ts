@@ -1,5 +1,5 @@
 import { oracion } from "./formato";
-import { esArt, pasosDe, primerNombre } from "./hojaRuta";
+import { primerNombre } from "./hojaRuta";
 import type { Caso, EstadoCaso } from "./tipos";
 
 /**
@@ -15,22 +15,16 @@ const ETAPA_CLIENTE: Record<Exclude<EstadoCaso, "cerrado">, string> = {
   demanda: "El juicio está en marcha. Son procesos largos y es normal que pasen semanas sin movimientos.",
 };
 
-function etapa(caso: Caso): string {
-  if (esArt(caso) && caso.hojaRuta) {
-    const actual = pasosDe(caso.hojaRuta).find((p) => p.estado === "actual");
-    if (!actual) return "Ya cumplimos todos los pasos y estamos terminando los últimos detalles.";
-    const titulo = `${actual.titulo.charAt(0).toLowerCase()}${actual.titulo.slice(1)}`;
-    return `Ahora estamos en: ${titulo}. ${actual.explicacion}`;
-  }
-  return caso.estado === "cerrado" ? "" : ETAPA_CLIENTE[caso.estado];
-}
-
-/** Sin `novedad` (o en blanco), el mensaje es "revisé tu caso y no hay novedades". */
+/**
+ * Sin `novedad` (o en blanco), el mensaje es "revisé tu caso y no hay novedades".
+ * Para casos que no son de ART: en esos, cada paso de la hoja de ruta arma su propio mensaje.
+ */
 export function mensajeParaCliente(caso: Caso, novedad = ""): string {
   const nombre = primerNombre(caso.cliente);
+  const etapa = caso.estado === "cerrado" ? "" : ETAPA_CLIENTE[caso.estado];
   const lineas = novedad.trim()
-    ? [`Hola ${nombre}, te cuento cómo va tu caso.`, oracion(novedad), etapa(caso), "Te voy contando."]
-    : [`Hola ${nombre}, revisé tu caso y no hay novedades.`, etapa(caso), "Apenas haya algo te aviso."];
+    ? [`Hola ${nombre}, te cuento cómo va tu caso.`, oracion(novedad), etapa, "Te voy contando."]
+    : [`Hola ${nombre}, revisé tu caso y no hay novedades.`, etapa, "Apenas haya algo te aviso."];
   return lineas.filter(Boolean).join("\n\n");
 }
 

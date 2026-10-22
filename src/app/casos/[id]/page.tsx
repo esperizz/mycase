@@ -166,7 +166,8 @@ export default function FichaCasoPage() {
               ))}
             </SelectField>
           )}
-          {caso.estado !== "cerrado" && <InformarCliente caso={caso} />}
+          {/* En ART no: la hoja de ruta ya arma el mensaje de cada paso. */}
+          {!art && caso.estado !== "cerrado" && <InformarCliente caso={caso} />}
         </section>
 
         <section className="flex flex-col gap-4 rounded-3xl border border-linea bg-white p-5">
