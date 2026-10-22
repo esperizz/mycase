@@ -6,13 +6,8 @@ import { SelectField, TextField } from "@/components/ui/Field";
 import { useCasos } from "@/lib/casos/CasosProvider";
 import { feriado } from "@/lib/casos/feriados";
 import { formatearFecha, hoyIso, sumarDias } from "@/lib/casos/formato";
+import { sugerencias } from "@/lib/casos/sugerencias";
 import type { Caso, TipoVencimiento } from "@/lib/casos/tipos";
-
-/** Sugerencias según lo que se esté cargando. La abogada representa al trabajador: demanda, no contesta demandas. */
-const SUGERENCIAS: Record<TipoVencimiento, string[]> = {
-  plazo: ["Contestar traslado", "Audiencia", "Presentar escrito"],
-  tarea: ["Llamar al cliente", "Pedir documentación"],
-};
 
 const TEXTOS: Record<TipoVencimiento, { pregunta: string; ejemplo: string; boton: string }> = {
   plazo: { pregunta: "¿Qué vence?", ejemplo: 'Ej.: "Contestar traslado"', boton: "Agregar plazo" },
@@ -156,7 +151,7 @@ export function CargaRapida({
             onChange={(e) => setDescripcion(e.target.value)}
           />
           <div className="flex flex-wrap gap-2">
-            {SUGERENCIAS[tipo].map((s) => (
+            {(caso ? sugerencias(caso, tipo) : []).map((s) => (
               <Chip key={s} activo={descripcion === s} onClick={() => setDescripcion(s)}>
                 {s}
               </Chip>

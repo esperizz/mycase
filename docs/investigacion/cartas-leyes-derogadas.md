@@ -36,3 +36,22 @@ Las cartas ya guardadas que tenían tildada una consecuencia eliminada simplemen
 2. ¿Hay que sumar alguna consecuencia que reemplace a las multas? Las fuentes mencionan que sigue abierta la vía de reclamar daños (reparación integral), que la app ya ofrece como "Reclamar además los daños".
 3. Para casos anteriores a julio de 2024, ¿conviene ofrecer igual las multas como opción, avisando que su aplicación es discutida?
 4. Los plazos que ofrece la carta (48 horas, 5 y 10 días hábiles), ¿son los que usan en la práctica para cada tipo de reclamo?
+
+## Sugerencias para cargar plazos y tareas
+
+La carga rápida del panel ofrece atajos según la etapa del caso y el tipo de reclamo
+(`src/lib/casos/sugerencias.ts`). Los armamos sin consultar a una abogada:
+
+| Según | Plazos | Tareas |
+|---|---|---|
+| Consulta | Prescripción | Pedir documentación · Llamar al cliente |
+| Intimación enviada | Vence la intimación · Recepción de la carta | Revisar respuesta del empleador · Llamar al cliente |
+| Mediación | Audiencia de mediación | Preparar propuesta · Llamar al cliente |
+| Demanda judicial | Contestar traslado · Audiencia · Presentar escrito | Llamar al cliente · Pedir documentación |
+| Despido sin causa | Pago de la indemnización · Entrega de certificados | Pedir telegrama de despido |
+| Falta de pago de haberes | Pago de haberes | Pedir recibos de sueldo |
+| Diferencias salariales | — | Revisar convenio colectivo · Pedir recibos de sueldo |
+| Trabajo no registrado | — | Juntar pruebas de la relación |
+| ART (cualquier etapa) | Discutir el alta · Examen en comisión médica | Pedir número de siniestro · Pedir historia clínica · Llamar al cliente |
+
+5. ¿Estos son los plazos y tareas que más cargarías en cada etapa y tipo de reclamo? ¿Cuáles sobran y cuáles faltan?
