@@ -6,6 +6,7 @@ import { ArtBadge, EstadoBadge } from "@/components/casos/EstadoBadge";
 import { SubirCasosLocales } from "@/components/casos/SubirCasosLocales";
 import { TipoTag } from "@/components/casos/TipoTag";
 import { Button, ButtonLink, Flecha } from "@/components/ui/Button";
+import { tipoCartaPorId } from "@/lib/casos/cartaCatalogo";
 import { useCasos } from "@/lib/casos/CasosProvider";
 import { proximoFeriado } from "@/lib/casos/feriados";
 import { formatearFecha, horaYLugar, hoyIso, textoPendiente } from "@/lib/casos/formato";
@@ -341,8 +342,22 @@ export function Panel() {
           )}
 
           {panel.cartasSinEnviar.length > 0 && (
-            <Tarjeta titulo="Cartas sin enviar" ayuda="Empezaste la carta de intimación pero no la marcaste como enviada.">
-              <ListaCorta casos={panel.cartasSinEnviar} destino={(c) => `/casos/${c.id}/carta`} accion="Seguir" />
+            <Tarjeta titulo="Cartas sin enviar" ayuda="Cartas que empezaste pero no marcaste como enviadas.">
+              <ul className="flex flex-col gap-2">
+                {panel.cartasSinEnviar.map(({ caso, carta }) => (
+                  <li key={carta.id}>
+                    <Link href={`/casos/${caso.id}/cartas/${carta.id}`} className={filaCorta}>
+                      <span className="min-w-0 truncate font-medium text-tinta">
+                        {caso.cliente} <span className="font-normal text-gray-500">· {tipoCartaPorId(carta.tipo).titulo}</span>
+                      </span>
+                      <span className="flex shrink-0 items-center gap-2 font-semibold text-tinta">
+                        Seguir
+                        <Flecha variante="secondary" className="size-6" />
+                      </span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
             </Tarjeta>
           )}
 

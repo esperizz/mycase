@@ -13,38 +13,46 @@ import {
   pedidoPorId,
   pedidosPara,
   plazoPorId,
+  tipoCartaPorId,
   VENCE_INTIMACION,
 } from "@/lib/casos/cartaCatalogo";
 import { useCasos } from "@/lib/casos/CasosProvider";
 import { formatearFecha, hoyIso, sumarDias } from "@/lib/casos/formato";
 import { generarCarta } from "@/lib/casos/generarCarta";
-import { cartaVacia, type CartaDatos, type PlazoId } from "@/lib/casos/tipos";
+import type { CartaDatos, PlazoId } from "@/lib/casos/tipos";
 
-export default function CartaCasoPage() {
-  const { id } = useParams<{ id: string }>();
+function NoEncontrada({ casoId }: { casoId?: string }) {
+  return (
+    <>
+      <Header />
+      <main className="mx-auto flex w-full max-w-xl flex-1 flex-col items-center gap-4 px-4 py-16 text-center">
+        <p className="text-lg font-semibold text-tinta">No encontramos esa carta</p>
+        <Link
+          href={casoId ? `/casos/${casoId}` : "/casos"}
+          className="text-sm font-semibold text-tinta underline underline-offset-2"
+        >
+          {casoId ? "Volver al caso" : "Volver a la lista"}
+        </Link>
+      </main>
+    </>
+  );
+}
+
+const seccion = "flex flex-col gap-4 rounded-3xl border border-linea bg-white p-5";
+
+export default function CartaPage() {
+  const { id, cartaId } = useParams<{ id: string; cartaId: string }>();
   const { casos, listo, actualizar } = useCasos();
   const caso = casos.find((c) => c.id === id);
+  const d = caso?.cartas.find((c) => c.id === cartaId);
 
   const [copiado, setCopiado] = useState(false);
   const [fechaEnvio, setFechaEnvio] = useState(hoyIso);
 
   if (!listo) return null;
+  if (!caso || !d) return <NoEncontrada casoId={caso?.id} />;
 
-  if (!caso) {
-    return (
-      <>
-        <Header />
-        <main className="mx-auto flex w-full max-w-xl flex-1 flex-col items-center gap-4 px-4 py-16 text-center">
-          <p className="text-lg font-semibold text-tinta">No encontramos ese caso</p>
-          <Link href="/casos" className="text-sm font-semibold text-tinta underline underline-offset-2">
-            Volver a la lista
-          </Link>
-        </main>
-      </>
-    );
-  }
-
-  const d = caso.carta ?? cartaVacia();
+  const tipo = tipoCartaPorId(d.tipo);
   const pedidos = pedidosPara(caso.tipoReclamo);
   const pedidoActual = pedidoPorId(caso.tipoReclamo, d.pedidoId) ?? pedidos[0];
   const info = INFO_TIPO[caso.tipoReclamo] ?? INFO_TIPO.Otro;
@@ -52,9 +60,9 @@ export default function CartaCasoPage() {
 
   // Cada cambio se guarda en el caso al instante: no hay que acordarse de guardar.
   const cambiar = (cambio: Partial<CartaDatos>) =>
-    actualizar(caso.id, (c) => ({ ...c, carta: { ...(c.carta ?? cartaVacia()), ...cambio } }));
+    actualizar(caso.id, (c) => ({ ...c, cartas: c.cartas.map((x) => (x.id === d.id ? { ...x, ...cambio } : x)) }));
 
-  const carta = generarCarta({ ...caso, carta: d });
+  const carta = generarCarta(caso, d);
 
   const plazo = plazoPorId(d.plazo);
   const venceEl = fechaEnvio ? sumarDias(fechaEnvio, plazo.dias, plazo.habiles) : "";
@@ -64,7 +72,7 @@ export default function CartaCasoPage() {
     actualizar(caso.id, (c) => ({
       ...c,
       estado: c.estado === "consulta" ? "intimacion" : c.estado,
-      carta: { ...(c.carta ?? cartaVacia()), enviadaEl: fechaEnvio },
+      cartas: c.cartas.map((x) => (x.id === d.id ? { ...x, enviadaEl: fechaEnvio } : x)),
       vencimientos: [
         ...c.vencimientos,
         {
@@ -95,7 +103,7 @@ export default function CartaCasoPage() {
     const url = URL.createObjectURL(new Blob([contenido], { type: "text/plain;charset=utf-8" }));
     const a = document.createElement("a");
     a.href = url;
-    a.download = `carta-${caso.cliente || "caso"}.txt`;
+    a.download = `carta-${tipo.id}-${caso.cliente || "caso"}.txt`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -105,14 +113,14 @@ export default function CartaCasoPage() {
       <Header />
       <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 px-4 py-8">
         <div className="flex flex-col gap-3">
-          <LinkVolver href={`/casos/${caso.id}`}>
-            Volver al caso
-          </LinkVolver>
-          <h1 className="text-2xl font-bold tracking-tight text-tinta">Carta de intimación — {caso.cliente}</h1>
-          <p className="text-sm text-gray-500">{info.intro}</p>
+          <LinkVolver href={`/casos/${caso.id}`}>Volver al caso</LinkVolver>
+          <h1 className="text-2xl font-bold tracking-tight text-tinta">
+            {tipo.titulo} — {caso.cliente}
+          </h1>
+          <p className="text-sm text-gray-500">{tipo.descripcion}</p>
         </div>
 
-        <section className="flex flex-col gap-4 rounded-3xl border border-linea bg-white p-5">
+        <section className={seccion}>
           <h2 className="font-semibold text-tinta">Remitente (cliente)</h2>
           <div className="grid gap-4 sm:grid-cols-2">
             <TextField
@@ -133,7 +141,7 @@ export default function CartaCasoPage() {
           </div>
         </section>
 
-        <section className="flex flex-col gap-4 rounded-3xl border border-linea bg-white p-5">
+        <section className={seccion}>
           <h2 className="font-semibold text-tinta">Destinatario (empleador)</h2>
           <div className="grid gap-4 sm:grid-cols-2">
             <TextField
@@ -154,47 +162,79 @@ export default function CartaCasoPage() {
           </div>
         </section>
 
-        <section className="flex flex-col gap-4 rounded-3xl border border-linea bg-white p-5">
+        <section className={seccion}>
           <h2 className="font-semibold text-tinta">¿Qué pasó?</h2>
+          {d.tipo === "despido-indirecto" && (
+            <SelectField
+              label="¿Qué hizo el empleador con la carta anterior?"
+              value={d.respuesta}
+              onChange={(e) => cambiar({ respuesta: e.target.value as CartaDatos["respuesta"] })}
+            >
+              <option value="silencio">No respondió</option>
+              <option value="negativa">Respondió negándose</option>
+            </SelectField>
+          )}
           <TextField
-            label="Fecha del hecho"
-            opcional
+            label={
+              d.tipo === "despido-indirecto"
+                ? "Fecha de la carta anterior"
+                : d.tipo === "liquidacion"
+                  ? "Fecha en que terminó la relación"
+                  : "Fecha del hecho"
+            }
+            opcional={d.tipo !== "despido-indirecto"}
             type="date"
             value={d.hechosFecha}
             onChange={(e) => cambiar({ hechosFecha: e.target.value })}
           />
           <TextAreaField
-            label="Descripción"
-            placeholder={info.ejemploHechos}
+            label={d.tipo === "intimacion" ? "Descripción" : "Algo más que quieras contar"}
+            opcional={d.tipo !== "intimacion"}
+            placeholder={d.tipo === "intimacion" ? info.ejemploHechos : undefined}
             value={d.hechosDescripcion}
             onChange={(e) => cambiar({ hechosDescripcion: e.target.value })}
           />
         </section>
 
-        <section className="flex flex-col gap-4 rounded-3xl border border-linea bg-white p-5">
+        <section className={seccion}>
           <h2 className="font-semibold text-tinta">Qué le pedís</h2>
-          <SelectField
-            label="Pedido"
-            value={pedidoActual?.id ?? ""}
-            onChange={(e) => cambiar({ pedidoId: e.target.value })}
-          >
-            {pedidos.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.titulo}
-              </option>
-            ))}
-          </SelectField>
-          {pedidoActual?.pideMonto && (
+          {d.tipo === "intimacion" && (
+            <SelectField
+              label="Pedido"
+              value={pedidoActual?.id ?? ""}
+              onChange={(e) => cambiar({ pedidoId: e.target.value })}
+            >
+              {pedidos.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.titulo}
+                </option>
+              ))}
+            </SelectField>
+          )}
+          {d.tipo === "despido-indirecto" && (
+            <p className="text-sm text-gray-600">
+              Que pague las indemnizaciones por el despido y la liquidación final, y que entregue los certificados de
+              trabajo.
+            </p>
+          )}
+          {d.tipo === "liquidacion" && (
+            <p className="text-sm text-gray-600">Que pague la liquidación final y entregue los certificados de trabajo.</p>
+          )}
+          {((d.tipo === "intimacion" && pedidoActual?.pideMonto) ||
+            d.tipo === "despido-indirecto" ||
+            d.tipo === "liquidacion") && (
             <TextField
               label="Monto"
+              opcional={d.tipo !== "intimacion"}
               placeholder="Ej.: 450.000"
               value={d.pedidoMonto}
               onChange={(e) => cambiar({ pedidoMonto: e.target.value })}
             />
           )}
-          {pedidoActual?.pideDetalle && (
+          {((d.tipo === "intimacion" && pedidoActual?.pideDetalle) || d.tipo === "otra") && (
             <TextAreaField
-              label="Detalle"
+              label={d.tipo === "otra" ? "¿Qué le pedís?" : "Detalle"}
+              placeholder={d.tipo === "otra" ? 'Ej.: "me reintegre a mi puesto de trabajo"' : undefined}
               value={d.pedidoDetalle}
               onChange={(e) => cambiar({ pedidoDetalle: e.target.value })}
             />
@@ -232,11 +272,9 @@ export default function CartaCasoPage() {
           </ul>
         </section>
 
-        <section className="flex flex-col gap-4 rounded-3xl border border-linea bg-white p-5">
+        <section className={seccion}>
           <h2 className="font-semibold text-tinta">Vista previa</h2>
-          <pre className="whitespace-pre-wrap rounded-2xl bg-fondo p-4 font-sans text-sm text-tinta">
-            {carta.cuerpo}
-          </pre>
+          <pre className="whitespace-pre-wrap rounded-2xl bg-fondo p-4 font-sans text-sm text-tinta">{carta.cuerpo}</pre>
           <div className="flex flex-col gap-3 sm:flex-row">
             <Button onClick={copiar}>{copiado ? "¡Copiado!" : "Copiar el texto"}</Button>
             <Button variante="secondary" onClick={descargar}>
@@ -245,27 +283,24 @@ export default function CartaCasoPage() {
           </div>
         </section>
 
-        <section className="flex flex-col gap-4 rounded-3xl border border-linea bg-white p-5">
+        <section className={seccion}>
           <h2 className="font-semibold text-tinta">¿Ya la mandaste?</h2>
           {d.enviadaEl ? (
             <div className="flex flex-col gap-2 text-sm text-gray-700">
               <p>
                 Marcada como enviada el <strong>{formatearFecha(d.enviadaEl)}</strong>. El vencimiento del plazo quedó
-                cargado en la ficha del caso.
+                cargado en la ficha del caso. Si hace falta otra carta, empezala desde la ficha.
               </p>
-              <Link
-                href={`/casos/${caso.id}`}
-                className="w-fit font-semibold text-tinta underline underline-offset-2"
-              >
+              <Link href={`/casos/${caso.id}`} className="w-fit font-semibold text-tinta underline underline-offset-2">
                 Ver el caso
               </Link>
             </div>
           ) : (
             <>
               <p className="text-sm text-gray-500">
-                Al marcarla como enviada, el caso pasa a &ldquo;Intimación enviada&rdquo; y se agrega el vencimiento
-                del plazo a la ficha. El plazo corre desde que el empleador la recibe: si la recepción se demora, quitá
-                ese vencimiento en la ficha y cargalo con la fecha correcta.
+                Al marcarla como enviada se agrega el vencimiento del plazo a la ficha
+                {caso.estado === "consulta" && <> y el caso pasa a &ldquo;Intimación enviada&rdquo;</>}. El plazo corre
+                desde que el empleador la recibe: si la recepción se demora, cambiá ese vencimiento en la ficha.
               </p>
               <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
                 <div className="flex-1">

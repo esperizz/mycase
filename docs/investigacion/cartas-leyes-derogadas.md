@@ -55,3 +55,24 @@ La carga rápida del panel ofrece atajos según la etapa del caso y el tipo de r
 | ART (cualquier etapa) | Discutir el alta · Examen en comisión médica | Pedir número de siniestro · Pedir historia clínica · Llamar al cliente |
 
 5. ¿Estos son los plazos y tareas que más cargarías en cada etapa y tipo de reclamo? ¿Cuáles sobran y cuáles faltan?
+
+## Cartas nuevas: despido indirecto y liquidación
+
+En la práctica se suelen mandar varias cartas en un mismo reclamo: primero se intima al
+empleador y, si no responde, se manda otra haciendo efectivo el apercibimiento y declarándose
+despedido; después, o en la misma, se intima el pago de la liquidación final y los certificados
+([Telegramas y otros medios de comunicación en la relación laboral](https://www.derecho.uba.ar/noticias/2020/telegramas-y-otros-medios-de-comunicacion-en-la-relacion-laboral), UBA).
+
+La app ahora deja crear varias cartas por caso, con estos textos que armamos sin consultar a
+una abogada (`src/lib/casos/generarCarta.ts`):
+
+- **Despido indirecto:** "Ante su silencio / su respuesta negativa a mi intimación de fecha …,
+  hago efectivo el apercibimiento allí formulado y me considero gravemente injuriado/a y
+  despedido/a por su exclusiva culpa, conforme los arts. 242 y 246 de la LCT." Después intima el
+  pago de las indemnizaciones por antigüedad, preaviso e integración del mes de despido
+  (arts. 245, 232 y 233 LCT), la liquidación final y los certificados del art. 80.
+- **Liquidación y certificados:** "Me dirijo a Ud. en relación con la extinción de la relación
+  laboral…" e intima el pago de la liquidación final y la entrega de los certificados del art. 80.
+
+6. ¿Están bien estos textos y los artículos que citan? ¿Qué cambiarías?
+7. ¿Qué otras cartas mandás seguido que convenga sumar?

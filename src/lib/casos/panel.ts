@@ -1,6 +1,7 @@
 import { diasEntre } from "./formato";
 import { esArt, hojaCompleta, tienePasoPendiente } from "./hojaRuta";
-import { ESTADOS, type Caso, type EstadoCaso, type Vencimiento } from "./tipos";
+import { borradores } from "./cartas";
+import { ESTADOS, type CartaDatos, type Caso, type EstadoCaso, type Vencimiento } from "./tipos";
 
 export interface Pendiente {
   caso: Caso;
@@ -29,8 +30,8 @@ export interface Panel {
   proximosPlazos: Pendiente[];
   /** Casos de ART con toda la hoja de ruta cumplida que todavía no se cerraron. */
   listosParaCerrar: Caso[];
-  /** Casos activos con la carta empezada pero sin marcar como enviada. */
-  cartasSinEnviar: Caso[];
+  /** Cartas empezadas de casos activos que no se marcaron como enviadas, una por una. */
+  cartasSinEnviar: { caso: Caso; carta: CartaDatos }[];
   /** Casos por estado; los de ART activos van aparte, porque su etapa sale de la hoja de ruta. */
   porEtapa: Record<EstadoCaso, number>;
   art: number;
@@ -76,12 +77,12 @@ export function armarPanel(casos: Caso[], hoy: string): Panel {
         !c.vencimientos.some((v) => !v.cumplido) &&
         !tienePasoPendiente(c) &&
         !hojaCompleta(c) &&
-        !(c.carta && !c.carta.enviadaEl) &&
+        borradores(c).length === 0 &&
         diasEntre(c.fechaApertura, hoy) > DIAS_SEMANA,
     ),
     listosParaCerrar: activos.filter(hojaCompleta),
     proximosPlazos,
-    cartasSinEnviar: activos.filter((c) => c.carta && !c.carta.enviadaEl),
+    cartasSinEnviar: activos.flatMap((caso) => borradores(caso).map((carta) => ({ caso, carta }))),
     porEtapa,
     art,
     activos: activos.length,

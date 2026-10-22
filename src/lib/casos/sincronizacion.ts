@@ -79,7 +79,7 @@ function fusionarValor(base: unknown, local: unknown, remoto: unknown): unknown 
   return local;
 }
 
-/** Fusión de tres vías de una lista de elementos con id (vencimientos, notas). */
+/** Fusión de tres vías de una lista de elementos con id (vencimientos, notas, cartas). */
 export function fusionarPorId<T extends { id: string }>(base: T[], local: T[], remoto: T[]): T[] {
   const enBase = new Map(base.map((x) => [x.id, x]));
   const enLocal = new Map(local.map((x) => [x.id, x]));
@@ -106,13 +106,14 @@ export function fusionarPorId<T extends { id: string }>(base: T[], local: T[], r
  */
 export function fusionar(base: Caso | undefined, local: Caso, remoto: Caso): Caso {
   if (!base) return local;
-  const { vencimientos: vb, historial: hb, ...restoBase } = base;
-  const { vencimientos: vl, historial: hl, ...restoLocal } = local;
-  const { vencimientos: vr, historial: hr, ...restoRemoto } = remoto;
+  const { vencimientos: vb, historial: hb, cartas: cb, ...restoBase } = base;
+  const { vencimientos: vl, historial: hl, cartas: cl, ...restoLocal } = local;
+  const { vencimientos: vr, historial: hr, cartas: cr, ...restoRemoto } = remoto;
   return {
-    ...(fusionarValor(restoBase, restoLocal, restoRemoto) as Omit<Caso, "vencimientos" | "historial">),
+    ...(fusionarValor(restoBase, restoLocal, restoRemoto) as Omit<Caso, "vencimientos" | "historial" | "cartas">),
     vencimientos: fusionarPorId(vb, vl, vr),
     historial: fusionarPorId(hb, hl, hr),
+    cartas: fusionarPorId(cb, cl, cr),
   };
 }
 

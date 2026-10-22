@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 import { CamposHoraLugar } from "@/components/casos/CamposHoraLugar";
+import { CartasCaso } from "@/components/casos/CartasCaso";
 import { DialogoCerrarCaso } from "@/components/casos/CerrarCaso";
 import { DocumentosCaso } from "@/components/casos/DocumentosCaso";
 import { EtapaBadge } from "@/components/casos/EstadoBadge";
@@ -12,7 +13,7 @@ import { HojaRutaArt } from "@/components/casos/HojaRutaArt";
 import { ItemVencimiento } from "@/components/casos/ItemVencimiento";
 import { NotasCaso } from "@/components/casos/NotasCaso";
 import { InformarCliente } from "@/components/casos/InformarCliente";
-import { Button, ButtonLink, LinkVolver } from "@/components/ui/Button";
+import { Button, LinkVolver } from "@/components/ui/Button";
 import { DialogoConfirmar } from "@/components/ui/DialogoConfirmar";
 import { SelectField, TextField } from "@/components/ui/Field";
 import { Header } from "@/components/ui/Header";
@@ -101,13 +102,7 @@ export default function FichaCasoPage() {
           </div>
         </div>
 
-        {art ? (
-          <HojaRutaArt caso={caso} />
-        ) : (
-          <ButtonLink href={`/casos/${caso.id}/carta`} className="self-start" flecha>
-            Generar carta de intimación
-          </ButtonLink>
-        )}
+        {art ? <HojaRutaArt caso={caso} /> : <CartasCaso caso={caso} />}
 
         {editando ? (
           <section className="rounded-3xl border border-linea bg-white p-5">
@@ -251,7 +246,7 @@ export default function FichaCasoPage() {
           onCancelar={() => setBorrando(false)}
           onConfirmar={borrarCaso}
         >
-          <p>Se borran sus datos, plazos y tareas, notas, documentos, carta y hoja de ruta. No se puede deshacer.</p>
+          <p>Se borran sus datos, plazos y tareas, notas, documentos, cartas y hoja de ruta. No se puede deshacer.</p>
         </DialogoConfirmar>
       </main>
     </>
