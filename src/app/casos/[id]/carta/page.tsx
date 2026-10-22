@@ -13,6 +13,7 @@ import {
   pedidoPorId,
   pedidosPara,
   plazoPorId,
+  VENCE_INTIMACION,
 } from "@/lib/casos/cartaCatalogo";
 import { useCasos } from "@/lib/casos/CasosProvider";
 import { formatearFecha, hoyIso, sumarDias } from "@/lib/casos/formato";
@@ -69,7 +70,7 @@ export default function CartaCasoPage() {
         {
           id: crypto.randomUUID(),
           fecha: venceEl,
-          descripcion: `Vence el plazo de la intimación (${plazo.titulo})`,
+          descripcion: `${VENCE_INTIMACION} (${plazo.titulo})`,
           cumplido: false,
           tipo: "plazo",
         },

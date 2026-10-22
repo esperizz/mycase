@@ -179,3 +179,6 @@ export const plazoPorId = (id: PlazoId) => PLAZOS.find((p) => p.id === id) ?? PL
 
 export const consecuenciasPara = (tipoReclamo: string): OpcionConsecuencia[] =>
   CONSECUENCIAS.filter((c) => !c.soloTipos || c.soloTipos.includes(tipoReclamo));
+
+/** Comienzo de la descripción del vencimiento que se carga al marcar la carta como enviada. */
+export const VENCE_INTIMACION = "Vence el plazo de la intimación";
