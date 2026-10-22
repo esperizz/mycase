@@ -6,6 +6,7 @@ import { ArtBadge, EstadoBadge } from "@/components/casos/EstadoBadge";
 import { SubirCasosLocales } from "@/components/casos/SubirCasosLocales";
 import { TipoTag } from "@/components/casos/TipoTag";
 import { Button, ButtonLink, Flecha } from "@/components/ui/Button";
+import { descargarCalendario } from "@/lib/casos/calendario";
 import { tipoCartaPorId } from "@/lib/casos/cartaCatalogo";
 import { useCasos } from "@/lib/casos/CasosProvider";
 import { proximoFeriado } from "@/lib/casos/feriados";
@@ -237,6 +238,10 @@ export function Panel() {
     .sort((a, b) => a.cliente.localeCompare(b.cliente, "es"));
   const proximo = panel.proximosPlazos[0];
   const hayAgenda = panel.vencidos.length + panel.atrasadas.length + panel.hoy.length + panel.semana.length > 0;
+  // Todo lo que falta, también lo de más adelante: el calendario avisa el día anterior.
+  const porVenir = casosActivos.flatMap((caso) =>
+    caso.vencimientos.filter((v) => !v.cumplido && v.fecha >= hoy).map((vencimiento) => ({ caso, vencimiento })),
+  );
 
   return (
     <div className="flex flex-col gap-6">
@@ -318,6 +323,15 @@ export function Panel() {
               <p className="rounded-2xl bg-fondo px-4 py-6 text-center text-sm text-gray-500">
                 No hay plazos ni tareas en los próximos {DIAS_SEMANA} días.
               </p>
+            )}
+            {porVenir.length > 0 && (
+              <button
+                type="button"
+                onClick={() => descargarCalendario(porVenir, "mycase-plazos")}
+                className="w-fit text-sm font-semibold text-tinta underline-offset-2 hover:underline"
+              >
+                Agregar {porVenir.length === 1 ? "el pendiente" : `los ${porVenir.length} pendientes`} a mi calendario
+              </button>
             )}
           </Tarjeta>
         </div>

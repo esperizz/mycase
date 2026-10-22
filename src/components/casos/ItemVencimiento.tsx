@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { SelectField, TextField } from "@/components/ui/Field";
+import { MenuAcciones } from "@/components/ui/MenuAcciones";
+import { descargarCalendario } from "@/lib/casos/calendario";
 import { useCasos } from "@/lib/casos/CasosProvider";
 import { CamposHoraLugar } from "./CamposHoraLugar";
 import { TipoTag } from "./TipoTag";
@@ -12,7 +14,8 @@ import type { TipoVencimiento, Vencimiento } from "@/lib/casos/tipos";
 
 /** Un plazo o tarea de la ficha: se tilda, se edita (tipo, fecha y texto) o se quita. */
 export function ItemVencimiento({ casoId, vencimiento: v }: { casoId: string; vencimiento: Vencimiento }) {
-  const { actualizar, marcarVencimiento, quitarVencimiento } = useCasos();
+  const { casos, actualizar, marcarVencimiento, quitarVencimiento } = useCasos();
+  const caso = casos.find((c) => c.id === casoId);
   const [editando, setEditando] = useState(false);
   const [fecha, setFecha] = useState(v.fecha);
   const [descripcion, setDescripcion] = useState(v.descripcion);
@@ -101,14 +104,16 @@ export function ItemVencimiento({ casoId, vencimiento: v }: { casoId: string; ve
           <TipoTag tipo={v.tipo} />
         </p>
       </div>
-      <div className="flex gap-2">
-        <Button variante="secondary" onClick={() => setEditando(true)}>
-          Editar
-        </Button>
-        <Button variante="secondary" onClick={() => quitarVencimiento(casoId, v.id)}>
-          Quitar
-        </Button>
-      </div>
+      <MenuAcciones
+        etiqueta={`Acciones de "${v.descripcion || "este vencimiento"}"`}
+        acciones={[
+          ...(caso && !v.cumplido
+            ? [{ etiqueta: "Agregar al calendario", onClick: () => descargarCalendario([{ caso, vencimiento: v }], v.descripcion || "plazo") }]
+            : []),
+          { etiqueta: "Editar", onClick: () => setEditando(true) },
+          { etiqueta: "Quitar", onClick: () => quitarVencimiento(casoId, v.id), peligro: true },
+        ]}
+      />
     </li>
   );
 }
