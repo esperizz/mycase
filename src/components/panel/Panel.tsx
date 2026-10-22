@@ -14,8 +14,8 @@ import { ESTADOS, type Caso } from "@/lib/casos/tipos";
 import { CargaRapida } from "./CargaRapida";
 
 /**
- * Dato de arriba del panel: algo que la lista no dice, y que lleva a una acción al tocarlo.
- * Van neutros; solo el próximo plazo se colorea, porque es el único que habla de urgencia.
+ * Dato de arriba del panel (hoy, el próximo plazo): algo que la lista no dice, y que lleva a
+ * una acción al tocarlo. El color dice cuán urgente es.
  */
 function Dato({
   etiqueta,
@@ -54,10 +54,6 @@ function Dato({
 /** "Marta Ríos" o "Marta Ríos y 4 más". */
 function yMas(nombres: string[]): string {
   return nombres.length > 1 ? `${nombres[0]} y ${nombres.length - 1} más` : (nombres[0] ?? "");
-}
-
-function plural(n: number, singular: string, plural: string) {
-  return `${n} ${n === 1 ? singular : plural}`;
 }
 
 function ItemPendiente({ pendiente, onCumplir }: { pendiente: Pendiente; onCumplir: () => void }) {
@@ -255,7 +251,7 @@ export function Panel() {
         </h1>
       </div>
 
-      <div className="grid grid-cols-2 gap-2 sm:gap-3">
+      <div>
         {proximo ? (
           <Dato
             etiqueta={
@@ -275,12 +271,6 @@ export function Panel() {
         ) : (
           <Dato etiqueta="Próximo plazo" valor="ninguno" detalle="No hay plazos cargados" href="#para-hacer" />
         )}
-        <Dato
-          etiqueta="Sin próximo paso"
-          valor={plural(panel.sinProximoPaso.length, "caso", "casos")}
-          detalle={panel.sinProximoPaso.length ? yMas(panel.sinProximoPaso.map((c) => c.cliente)) : "Todos tienen algo"}
-          href={panel.sinProximoPaso.length ? "#sin-proximo-paso" : "/casos"}
-        />
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
@@ -328,13 +318,12 @@ export function Panel() {
         </div>
 
         <div className="flex flex-col gap-6">
-          {panel.sinProximoPaso.length > 0 && (
+          {panel.sinNadaCargado.length > 0 && (
             <Tarjeta
-              id="sin-proximo-paso"
-              titulo="Sin próximo paso"
-              ayuda="Casos activos sin plazos ni tareas pendientes. Cargales el siguiente para no perderlos de vista."
+              titulo="Sin plazos ni tareas"
+              ayuda="Estos casos no tienen nada cargado que te recuerde qué sigue. Cargales lo próximo para no perderlos de vista."
             >
-              <ListaCorta casos={panel.sinProximoPaso} onElegir={(c) => setCarga(c.id)} accion="Cargar" />
+              <ListaCorta casos={panel.sinNadaCargado} onElegir={(c) => setCarga(c.id)} accion="Cargar" />
             </Tarjeta>
           )}
 

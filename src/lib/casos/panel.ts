@@ -17,8 +17,11 @@ export interface Panel {
   hoy: Pendiente[];
   /** Del día siguiente hasta 7 días adelante. */
   semana: Pendiente[];
-  /** Casos activos sin ningún vencimiento pendiente: nada les recuerda el próximo paso. */
-  sinProximoPaso: Caso[];
+  /**
+   * Casos activos que pueden quedar olvidados: sin plazos ni tareas pendientes, sin carta a
+   * medias y abiertos hace más de una semana.
+   */
+  sinNadaCargado: Caso[];
   /**
    * Lo próximo que importa: si hay plazos vencidos, todos ellos; si no, los plazos del día
    * más cercano (sin límite de días). Vacío si no hay plazos pendientes.
@@ -66,9 +69,15 @@ export function armarPanel(casos: Caso[], hoy: string): Panel {
     atrasadas: pendientes.filter((p) => p.dias < 0 && p.vencimiento.tipo === "tarea"),
     hoy: pendientes.filter((p) => p.dias === 0),
     semana: pendientes.filter((p) => p.dias > 0 && p.dias <= DIAS_SEMANA),
-    // Un caso con la hoja de ruta completa no está olvidado: está para cerrar.
-    sinProximoPaso: activos.filter(
-      (c) => !c.vencimientos.some((v) => !v.cumplido) && !tienePasoPendiente(c) && !hojaCompleta(c),
+    // No están olvidados: el de hoja de ruta completa está para cerrar, el de carta a medias
+    // ya aparece en "Cartas sin enviar" y uno recién abierto lo tiene presente.
+    sinNadaCargado: activos.filter(
+      (c) =>
+        !c.vencimientos.some((v) => !v.cumplido) &&
+        !tienePasoPendiente(c) &&
+        !hojaCompleta(c) &&
+        !(c.carta && !c.carta.enviadaEl) &&
+        diasEntre(c.fechaApertura, hoy) > DIAS_SEMANA,
     ),
     listosParaCerrar: activos.filter(hojaCompleta),
     proximosPlazos,
