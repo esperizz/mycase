@@ -1,4 +1,4 @@
-import type { PlazoId } from "./tipos";
+import type { PlazoId, TipoCarta } from "./tipos";
 
 export interface InfoTipo {
   /** Primer párrafo de la carta, después del encabezado. */
@@ -182,3 +182,31 @@ export const consecuenciasPara = (tipoReclamo: string): OpcionConsecuencia[] =>
 
 /** Comienzo de la descripción del vencimiento que se carga al marcar la carta como enviada. */
 export const VENCE_INTIMACION = "Vence el plazo de la intimación";
+
+export interface OpcionTipoCarta {
+  id: TipoCarta;
+  titulo: string;
+  /** Para elegirla: cuándo se manda. */
+  descripcion: string;
+}
+
+/**
+ * Las cartas que suelen mandarse en un reclamo laboral. Los textos de despido indirecto y de
+ * liquidación los armamos sin consultar a una abogada (ver docs/investigacion/cartas-leyes-derogadas.md).
+ */
+export const TIPOS_CARTA: OpcionTipoCarta[] = [
+  { id: "intimacion", titulo: "Intimación", descripcion: "El primer reclamo: le pedís algo al empleador en un plazo." },
+  {
+    id: "despido-indirecto",
+    titulo: "Despido indirecto",
+    descripcion: "El empleador no respondió o se negó: el cliente se considera despedido por su culpa.",
+  },
+  {
+    id: "liquidacion",
+    titulo: "Liquidación y certificados",
+    descripcion: "Terminada la relación, pedís que paguen la liquidación final y entreguen los certificados.",
+  },
+  { id: "otra", titulo: "Otra", descripcion: "Escribís vos qué le pedís." },
+];
+
+export const tipoCartaPorId = (id: TipoCarta) => TIPOS_CARTA.find((t) => t.id === id) ?? TIPOS_CARTA[0];

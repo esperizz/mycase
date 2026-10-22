@@ -20,7 +20,7 @@ function caso(parcial: Partial<Caso>): Caso {
     vencimientos: [],
     notas: "",
     historial: [],
-    carta: null,
+    cartas: [],
     hojaRuta: null,
     ...parcial,
   };
@@ -50,7 +50,7 @@ describe("armarPanel", () => {
 
   it("ignora los casos cerrados", () => {
     const panel = armarPanel(
-      [caso({ estado: "cerrado", vencimientos: [vto("2026-10-10")], carta: cartaVacia() })],
+      [caso({ estado: "cerrado", vencimientos: [vto("2026-10-10")], cartas: [cartaVacia()] })],
       HOY,
     );
     expect(panel.vencidos).toEqual([]);
@@ -63,23 +63,31 @@ describe("armarPanel", () => {
   it("detecta casos sin nada cargado y cartas sin enviar", () => {
     const sinNada = caso({ cliente: "A", vencimientos: [vto("2026-10-01", true)] });
     const conVto = caso({ cliente: "B", vencimientos: [vto("2026-11-30")] });
-    const cartaPendiente = caso({ cliente: "C", vencimientos: [vto("2026-11-30")], carta: cartaVacia() });
+    const cartaPendiente = caso({ cliente: "C", vencimientos: [vto("2026-11-30")], cartas: [cartaVacia()] });
     const cartaEnviada = caso({
       cliente: "D",
       vencimientos: [vto("2026-11-30")],
-      carta: { ...cartaVacia(), enviadaEl: "2026-10-01" },
+      cartas: [{ ...cartaVacia(), enviadaEl: "2026-10-01" }],
     });
     const panel = armarPanel([sinNada, conVto, cartaPendiente, cartaEnviada], HOY);
     expect(panel.sinNadaCargado.map((c) => c.cliente)).toEqual(["A"]);
-    expect(panel.cartasSinEnviar.map((c) => c.cliente)).toEqual(["C"]);
+    expect(panel.cartasSinEnviar.map((p) => p.caso.cliente)).toEqual(["C"]);
     expect(panel.activos).toBe(4);
+  });
+
+  it("lista cada borrador por separado, aunque el caso ya tenga cartas enviadas", () => {
+    const enviada = { ...cartaVacia(), enviadaEl: "2026-10-01" };
+    const despido = cartaVacia("despido-indirecto");
+    const otra = cartaVacia("otra");
+    const panel = armarPanel([caso({ cliente: "M", cartas: [enviada, despido, otra] })], HOY);
+    expect(panel.cartasSinEnviar.map((p) => p.carta.id)).toEqual([despido.id, otra.id]);
   });
 
   it("no da por olvidados los casos con la carta a medias ni los abiertos en la última semana", () => {
     const viejo = caso({ cliente: "Viejo", fechaApertura: "2026-10-06" });
     const nuevo = caso({ cliente: "Nuevo", fechaApertura: "2026-10-08" });
-    const conCarta = caso({ cliente: "Carta", carta: cartaVacia() });
-    const cartaEnviada = caso({ cliente: "Enviada", carta: { ...cartaVacia(), enviadaEl: "2026-10-01" } });
+    const conCarta = caso({ cliente: "Carta", cartas: [cartaVacia()] });
+    const cartaEnviada = caso({ cliente: "Enviada", cartas: [{ ...cartaVacia(), enviadaEl: "2026-10-01" }] });
     const panel = armarPanel([viejo, nuevo, conCarta, cartaEnviada], HOY);
     expect(panel.sinNadaCargado.map((c) => c.cliente)).toEqual(["Viejo", "Enviada"]);
   });

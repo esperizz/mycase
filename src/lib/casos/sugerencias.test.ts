@@ -15,7 +15,7 @@ function caso(parcial: Partial<Caso>): Caso {
     vencimientos: [],
     notas: "",
     historial: [],
-    carta: null,
+    cartas: [],
     hojaRuta: null,
     ...parcial,
   };

@@ -2,12 +2,12 @@
 
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { cartasDe } from "./cartas";
 import { BUCKET, carpetaDelCaso } from "./documentos";
 import { hojaRutaVacia } from "./hojaRuta";
 import { migrarNotas } from "./notas";
 import { cambiosVencimientos, diferencias, fusionar, fusionarCarga, iguales } from "./sincronizacion";
 import {
-  cartaVacia,
   type CartaDatos,
   type Caso,
   type CasoNuevo,
@@ -36,7 +36,9 @@ interface FilaCaso {
   estado: EstadoCaso;
   fecha_apertura: string;
   notas: string;
-  carta: CartaDatos | null;
+  cartas?: CartaDatos[] | null;
+  /** Carta única de la versión anterior: solo se lee, para pasarla a `cartas`. */
+  carta?: CartaDatos | null;
   hoja_ruta: HojaRuta | null;
   notas_historial: Nota[] | null;
   /** Solo al leer: lo pone un trigger en cada update. */
@@ -78,7 +80,9 @@ function idValido(id: string | undefined) {
 }
 
 /** Tolera datos con formas viejas (un solo `proximoVencimiento`, ids no uuid, notas en un solo texto). */
-function normalizar(caso: Partial<Caso> & { proximoVencimiento?: Vencimiento | null }): Caso {
+function normalizar(
+  caso: Partial<Caso> & { proximoVencimiento?: Vencimiento | null; carta?: Partial<CartaDatos> | null },
+): Caso {
   const vencimientos =
     caso.vencimientos ?? (caso.proximoVencimiento ? [{ ...caso.proximoVencimiento, cumplido: false }] : []);
   return migrarNotas({
@@ -101,7 +105,7 @@ function normalizar(caso: Partial<Caso> & { proximoVencimiento?: Vencimiento | n
     })),
     notas: caso.notas ?? "",
     historial: (caso.historial ?? []).map((n) => ({ ...n, id: idValido(n.id) })),
-    carta: caso.carta ? { ...cartaVacia(), ...caso.carta } : null,
+    cartas: cartasDe(caso),
     hojaRuta: caso.hojaRuta ? { ...hojaRutaVacia(), ...caso.hojaRuta } : null,
   });
 }
@@ -119,7 +123,7 @@ function aFilaCaso(c: Caso): FilaCaso {
     fecha_apertura: c.fechaApertura,
     notas: c.notas,
     notas_historial: c.historial,
-    carta: c.carta,
+    cartas: c.cartas,
     hoja_ruta: c.hojaRuta,
   };
 }
@@ -137,6 +141,7 @@ function aCaso(fila: FilaCaso, vencimientos: Vencimiento[]): Caso {
     fechaApertura: fila.fecha_apertura,
     notas: fila.notas,
     historial: fila.notas_historial ?? [],
+    cartas: fila.cartas ?? undefined,
     carta: fila.carta,
     hojaRuta: fila.hoja_ruta,
     vencimientos,

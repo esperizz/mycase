@@ -102,3 +102,7 @@ alter table public.casos add column if not exists expediente text not null defau
 alter table public.casos add column if not exists juzgado text not null default '';
 alter table public.vencimientos add column if not exists hora text not null default '';
 alter table public.vencimientos add column if not exists lugar text not null default '';
+
+-- Varias cartas por caso (lista de cartas en jsonb). La columna "carta" queda solo para
+-- pasar la carta única de antes a la lista: la app la lee pero ya no la escribe.
+alter table public.casos add column if not exists cartas jsonb not null default '[]'::jsonb;

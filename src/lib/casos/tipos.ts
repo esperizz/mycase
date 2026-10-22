@@ -32,8 +32,13 @@ export type VencimientoNuevo = Omit<Vencimiento, "id" | "cumplido" | "tipo"> & {
 
 export type PlazoId = "48h" | "5d" | "10d";
 
-/** Datos para generar la carta documento / telegrama de intimación de este caso. */
+/** Qué carta es: cada tipo tiene su propio texto (ver generarCarta.ts). */
+export type TipoCarta = "intimacion" | "despido-indirecto" | "liquidacion" | "otra";
+
+/** Datos para generar una carta documento / telegrama del caso. */
 export interface CartaDatos {
+  id: string;
+  tipo: TipoCarta;
   remitenteDomicilio: string;
   remitenteLocalidad: string;
   remitenteDocumento: string;
@@ -47,11 +52,15 @@ export interface CartaDatos {
   pedidoDetalle: string;
   plazo: PlazoId;
   consecuencias: string[];
+  /** Despido indirecto: si el empleador no contestó la carta anterior o la contestó negándose. */
+  respuesta: "silencio" | "negativa";
   /** Fecha (yyyy-mm-dd) en que se marcó como enviada; "" si todavía no se envió. */
   enviadaEl: string;
 }
 
-export const cartaVacia = (): CartaDatos => ({
+export const cartaVacia = (tipo: TipoCarta = "intimacion", id: string = crypto.randomUUID()): CartaDatos => ({
+  id,
+  tipo,
   remitenteDomicilio: "",
   remitenteLocalidad: "",
   remitenteDocumento: "",
@@ -65,6 +74,7 @@ export const cartaVacia = (): CartaDatos => ({
   pedidoDetalle: "",
   plazo: "10d",
   consecuencias: [],
+  respuesta: "silencio",
   enviadaEl: "",
 });
 
@@ -105,10 +115,11 @@ export interface Caso {
   /** Texto único de la versión anterior; se migra a `historial` (ver notas.ts). */
   notas: string;
   historial: Nota[];
-  carta: CartaDatos | null;
+  /** Cartas documento del caso, en el orden en que se crearon. */
+  cartas: CartaDatos[];
   hojaRuta: HojaRuta | null;
 }
 
-export type CasoNuevo = Omit<Caso, "id" | "fechaApertura" | "vencimientos" | "notas" | "historial" | "carta" | "hojaRuta"> & {
+export type CasoNuevo = Omit<Caso, "id" | "fechaApertura" | "vencimientos" | "notas" | "historial" | "cartas" | "hojaRuta"> & {
   notas?: string;
 };
