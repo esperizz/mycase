@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { ArtBadge, EstadoBadge } from "@/components/casos/EstadoBadge";
 import { SubirCasosLocales } from "@/components/casos/SubirCasosLocales";
 import { TipoTag } from "@/components/casos/TipoTag";
-import { Button, ButtonLink } from "@/components/ui/Button";
+import { Button, ButtonLink, Flecha } from "@/components/ui/Button";
 import { useCasos } from "@/lib/casos/CasosProvider";
 import { proximoFeriado } from "@/lib/casos/feriados";
 import { formatearFecha, hoyIso, textoPendiente } from "@/lib/casos/formato";
@@ -155,7 +155,10 @@ function ContenidoFila({ caso, accion }: { caso: Caso; accion: string }) {
   return (
     <>
       <span className="min-w-0 truncate font-medium text-tinta">{caso.cliente}</span>
-      <span className="shrink-0 font-semibold text-gray-500">{accion} →</span>
+      <span className="flex shrink-0 items-center gap-2 font-semibold text-tinta">
+        {accion}
+        <Flecha variante="secondary" className="size-6" />
+      </span>
     </>
   );
 }

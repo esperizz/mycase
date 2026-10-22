@@ -11,7 +11,7 @@ import { HojaRutaArt } from "@/components/casos/HojaRutaArt";
 import { ItemVencimiento } from "@/components/casos/ItemVencimiento";
 import { NotasCaso } from "@/components/casos/NotasCaso";
 import { InformarCliente } from "@/components/casos/InformarCliente";
-import { Button } from "@/components/ui/Button";
+import { Button, ButtonLink } from "@/components/ui/Button";
 import { DialogoConfirmar } from "@/components/ui/DialogoConfirmar";
 import { SelectField, TextField } from "@/components/ui/Field";
 import { Header } from "@/components/ui/Header";
@@ -92,12 +92,9 @@ export default function FichaCasoPage() {
         {art ? (
           <HojaRutaArt caso={caso} />
         ) : (
-          <Link
-            href={`/casos/${caso.id}/carta`}
-            className="w-fit rounded-2xl border border-linea bg-white px-4 py-2 text-sm font-semibold text-tinta hover:bg-fondo"
-          >
-            Generar carta de intimación →
-          </Link>
+          <ButtonLink href={`/casos/${caso.id}/carta`} className="self-start" flecha>
+            Generar carta de intimación
+          </ButtonLink>
         )}
 
         {editando ? (

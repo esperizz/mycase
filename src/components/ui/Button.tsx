@@ -22,11 +22,12 @@ function clases({ variante = "primary", className, flecha }: Props) {
   return [base, variantes[variante], flecha && "pr-1.5", className].filter(Boolean).join(" ");
 }
 
-function Flecha({ variante = "primary" }: { variante?: Variante }) {
+/** Flecha en círculo. Se usa sola en filas que llevan a otra pantalla, con `className` para el tamaño. */
+export function Flecha({ variante = "primary", className = "ml-1 size-7" }: { variante?: Variante; className?: string }) {
   return (
     <span
       aria-hidden
-      className={`ml-1 flex size-7 items-center justify-center rounded-full ${
+      className={`flex shrink-0 items-center justify-center rounded-full ${className} ${
         variante === "primary" ? "bg-white text-tinta" : "bg-tinta text-white"
       }`}
     >
