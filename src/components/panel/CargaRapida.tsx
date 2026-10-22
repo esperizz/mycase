@@ -8,14 +8,11 @@ import { feriado } from "@/lib/casos/feriados";
 import { formatearFecha, hoyIso, sumarDias } from "@/lib/casos/formato";
 import type { Caso, TipoVencimiento } from "@/lib/casos/tipos";
 
-/** Tocar una sugerencia también elige si es plazo o tarea. */
-const SUGERENCIAS: { texto: string; tipo: TipoVencimiento }[] = [
-  { texto: "Contestar demanda", tipo: "plazo" },
-  { texto: "Audiencia", tipo: "plazo" },
-  { texto: "Presentar escrito", tipo: "plazo" },
-  { texto: "Llamar al cliente", tipo: "tarea" },
-  { texto: "Pedir documentación", tipo: "tarea" },
-];
+/** Sugerencias según lo que se esté cargando. La abogada representa al trabajador: demanda, no contesta demandas. */
+const SUGERENCIAS: Record<TipoVencimiento, string[]> = {
+  plazo: ["Contestar traslado", "Audiencia", "Presentar escrito"],
+  tarea: ["Llamar al cliente", "Pedir documentación"],
+};
 
 const TEXTOS: Record<TipoVencimiento, { pregunta: string; ejemplo: string; boton: string }> = {
   plazo: { pregunta: "¿Qué vence?", ejemplo: 'Ej.: "Contestar traslado"', boton: "Agregar plazo" },
@@ -159,16 +156,9 @@ export function CargaRapida({
             onChange={(e) => setDescripcion(e.target.value)}
           />
           <div className="flex flex-wrap gap-2">
-            {SUGERENCIAS.map((s) => (
-              <Chip
-                key={s.texto}
-                activo={descripcion === s.texto}
-                onClick={() => {
-                  setDescripcion(s.texto);
-                  setTipo(s.tipo);
-                }}
-              >
-                {s.texto}
+            {SUGERENCIAS[tipo].map((s) => (
+              <Chip key={s} activo={descripcion === s} onClick={() => setDescripcion(s)}>
+                {s}
               </Chip>
             ))}
           </div>

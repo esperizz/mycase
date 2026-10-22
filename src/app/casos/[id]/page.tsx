@@ -196,7 +196,7 @@ export default function FichaCasoPage() {
             <div className="flex-[2]">
               <TextField
                 label={tipoVto === "plazo" ? "Qué vence" : "Qué hay que hacer"}
-                placeholder={tipoVto === "plazo" ? 'Ej.: "Contestar demanda"' : 'Ej.: "Llamar al cliente"'}
+                placeholder={tipoVto === "plazo" ? 'Ej.: "Contestar traslado"' : 'Ej.: "Llamar al cliente"'}
                 value={descVto}
                 onChange={(e) => setDescVto(e.target.value)}
               />
