@@ -152,7 +152,16 @@ export function CargaRapida({
           />
           <div className="flex flex-wrap gap-2">
             {(caso ? sugerencias(caso, tipo) : []).map((s) => (
-              <Chip key={s} activo={descripcion === s} onClick={() => setDescripcion(s)}>
+              <Chip
+                key={s}
+                activo={descripcion === s}
+                onClick={() => {
+                  // Tocar el elegido lo desmarca y deja el campo listo para escribir otro motivo.
+                  if (descripcion !== s) return setDescripcion(s);
+                  setDescripcion("");
+                  campoDescripcion.current?.focus();
+                }}
+              >
                 {s}
               </Chip>
             ))}
@@ -163,7 +172,7 @@ export function CargaRapida({
           <p className="text-sm font-semibold text-tinta">Cuándo</p>
           <div className="flex flex-wrap gap-2">
             {atajos.map((a) => (
-              <Chip key={a.etiqueta} activo={fecha === a.fecha} onClick={() => setFecha(a.fecha)}>
+              <Chip key={a.etiqueta} activo={fecha === a.fecha} onClick={() => setFecha(fecha === a.fecha ? "" : a.fecha)}>
                 {a.etiqueta}
               </Chip>
             ))}
