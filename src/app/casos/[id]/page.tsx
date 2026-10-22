@@ -10,6 +10,7 @@ import { FormularioCaso } from "@/components/casos/FormularioCaso";
 import { HojaRutaArt } from "@/components/casos/HojaRutaArt";
 import { ItemVencimiento } from "@/components/casos/ItemVencimiento";
 import { NotasCaso } from "@/components/casos/NotasCaso";
+import { SinNovedades } from "@/components/casos/SinNovedades";
 import { Button } from "@/components/ui/Button";
 import { DialogoConfirmar } from "@/components/ui/DialogoConfirmar";
 import { SelectField, TextField } from "@/components/ui/Field";
@@ -86,6 +87,7 @@ export default function FichaCasoPage() {
             </h1>
             <EtapaBadge caso={caso} />
           </div>
+          {caso.estado !== "cerrado" && <SinNovedades caso={caso} />}
         </div>
 
         {art ? (

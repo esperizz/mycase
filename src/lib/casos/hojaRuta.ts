@@ -243,7 +243,7 @@ export function hojaCompleta(caso: Caso): boolean {
 }
 
 /** "juan pérez" → "Juan". */
-function primerNombre(cliente: string) {
+export function primerNombre(cliente: string) {
   const nombre = cliente.trim().split(/\s+/)[0] ?? "";
   return nombre.charAt(0).toUpperCase() + nombre.slice(1).toLowerCase();
 }
