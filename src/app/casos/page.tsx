@@ -1,16 +1,14 @@
 import { CopiaSeguridad } from "@/components/casos/CopiaSeguridad";
 import { ListaCasos } from "@/components/casos/ListaCasos";
-import { Header } from "@/components/ui/Header";
+import { Pagina } from "@/components/ui/Pagina";
+import { Titulo } from "@/components/ui/Texto";
 
 export default function CasosPage() {
   return (
-    <>
-      <Header />
-      <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 py-8">
-        <h1 className="text-2xl font-semibold tracking-tight text-tinta sm:text-3xl">Tus casos</h1>
-        <ListaCasos />
-        <CopiaSeguridad />
-      </main>
-    </>
+    <Pagina>
+      <Titulo>Tus casos</Titulo>
+      <ListaCasos />
+      <CopiaSeguridad />
+    </Pagina>
   );
 }

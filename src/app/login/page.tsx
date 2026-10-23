@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { TextField } from "@/components/ui/Field";
+import { Pagina } from "@/components/ui/Pagina";
+import { Texto, Titulo } from "@/components/ui/Texto";
 import { createClient } from "@/lib/supabase/client";
 
 export default function LoginPage() {
@@ -26,17 +28,19 @@ export default function LoginPage() {
   };
 
   return (
-    <main className="flex flex-1 flex-col items-center justify-center gap-6 px-4 py-16">
-      <h1 className="text-2xl font-bold tracking-tight text-tinta">MyCase</h1>
+    <Pagina ancho="angosto" centrada encabezado={false}>
+      <Titulo>MyCase</Titulo>
       {enviado ? (
-        <div className="flex max-w-sm flex-col gap-2 text-center">
-          <p className="font-semibold text-tinta">Revisá tu email</p>
-          <p className="text-sm text-gray-500">
+        <div className="flex max-w-sm flex-col gap-2">
+          <Texto peso="semibold" tono="primary">
+            Revisá tu email
+          </Texto>
+          <Texto estilo="body-sm" tono="secondary">
             Te mandamos un link a <strong>{email}</strong> para entrar. Si no lo ves, revisá spam.
-          </p>
+          </Texto>
         </div>
       ) : (
-        <form onSubmit={enviar} className="flex w-full max-w-sm flex-col gap-4">
+        <form onSubmit={enviar} className="flex w-full max-w-sm flex-col gap-4 text-left">
           <TextField
             label="Tu email"
             type="email"
@@ -46,15 +50,15 @@ export default function LoginPage() {
             onChange={(e) => setEmail(e.target.value)}
           />
           {error && (
-            <p role="alert" className="text-sm font-medium text-red-600">
+            <Texto role="alert" estilo="body-sm" peso="medium" tono="danger">
               {error}
-            </p>
+            </Texto>
           )}
           <Button type="submit" disabled={enviando}>
             {enviando ? "Enviando..." : "Enviarme el link para entrar"}
           </Button>
         </form>
       )}
-    </main>
+    </Pagina>
   );
 }

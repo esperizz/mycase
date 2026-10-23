@@ -1,10 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "@/components/ui/Button";
-import { DialogoCerrarCaso } from "@/components/casos/CerrarCaso";import { DialogoConfirmar } from "@/components/ui/DialogoConfirmar";
-import { TextField } from "@/components/ui/Field";
+import { DialogoCerrarCaso } from "@/components/casos/CerrarCaso";
+import { Badge } from "@/components/ui/Badge";
+import { BotonTexto, Button } from "@/components/ui/Button";
+import { Segmentado } from "@/components/ui/Controles";
+import { MarcadorPaso } from "@/components/ui/Datos";
+import { DialogoConfirmar } from "@/components/ui/DialogoConfirmar";
+import { TextAreaField, TextField } from "@/components/ui/Field";
 import { MenuAcciones } from "@/components/ui/MenuAcciones";
+import { Aviso, ListaDividida, Recuadro, Tarjeta } from "@/components/ui/Superficies";
+import { Rotulo, Texto } from "@/components/ui/Texto";
 import { useCasos } from "@/lib/casos/CasosProvider";
 import { diasHasta, fechaCorta, formatearFecha, hoyIso, textoDias } from "@/lib/casos/formato";
 import {
@@ -51,40 +57,32 @@ function PasoActual({ caso, paso }: { caso: Caso; paso: Paso }) {
   };
 
   return (
-    <div className="flex flex-col gap-3 rounded-2xl border-2 border-tinta p-4">
+    <Recuadro tono="highlighted" className="flex flex-col gap-3">
       <div>
-        <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Paso actual</p>
-        <p className="text-lg font-bold text-tinta">{paso.tecnico}</p>
+        <Rotulo>Paso actual</Rotulo>
+        <Texto estilo="h2" tono="primary">
+          {paso.tecnico}
+        </Texto>
       </div>
       {plazo && (
-        <p
-          className={`w-fit rounded-md px-2 py-1 text-sm font-semibold ${
-            diasHasta(plazo.fecha) <= 2 ? "bg-red-100 text-red-800" : "bg-amber-100 text-amber-900"
-          }`}
-        >
+        <Badge tono={diasHasta(plazo.fecha) <= 2 ? "danger" : "warning"} className="self-start">
           {plazo.descripcion}: {textoDias(diasHasta(plazo.fecha)).toLowerCase()} ({formatearFecha(plazo.fecha)})
-        </p>
+        </Badge>
       )}
       {esRespuesta && (
-        <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Respuesta de la ART">
-          {[false, true].map((r) => (
-            <button
-              key={String(r)}
-              type="button"
-              role="radio"
-              aria-checked={rechazo === r}
-              onClick={() => {
-                setRechazo(r);
-                setEditado(null);
-              }}
-              className={`rounded-full border px-3 py-1 text-sm font-semibold ${
-                rechazo === r ? "border-tinta bg-tinta text-white" : "border-linea text-gray-700"
-              }`}
-            >
-              {r ? "La ART rechazó" : "La ART aceptó"}
-            </button>
-          ))}
-        </div>
+        <Segmentado
+          label="Respuesta de la ART"
+          ocultarLabel
+          opciones={[
+            { valor: "acepto", etiqueta: "La ART aceptó" },
+            { valor: "rechazo", etiqueta: "La ART rechazó" },
+          ]}
+          valor={rechazo ? "rechazo" : "acepto"}
+          onChange={(v) => {
+            setRechazo(v === "rechazo");
+            setEditado(null);
+          }}
+        />
       )}
       {conFecha && (
         <div className="max-w-xs">
@@ -94,28 +92,25 @@ function PasoActual({ caso, paso }: { caso: Caso; paso: Paso }) {
             max={hoy}
             value={fecha}
             onChange={(e) => setFecha(e.target.value)}
+            ayuda="El plazo legal se cuenta desde esta fecha."
           />
-          <p className="mt-1 text-xs text-gray-500">El plazo legal se cuenta desde esta fecha.</p>
         </div>
       )}
-      <label className="flex flex-col gap-1.5 text-sm font-medium text-gray-700">
-        Mensaje para el cliente (podés editarlo)
-        <textarea
-          rows={7}
-          value={texto}
-          onChange={(e) => setEditado(e.target.value)}
-          className="field-sizing-content min-h-40 rounded-2xl border border-linea p-3 font-normal text-tinta focus:border-tinta focus:outline-none"
-        />
-      </label>
+      <TextAreaField
+        label="Mensaje para el cliente (podés editarlo)"
+        rows={7}
+        value={texto}
+        onChange={(e) => setEditado(e.target.value)}
+      />
       <div className="flex flex-col gap-2 sm:flex-row">
-        <Button className="bg-green-700 hover:bg-green-800" onClick={() => cumplir(true)}>
+        <Button variante="success" onClick={() => cumplir(true)}>
           Cumplido e informarle por WhatsApp
         </Button>
         <Button variante="secondary" onClick={() => cumplir(false)}>
           Cumplido, sin informarle
         </Button>
       </div>
-    </div>
+    </Recuadro>
   );
 }
 
@@ -128,18 +123,14 @@ export function HojaRutaArt({ caso }: { caso: Caso }) {
 
   if (!caso.hojaRuta) {
     return (
-      <section className="flex flex-col gap-3 rounded-3xl border border-linea bg-white p-5">
-        <h2 className="font-semibold text-tinta">Hoja de ruta de ART</h2>
-        <p className="text-sm text-gray-500">
-          Seguí el reclamo paso a paso, con los plazos legales calculados en días hábiles, e informale al cliente por
-          WhatsApp cuando quieras.
-        </p>
-        <div>
-          <Button onClick={() => actualizar(caso.id, (c) => ({ ...c, hojaRuta: hojaRutaVacia() }))}>
-            Empezar hoja de ruta
-          </Button>
-        </div>
-      </section>
+      <Tarjeta
+        titulo="Hoja de ruta de ART"
+        ayuda="Seguí el reclamo paso a paso, con los plazos legales calculados en días hábiles, e informale al cliente por WhatsApp cuando quieras."
+      >
+        <Button className="self-start" onClick={() => actualizar(caso.id, (c) => ({ ...c, hojaRuta: hojaRutaVacia() }))}>
+          Empezar hoja de ruta
+        </Button>
+      </Tarjeta>
     );
   }
 
@@ -166,62 +157,63 @@ export function HojaRutaArt({ caso }: { caso: Caso }) {
   };
 
   return (
-    <section className="flex flex-col gap-4 rounded-3xl border border-linea bg-white p-5">
-      <h2 className="font-semibold text-tinta">Hoja de ruta de ART</h2>
-
+    <Tarjeta titulo="Hoja de ruta de ART">
       {hoja.inicioAvisado ? (
-        <p className="text-sm text-gray-500">
+        <Texto estilo="body-sm" tono="secondary">
           Le informaste al cliente cómo va a ser el caso el {formatearFecha(hoja.inicioAvisado)}.{" "}
-          <button type="button" onClick={contarInicio} className="font-semibold text-tinta underline underline-offset-2">
+          <BotonTexto subrayado onClick={contarInicio}>
             Volver a mandar
-          </button>
-        </p>
+          </BotonTexto>
+        </Texto>
       ) : (
-        <div className="flex flex-col gap-2 rounded-2xl bg-blue-50 p-4 text-sm text-blue-900 sm:flex-row sm:items-center sm:justify-between">
-          <p>Informale al cliente todo el recorrido desde el principio: después, cada paso que se cumple confirma lo que le dijiste.</p>
+        <Aviso tono="info" className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <Texto>
+            Informale al cliente todo el recorrido desde el principio: después, cada paso que se cumple confirma lo que le
+            dijiste.
+          </Texto>
           <Button onClick={contarInicio}>Informarle el recorrido por WhatsApp</Button>
-        </div>
+        </Aviso>
       )}
 
       {actual ? (
         <PasoActual key={actual.id} caso={caso} paso={actual} />
       ) : (
-        <div className="flex flex-col gap-3 rounded-2xl bg-green-50 p-4 text-green-900 sm:flex-row sm:items-center sm:justify-between">
+        <Recuadro tono="success" className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="font-semibold">Todos los pasos están cumplidos.</p>
+            <Texto peso="semibold">Todos los pasos están cumplidos.</Texto>
             {caso.estado !== "cerrado" && (
-              <p className="text-sm">Si no queda nada más por hacer (por ejemplo, cobrar honorarios), cerralo.</p>
+              <Texto estilo="body-sm">Si no queda nada más por hacer (por ejemplo, cobrar honorarios), cerralo.</Texto>
             )}
           </div>
           {caso.estado !== "cerrado" && <Button onClick={() => setCerrando(true)}>Cerrar caso</Button>}
-        </div>
+        </Recuadro>
       )}
 
-      <ol className="flex flex-col divide-y divide-gray-100">
+      <ListaDividida as="ol">
         {pasos.map((p) => (
-          <li key={p.id} className="flex items-start gap-3 py-3 text-sm">
-            <span
-              className={`mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full text-xs ${
-                p.estado === "cumplido"
-                  ? "bg-green-600 text-white"
-                  : p.estado === "actual"
-                    ? "border-2 border-tinta"
-                    : "border border-linea"
-              }`}
-              aria-hidden
-            >
-              {p.estado === "cumplido" ? "✓" : ""}
-            </span>
+          <li key={p.id} className="flex items-start gap-3 py-3">
+            <MarcadorPaso estado={p.estado} />
             <div className="min-w-0 flex-1">
-              <p className={p.estado === "pendiente" ? "text-gray-400" : "font-medium text-tinta"}>
+              <Texto
+                estilo="body-sm"
+                tono={p.estado === "pendiente" ? "tertiary" : "primary"}
+                peso={p.estado === "pendiente" ? undefined : "medium"}
+              >
                 {p.tecnico}
                 {p.id === "respuesta" && p.fecha && (hoja.rechazo ? " · rechazó" : " · aceptó")}
-              </p>
+              </Texto>
               {/* Solo datos: cuándo se cumplió y si se le avisó al cliente. Las acciones van en el menú. */}
               {p.fecha && (
-                <p className="mt-0.5 text-xs text-gray-500">
-                  {fechaCorta(p.fecha)} · {p.avisado ? <span className="text-green-700">Informado</span> : "No informado"}
-                </p>
+                <Texto estilo="caption" tono="secondary" className="mt-0.5">
+                  {fechaCorta(p.fecha)} ·{" "}
+                  {p.avisado ? (
+                    <Texto as="span" tono="success">
+                      Informado
+                    </Texto>
+                  ) : (
+                    "No informado"
+                  )}
+                </Texto>
               )}
             </div>
             {p.fecha && (
@@ -235,7 +227,7 @@ export function HojaRutaArt({ caso }: { caso: Caso }) {
             )}
           </li>
         ))}
-      </ol>
+      </ListaDividida>
 
       <DialogoCerrarCaso caso={caso} abierto={cerrando} onCerrar={() => setCerrando(false)} />
 
@@ -255,11 +247,11 @@ export function HojaRutaArt({ caso }: { caso: Caso }) {
             : "Ese paso vuelve a quedar pendiente. Se borran los plazos que había abierto."}
         </p>
         {huboAvisos && (
-          <p className="rounded-2xl bg-amber-50 p-3 text-amber-900">
+          <Aviso tono="warning">
             Los mensajes que ya le mandaste al cliente no se borran de WhatsApp. Si hace falta, mandale una aclaración.
-          </p>
+          </Aviso>
         )}
       </DialogoConfirmar>
-    </section>
+    </Tarjeta>
   );
 }

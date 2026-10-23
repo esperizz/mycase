@@ -1,10 +1,12 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Button, Flecha } from "@/components/ui/Button";
+import { Badge } from "@/components/ui/Badge";
+import { BotonTexto, Button, FilaEnlace } from "@/components/ui/Button";
 import { DialogoConfirmar } from "@/components/ui/DialogoConfirmar";
+import { Tarjeta } from "@/components/ui/Superficies";
+import { Texto } from "@/components/ui/Texto";
 import { tipoCartaPorId, TIPOS_CARTA } from "@/lib/casos/cartaCatalogo";
 import { nuevaCarta } from "@/lib/casos/cartas";
 import { useCasos } from "@/lib/casos/CasosProvider";
@@ -31,43 +33,26 @@ export function CartasCaso({ caso }: { caso: Caso }) {
   };
 
   return (
-    <section className="flex flex-col gap-4 rounded-3xl border border-linea bg-white p-5">
-      <div>
-        <h2 className="font-semibold text-tinta">Cartas</h2>
-        <p className="text-sm text-gray-500">Cartas documento y telegramas del caso, en el orden en que los empezaste.</p>
-      </div>
-
+    <Tarjeta titulo="Cartas" ayuda="Cartas documento y telegramas del caso, en el orden en que los empezaste.">
       {caso.cartas.length > 0 && (
         <ul className="flex flex-col gap-2">
           {caso.cartas.map((c) => (
-            <li key={c.id} className="flex items-center gap-3 rounded-2xl bg-fondo px-3 py-2 text-sm">
-              <Link
+            <li key={c.id}>
+              <FilaEnlace
                 href={`/casos/${caso.id}/cartas/${c.id}`}
-                className="flex min-w-0 flex-1 items-center justify-between gap-3 font-medium text-tinta hover:underline"
+                accion={c.enviadaEl ? <Badge tono="success">Enviada {fechaCorta(c.enviadaEl)}</Badge> : <Badge tono="warning">Borrador</Badge>}
+                extra={
+                  !c.enviadaEl && (
+                    <BotonTexto variante="dangerQuiet" estilo="caption" className="shrink-0" onClick={() => setDescartando(c)}>
+                      Descartar
+                    </BotonTexto>
+                  )
+                }
               >
-                <span className="truncate">{tipoCartaPorId(c.tipo).titulo}</span>
-                <span className="flex shrink-0 items-center gap-2">
-                  {c.enviadaEl ? (
-                    <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-semibold text-green-800">
-                      Enviada {fechaCorta(c.enviadaEl)}
-                    </span>
-                  ) : (
-                    <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-900">
-                      Borrador
-                    </span>
-                  )}
-                  <Flecha variante="secondary" className="size-6" />
-                </span>
-              </Link>
-              {!c.enviadaEl && (
-                <button
-                  type="button"
-                  onClick={() => setDescartando(c)}
-                  className="shrink-0 text-xs text-gray-500 hover:text-red-700 hover:underline"
-                >
-                  Descartar
-                </button>
-              )}
+                <Texto as="span" peso="medium" tono="primary" className="truncate">
+                  {tipoCartaPorId(c.tipo).titulo}
+                </Texto>
+              </FilaEnlace>
             </li>
           ))}
         </ul>
@@ -75,28 +60,28 @@ export function CartasCaso({ caso }: { caso: Caso }) {
 
       {eligiendo ? (
         <div className="flex flex-col gap-2">
-          <p className="text-sm font-semibold text-tinta">¿Qué carta vas a escribir?</p>
+          <Texto estilo="body-sm" peso="semibold" tono="primary">
+            ¿Qué carta vas a escribir?
+          </Texto>
           <ul className="flex flex-col gap-2">
             {TIPOS_CARTA.map((t) => (
               <li key={t.id}>
-                <button
-                  type="button"
-                  onClick={() => empezar(t.id)}
-                  className="flex w-full flex-col gap-0.5 rounded-2xl border border-linea px-4 py-3 text-left hover:border-tinta"
-                >
-                  <span className="text-sm font-semibold text-tinta">{t.titulo}</span>
-                  <span className="text-xs text-gray-500">{t.descripcion}</span>
-                </button>
+                <FilaEnlace onClick={() => empezar(t.id)}>
+                  <span className="flex flex-col gap-0.5">
+                    <Texto as="span" peso="semibold" tono="primary">
+                      {t.titulo}
+                    </Texto>
+                    <Texto as="span" estilo="caption" tono="secondary">
+                      {t.descripcion}
+                    </Texto>
+                  </span>
+                </FilaEnlace>
               </li>
             ))}
           </ul>
-          <button
-            type="button"
-            onClick={() => setEligiendo(false)}
-            className="w-fit text-sm font-medium text-gray-500 hover:text-tinta"
-          >
+          <BotonTexto variante="quiet" estilo="body-sm" className="w-fit" onClick={() => setEligiendo(false)}>
             Cancelar
-          </button>
+          </BotonTexto>
         </div>
       ) : (
         <Button variante="secondary" className="self-start" onClick={() => setEligiendo(true)}>
@@ -114,6 +99,7 @@ export function CartasCaso({ caso }: { caso: Caso }) {
       >
         <p>Se borra todo lo que escribiste en esta carta. No se puede deshacer.</p>
       </DialogoConfirmar>
-    </section>
+    </Tarjeta>
   );
 }
+

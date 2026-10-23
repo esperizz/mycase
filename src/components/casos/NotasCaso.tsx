@@ -1,9 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "@/components/ui/Button";
+import { BotonTexto, Button } from "@/components/ui/Button";
 import { DialogoConfirmar } from "@/components/ui/DialogoConfirmar";
 import { TextAreaField } from "@/components/ui/Field";
+import { ListaDividida, Tarjeta } from "@/components/ui/Superficies";
+import { Texto } from "@/components/ui/Texto";
 import { useCasos } from "@/lib/casos/CasosProvider";
 import { formatearFecha } from "@/lib/casos/formato";
 import { ahoraIso, ordenarNotas } from "@/lib/casos/notas";
@@ -56,17 +58,21 @@ function ItemNota({ casoId, nota, onBorrar }: { casoId: string; nota: Nota; onBo
   return (
     <li className="flex flex-col gap-1 py-3">
       <div className="flex items-baseline justify-between gap-3">
-        <p className="text-xs font-semibold text-gray-500">{cuando(nota.fecha)}</p>
-        <div className="flex gap-3 text-xs text-gray-500">
-          <button type="button" onClick={() => setEditando(true)} className="hover:text-tinta hover:underline">
+        <Texto estilo="caption" peso="semibold" tono="secondary">
+          {cuando(nota.fecha)}
+        </Texto>
+        <div className="flex gap-3">
+          <BotonTexto variante="quiet" estilo="caption" onClick={() => setEditando(true)}>
             Editar
-          </button>
-          <button type="button" onClick={onBorrar} className="hover:text-red-700 hover:underline">
+          </BotonTexto>
+          <BotonTexto variante="dangerQuiet" estilo="caption" onClick={onBorrar}>
             Borrar
-          </button>
+          </BotonTexto>
         </div>
       </div>
-      <p className="whitespace-pre-line text-sm text-tinta">{nota.texto}</p>
+      <Texto estilo="body-sm" tono="primary" preservarSaltos>
+        {nota.texto}
+      </Texto>
     </li>
   );
 }
@@ -90,12 +96,10 @@ export function NotasCaso({ caso }: { caso: Caso }) {
   };
 
   return (
-    <section className="flex flex-col gap-4 rounded-3xl border border-linea bg-white p-5">
-      <div>
-        <h2 className="font-semibold text-tinta">Notas</h2>
-        <p className="text-sm text-gray-500">Lo que te contó el cliente, datos sueltos, cosas a tener en cuenta. Solo lo ves vos.</p>
-      </div>
-
+    <Tarjeta
+      titulo="Notas"
+      ayuda="Lo que te contó el cliente, datos sueltos, cosas a tener en cuenta. Solo lo ves vos."
+    >
       <form onSubmit={agregar} className="flex flex-col gap-2">
         <TextAreaField
           label="Nueva nota"
@@ -103,21 +107,21 @@ export function NotasCaso({ caso }: { caso: Caso }) {
           onChange={(e) => setNueva(e.target.value)}
           placeholder='Ej.: "Llamó: dice que la ART no le contestó todavía."'
         />
-        <div>
-          <Button type="submit" disabled={!nueva.trim()}>
-            Agregar nota
-          </Button>
-        </div>
+        <Button type="submit" className="self-start" disabled={!nueva.trim()}>
+          Agregar nota
+        </Button>
       </form>
 
       {notas.length === 0 ? (
-        <p className="text-sm text-gray-500">Todavía no hay notas en este caso.</p>
+        <Texto estilo="body-sm" tono="secondary">
+          Todavía no hay notas en este caso.
+        </Texto>
       ) : (
-        <ul className="flex flex-col divide-y divide-gray-100">
+        <ListaDividida>
           {notas.map((n) => (
             <ItemNota key={n.id} casoId={caso.id} nota={n} onBorrar={() => setBorrando(n.id)} />
           ))}
-        </ul>
+        </ListaDividida>
       )}
 
       <DialogoConfirmar
@@ -133,6 +137,6 @@ export function NotasCaso({ caso }: { caso: Caso }) {
       >
         <p>No se puede deshacer.</p>
       </DialogoConfirmar>
-    </section>
+    </Tarjeta>
   );
 }

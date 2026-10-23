@@ -1,37 +1,29 @@
 "use client";
 
-import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
-import { CamposHoraLugar } from "@/components/casos/CamposHoraLugar";
 import { CartasCaso } from "@/components/casos/CartasCaso";
 import { DialogoCerrarCaso } from "@/components/casos/CerrarCaso";
 import { DocumentosCaso } from "@/components/casos/DocumentosCaso";
 import { EtapaBadge } from "@/components/casos/EstadoBadge";
 import { FormularioCaso } from "@/components/casos/FormularioCaso";
+import { FormularioVencimiento } from "@/components/casos/FormularioVencimiento";
 import { HojaRutaArt } from "@/components/casos/HojaRutaArt";
+import { InformarCliente } from "@/components/casos/InformarCliente";
 import { ItemVencimiento } from "@/components/casos/ItemVencimiento";
 import { NotasCaso } from "@/components/casos/NotasCaso";
-import { InformarCliente } from "@/components/casos/InformarCliente";
-import { Button, Flecha, LinkVolver } from "@/components/ui/Button";
+import { BotonTexto, Button, FilaEnlace, LinkVolver } from "@/components/ui/Button";
+import { Dato } from "@/components/ui/Datos";
 import { DialogoConfirmar } from "@/components/ui/DialogoConfirmar";
-import { SelectField, TextField } from "@/components/ui/Field";
-import { Header } from "@/components/ui/Header";
+import { SelectField } from "@/components/ui/Field";
+import { Pagina, PaginaNoEncontrada } from "@/components/ui/Pagina";
+import { Tarjeta } from "@/components/ui/Superficies";
+import { Texto, Titulo, TituloTenue } from "@/components/ui/Texto";
 import { useCasos } from "@/lib/casos/CasosProvider";
 import { otrosCasos } from "@/lib/casos/clientes";
 import { formatearFecha } from "@/lib/casos/formato";
 import { esArt, etapaArt } from "@/lib/casos/hojaRuta";
-import { esCita } from "@/lib/casos/sugerencias";
-import { ESTADO_LABEL, ESTADOS, type TipoVencimiento } from "@/lib/casos/tipos";
-
-function Dato({ label, valor }: { label: string; valor: string }) {
-  return (
-    <div>
-      <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">{label}</p>
-      <p className="text-tinta">{valor}</p>
-    </div>
-  );
-}
+import { ESTADO_LABEL, ESTADOS } from "@/lib/casos/tipos";
 
 export default function FichaCasoPage() {
   const { id } = useParams<{ id: string }>();
@@ -39,49 +31,16 @@ export default function FichaCasoPage() {
   const { casos, listo, actualizar, eliminar, agregarVencimiento } = useCasos();
   const caso = casos.find((c) => c.id === id);
 
-  const [fechaVto, setFechaVto] = useState("");
-  const [descVto, setDescVto] = useState("");
-  const [tipoVto, setTipoVto] = useState<TipoVencimiento>("plazo");
-  const [horaVto, setHoraVto] = useState("");
-  const [lugarVto, setLugarVto] = useState("");
   const [editando, setEditando] = useState(false);
   const [borrando, setBorrando] = useState(false);
   const [cerrando, setCerrando] = useState(false);
 
   if (!listo) return null;
 
-  if (!caso) {
-    return (
-      <>
-        <Header />
-        <main className="mx-auto flex w-full max-w-xl flex-1 flex-col items-center gap-4 px-4 py-16 text-center">
-          <p className="text-lg font-semibold text-tinta">No encontramos ese caso</p>
-          <Link href="/casos" className="text-sm font-semibold text-tinta underline underline-offset-2">
-            Volver a la lista
-          </Link>
-        </main>
-      </>
-    );
-  }
+  if (!caso) return <PaginaNoEncontrada titulo="No encontramos ese caso" href="/casos" enlace="Volver a la lista" />;
 
   const art = esArt(caso);
   const otros = otrosCasos(caso, casos);
-
-  const guardarVencimiento = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!fechaVto) return;
-    agregarVencimiento(caso.id, {
-      fecha: fechaVto,
-      descripcion: descVto,
-      tipo: tipoVto,
-      hora: horaVto,
-      lugar: lugarVto.trim(),
-    });
-    setFechaVto("");
-    setDescVto("");
-    setHoraVto("");
-    setLugarVto("");
-  };
 
   const borrarCaso = () => {
     eliminar(caso.id);
@@ -89,192 +48,143 @@ export default function FichaCasoPage() {
   };
 
   return (
-    <>
-      <Header />
-      <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-8 px-4 py-8">
-        <div className="flex flex-col gap-3">
-          <LinkVolver href="/casos">
-            Volver a mis casos
-          </LinkVolver>
-          <div className="flex flex-wrap items-center gap-3">
-            <h1 className="text-2xl font-semibold tracking-tight text-tinta sm:text-3xl">
-              {caso.cliente} <span className="text-tenue">contra {caso.empleador}</span>
-            </h1>
-            <EtapaBadge caso={caso} />
+    <Pagina ancho="medio">
+      <div className="flex flex-col gap-3">
+        <LinkVolver href="/casos">Volver a mis casos</LinkVolver>
+        <div className="flex flex-wrap items-center gap-3">
+          <Titulo>
+            {caso.cliente} <TituloTenue>contra {caso.empleador}</TituloTenue>
+          </Titulo>
+          <EtapaBadge caso={caso} />
+        </div>
+      </div>
+
+      {art ? <HojaRutaArt caso={caso} /> : <CartasCaso caso={caso} />}
+
+      {editando ? (
+        <Tarjeta>
+          <FormularioCaso
+            inicial={caso}
+            textoBoton="Guardar cambios"
+            onGuardar={(datos) => {
+              actualizar(caso.id, (c) => ({ ...c, ...datos }));
+              setEditando(false);
+            }}
+            onCancelar={() => setEditando(false)}
+          />
+        </Tarjeta>
+      ) : (
+        <Tarjeta>
+          <div className="grid grid-cols-2 gap-4">
+            <Dato label="Empleador" valor={caso.empleador} />
+            <Dato label="Tipo de reclamo" valor={caso.tipoReclamo} />
+            <Dato label="Contacto" valor={caso.contacto || "—"} />
+            <Dato label="Caso abierto el" valor={formatearFecha(caso.fechaApertura)} />
+            {caso.expediente && <Dato label="Expediente" valor={caso.expediente} />}
+            {caso.juzgado && <Dato label="Juzgado" valor={caso.juzgado} />}
           </div>
-        </div>
+          <Button variante="secondary" className="self-start" onClick={() => setEditando(true)}>
+            Editar datos
+          </Button>
+        </Tarjeta>
+      )}
 
-        {art ? <HojaRutaArt caso={caso} /> : <CartasCaso caso={caso} />}
+      {otros.length > 0 && (
+        <Tarjeta titulo={`Otros casos de ${caso.cliente}`}>
+          <ul className="flex flex-col gap-2">
+            {otros.map((o) => (
+              <li key={o.id}>
+                <FilaEnlace href={`/casos/${o.id}`}>
+                  <Texto as="span" peso="medium" tono="primary">
+                    {o.tipoReclamo}{" "}
+                    <Texto as="span" peso="regular" tono="secondary">
+                      · contra {o.empleador}
+                    </Texto>
+                  </Texto>
+                  <EtapaBadge caso={o} />
+                </FilaEnlace>
+              </li>
+            ))}
+          </ul>
+        </Tarjeta>
+      )}
 
-        {editando ? (
-          <section className="rounded-3xl border border-linea bg-white p-5">
-            <FormularioCaso
-              inicial={caso}
-              textoBoton="Guardar cambios"
-              onGuardar={(datos) => {
-                actualizar(caso.id, (c) => ({ ...c, ...datos }));
-                setEditando(false);
-              }}
-              onCancelar={() => setEditando(false)}
-            />
-          </section>
-        ) : (
-          <section className="flex flex-col gap-4 rounded-3xl border border-linea bg-white p-5">
-            <div className="grid grid-cols-2 gap-4">
-              <Dato label="Empleador" valor={caso.empleador} />
-              <Dato label="Tipo de reclamo" valor={caso.tipoReclamo} />
-              <Dato label="Contacto" valor={caso.contacto || "—"} />
-              <Dato label="Caso abierto el" valor={formatearFecha(caso.fechaApertura)} />
-              {caso.expediente && <Dato label="Expediente" valor={caso.expediente} />}
-              {caso.juzgado && <Dato label="Juzgado" valor={caso.juzgado} />}
-            </div>
-            <div>
-              <Button variante="secondary" onClick={() => setEditando(true)}>
-                Editar datos
-              </Button>
-            </div>
-          </section>
-        )}
-
-        {otros.length > 0 && (
-          <section className="flex flex-col gap-3 rounded-3xl border border-linea bg-white p-5">
-            <h2 className="font-semibold text-tinta">Otros casos de {caso.cliente}</h2>
-            <ul className="flex flex-col gap-2">
-              {otros.map((o) => (
-                <li key={o.id}>
-                  <Link
-                    href={`/casos/${o.id}`}
-                    className="flex items-center justify-between gap-3 rounded-2xl bg-fondo px-3 py-2 text-sm hover:bg-gray-100"
-                  >
-                    <span className="flex min-w-0 flex-wrap items-center gap-2">
-                      <span className="font-medium text-tinta">
-                        {o.tipoReclamo} <span className="font-normal text-gray-500">· contra {o.empleador}</span>
-                      </span>
-                      <EtapaBadge caso={o} />
-                    </span>
-                    <Flecha variante="secondary" className="size-6" />
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </section>
-        )}
-
-        <section className="flex flex-col gap-3 rounded-3xl border border-linea bg-white p-5">
-          <h2 className="font-semibold text-tinta">Estado del caso</h2>
-          {art ? (
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <p className="text-sm text-gray-600">
-                {caso.estado === "cerrado"
-                  ? "Caso cerrado."
-                  : `Etapa: ${etapaArt(caso)}. Avanza sola con la hoja de ruta.`}
-              </p>
-              <Button
-                variante="secondary"
-                onClick={() =>
-                  caso.estado === "cerrado"
-                    ? actualizar(caso.id, (c) => ({ ...c, estado: "consulta" }))
-                    : setCerrando(true)
-                }
-              >
-                {caso.estado === "cerrado" ? "Reabrir caso" : "Cerrar caso"}
-              </Button>
-            </div>
-          ) : (
-            <SelectField
-              label="Etapa actual"
-              value={caso.estado}
-              onChange={(e) => {
-                const estado = e.target.value as typeof caso.estado;
-                // Cerrar pide confirmación; el resto de las etapas cambia directo.
-                if (estado === "cerrado") setCerrando(true);
-                else actualizar(caso.id, (c) => ({ ...c, estado }));
-              }}
+      <Tarjeta titulo="Estado del caso">
+        {art ? (
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <Texto estilo="body-sm" tono="secondary">
+              {caso.estado === "cerrado" ? "Caso cerrado." : `Etapa: ${etapaArt(caso)}. Avanza sola con la hoja de ruta.`}
+            </Texto>
+            <Button
+              variante="secondary"
+              onClick={() =>
+                caso.estado === "cerrado"
+                  ? actualizar(caso.id, (c) => ({ ...c, estado: "consulta" }))
+                  : setCerrando(true)
+              }
             >
-              {ESTADOS.map((e) => (
-                <option key={e} value={e}>
-                  {ESTADO_LABEL[e]}
-                </option>
-              ))}
-            </SelectField>
-          )}
-          {/* En ART no: la hoja de ruta ya arma el mensaje de cada paso. */}
-          {!art && caso.estado !== "cerrado" && <InformarCliente caso={caso} />}
-        </section>
-
-        <section className="flex flex-col gap-4 rounded-3xl border border-linea bg-white p-5">
-          <h2 className="font-semibold text-tinta">Plazos y tareas</h2>
-          {caso.vencimientos.length === 0 ? (
-            <p className="text-sm text-gray-500">No hay plazos ni tareas cargados para este caso.</p>
-          ) : (
-            <ul className="flex flex-col gap-2">
-              {[...caso.vencimientos]
-                .sort((a, b) => a.fecha.localeCompare(b.fecha))
-                .map((v) => (
-                  <ItemVencimiento key={v.id} casoId={caso.id} vencimiento={v} />
-                ))}
-            </ul>
-          )}
-          <form onSubmit={guardarVencimiento} className="flex flex-col gap-3">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
-              <div className="sm:w-28">
-                <SelectField label="Tipo" value={tipoVto} onChange={(e) => setTipoVto(e.target.value as TipoVencimiento)}>
-                  <option value="plazo">Plazo</option>
-                  <option value="tarea">Tarea</option>
-                </SelectField>
-              </div>
-              <div className="flex-1">
-                <TextField label="Fecha" type="date" value={fechaVto} onChange={(e) => setFechaVto(e.target.value)} />
-              </div>
-              <div className="flex-[2]">
-                <TextField
-                  label={tipoVto === "plazo" ? "Qué vence" : "Qué hay que hacer"}
-                  placeholder={tipoVto === "plazo" ? 'Ej.: "Contestar traslado"' : 'Ej.: "Llamar al cliente"'}
-                  value={descVto}
-                  onChange={(e) => setDescVto(e.target.value)}
-                />
-              </div>
-            </div>
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-              <CamposHoraLugar
-                hora={horaVto}
-                lugar={lugarVto}
-                onHora={setHoraVto}
-                onLugar={setLugarVto}
-                abrir={esCita(descVto)}
-              />
-              <Button type="submit">Agregar</Button>
-            </div>
-          </form>
-        </section>
-
-        <NotasCaso caso={caso} />
-
-        <DocumentosCaso caso={caso} />
-
-        <div>
-          <button
-            type="button"
-            onClick={() => setBorrando(true)}
-            className="text-sm font-medium text-red-600 hover:text-red-800"
+              {caso.estado === "cerrado" ? "Reabrir caso" : "Cerrar caso"}
+            </Button>
+          </div>
+        ) : (
+          <SelectField
+            label="Etapa actual"
+            value={caso.estado}
+            onChange={(e) => {
+              const estado = e.target.value as typeof caso.estado;
+              // Cerrar pide confirmación; el resto de las etapas cambia directo.
+              if (estado === "cerrado") setCerrando(true);
+              else actualizar(caso.id, (c) => ({ ...c, estado }));
+            }}
           >
-            Eliminar este caso
-          </button>
-        </div>
+            {ESTADOS.map((e) => (
+              <option key={e} value={e}>
+                {ESTADO_LABEL[e]}
+              </option>
+            ))}
+          </SelectField>
+        )}
+        {/* En ART no: la hoja de ruta ya arma el mensaje de cada paso. */}
+        {!art && caso.estado !== "cerrado" && <InformarCliente caso={caso} />}
+      </Tarjeta>
 
-        <DialogoCerrarCaso caso={caso} abierto={cerrando} onCerrar={() => setCerrando(false)} />
+      <Tarjeta titulo="Plazos y tareas">
+        {caso.vencimientos.length === 0 ? (
+          <Texto estilo="body-sm" tono="secondary">
+            No hay plazos ni tareas cargados para este caso.
+          </Texto>
+        ) : (
+          <ul className="flex flex-col gap-2">
+            {[...caso.vencimientos]
+              .sort((a, b) => a.fecha.localeCompare(b.fecha))
+              .map((v) => (
+                <ItemVencimiento key={v.id} casoId={caso.id} vencimiento={v} />
+              ))}
+          </ul>
+        )}
+        <FormularioVencimiento textoBoton="Agregar" onGuardar={(datos) => agregarVencimiento(caso.id, datos)} />
+      </Tarjeta>
 
-        <DialogoConfirmar
-          abierto={borrando}
-          titulo={`¿Eliminar el caso de ${caso.cliente}?`}
-          textoConfirmar="Eliminar caso"
-          peligro
-          onCancelar={() => setBorrando(false)}
-          onConfirmar={borrarCaso}
-        >
-          <p>Se borran sus datos, plazos y tareas, notas, documentos, cartas y hoja de ruta. No se puede deshacer.</p>
-        </DialogoConfirmar>
-      </main>
-    </>
+      <NotasCaso caso={caso} />
+
+      <DocumentosCaso caso={caso} />
+
+      <BotonTexto variante="danger" estilo="body-sm" className="self-start" onClick={() => setBorrando(true)}>
+        Eliminar este caso
+      </BotonTexto>
+
+      <DialogoCerrarCaso caso={caso} abierto={cerrando} onCerrar={() => setCerrando(false)} />
+
+      <DialogoConfirmar
+        abierto={borrando}
+        titulo={`¿Eliminar el caso de ${caso.cliente}?`}
+        textoConfirmar="Eliminar caso"
+        peligro
+        onCancelar={() => setBorrando(false)}
+        onConfirmar={borrarCaso}
+      >
+        <p>Se borran sus datos, plazos y tareas, notas, documentos, cartas y hoja de ruta. No se puede deshacer.</p>
+      </DialogoConfirmar>
+    </Pagina>
   );
 }

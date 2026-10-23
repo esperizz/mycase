@@ -1,17 +1,22 @@
 import Link from "next/link";
+import { ESTILOS, unir, type EstiloTexto } from "./Texto";
 
-type Variante = "primary" | "secondary";
+/** `danger` para lo que borra; `success` para lo que manda al cliente (WhatsApp). */
+export type Variante = "primary" | "secondary" | "danger" | "success";
 
 const base =
-  "inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-full h-10 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50";
+  "inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-full h-10 text-label transition-colors disabled:cursor-not-allowed disabled:border-transparent disabled:bg-fill-disabled disabled:text-disabled";
 
 const variantes: Record<Variante, string> = {
-  primary: "bg-tinta px-5 text-white hover:bg-tinta/85",
-  secondary: "border border-linea bg-white px-5 text-tinta hover:border-tenue",
+  primary: "bg-fill-primary px-5 text-on-fill hover:bg-fill-primary-hover",
+  secondary: "border border-secondary bg-surface-primary px-5 text-primary hover:border-secondary-hover",
+  danger: "bg-fill-danger px-5 text-on-fill hover:bg-fill-danger-hover",
+  success: "bg-fill-success px-5 text-on-fill hover:bg-fill-success-hover",
 };
 
 interface Props {
   variante?: Variante;
+  /** Solo para ubicarlo (`self-start`, márgenes) o ajustar su relleno lateral. */
   className?: string;
   /** Agrega la flecha en círculo: para botones que llevan a otra pantalla. */
   flecha?: boolean;
@@ -19,7 +24,7 @@ interface Props {
 
 function clases({ variante = "primary", className, flecha }: Props) {
   // Con flecha, el padding derecho lo ocupa el círculo.
-  return [base, variantes[variante], flecha && "pr-1.5", className].filter(Boolean).join(" ");
+  return unir(base, variantes[variante], flecha && "pr-1.5", className);
 }
 
 /**
@@ -38,13 +43,15 @@ export function Flecha({
   return (
     <span
       aria-hidden
-      className={`flex shrink-0 items-center justify-center rounded-full ${className} ${
-        variante === "primary" ? "bg-white text-tinta" : "bg-tinta text-white"
-      }`}
+      className={unir(
+        "flex shrink-0 items-center justify-center rounded-full",
+        className,
+        variante === "secondary" ? "bg-fill-primary text-on-fill" : "bg-surface-primary text-primary",
+      )}
     >
       <svg
         viewBox="0 0 16 16"
-        className={`size-3.5 ${atras ? "rotate-180" : ""}`}
+        className={unir("size-3.5", atras && "rotate-180")}
         fill="none"
         stroke="currentColor"
         strokeWidth={2}
@@ -88,9 +95,125 @@ export function ButtonLink({
 /** Link para volver a la pantalla anterior, con la flecha en círculo hacia atrás. */
 export function LinkVolver({ href, children }: { href: string; children: React.ReactNode }) {
   return (
-    <Link href={href} className="flex w-fit items-center gap-2 text-sm font-medium text-gray-500 hover:text-tinta">
+    <Link
+      href={href}
+      className="flex w-fit items-center gap-2 text-body-sm font-medium text-secondary transition-colors hover:text-secondary-hover"
+    >
       <Flecha variante="secondary" className="size-6" atras />
       {children}
     </Link>
+  );
+}
+
+/**
+ * Acciones con forma de texto, para lo secundario que no merece un botón.
+ * - strong: la acción del lugar ("+ Agregar hora y lugar", "Ver el caso").
+ * - subtle: un nombre que lleva a su ficha, dentro de un texto.
+ * - quiet: cancelar o cerrar.
+ * - danger: borrar algo importante ("Eliminar este caso").
+ * - dangerQuiet: borrar algo chico, que solo se pone rojo al pasar por encima.
+ */
+export type VarianteTexto = "strong" | "subtle" | "quiet" | "danger" | "dangerQuiet";
+
+const variantesTexto: Record<VarianteTexto, string> = {
+  strong: "font-semibold text-primary hover:underline",
+  subtle: "font-medium text-primary hover:underline",
+  quiet: "font-medium text-secondary hover:text-secondary-hover",
+  danger: "font-medium text-danger hover:underline",
+  dangerQuiet: "text-secondary hover:text-danger hover:underline",
+};
+
+interface PropsTexto {
+  variante?: VarianteTexto;
+  /** Text style; sin él, toma el del texto que lo rodea. */
+  estilo?: EstiloTexto;
+  /** Subrayado siempre, para que se note como link dentro de un párrafo. */
+  subrayado?: boolean;
+  /** Solo para ubicarlo (`w-fit`, `truncate`, `flex-1`). */
+  className?: string;
+}
+
+function clasesTexto({ variante = "strong", estilo, subrayado, className }: PropsTexto) {
+  return unir(
+    "underline-offset-2 transition-colors",
+    variantesTexto[variante],
+    subrayado && "underline",
+    estilo && ESTILOS[estilo],
+    className,
+  );
+}
+
+export function BotonTexto({
+  variante,
+  estilo,
+  subrayado,
+  className,
+  ...rest
+}: PropsTexto & React.ButtonHTMLAttributes<HTMLButtonElement>) {
+  return <button type="button" className={clasesTexto({ variante, estilo, subrayado, className })} {...rest} />;
+}
+
+export function Enlace({
+  href,
+  variante,
+  estilo,
+  subrayado,
+  className,
+  children,
+}: PropsTexto & { href: string; children: React.ReactNode }) {
+  return (
+    <Link href={href} className={clasesTexto({ variante, estilo, subrayado, className })}>
+      {children}
+    </Link>
+  );
+}
+
+const fila = "flex items-center gap-3 rounded-control bg-surface-secondary px-3 py-2 text-body-sm";
+
+/**
+ * Fila de una lista corta que lleva a algún lado: a la izquierda lo que es, a la derecha la acción
+ * con la flecha. Navega a `href` o, con `onClick`, resuelve ahí mismo. `extra` es una acción aparte
+ * que queda dentro de la fila pero fuera del link (por ejemplo, "Descartar").
+ */
+export function FilaEnlace({
+  href,
+  onClick,
+  accion,
+  extra,
+  children,
+}: {
+  href?: string;
+  onClick?: () => void;
+  accion?: React.ReactNode;
+  extra?: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  const contenido = (
+    <>
+      <span className="flex min-w-0 flex-1 flex-wrap items-center gap-2 text-left">{children}</span>
+      <span className="flex shrink-0 items-center gap-2 font-semibold text-primary">
+        {accion}
+        <Flecha variante="secondary" className="size-6" />
+      </span>
+    </>
+  );
+  const clasesElemento = extra
+    ? "flex min-w-0 flex-1 items-center justify-between gap-3 hover:underline"
+    : unir(fila, "w-full transition-colors hover:bg-surface-secondary-hover");
+  const elemento = onClick ? (
+    <button type="button" onClick={onClick} className={clasesElemento}>
+      {contenido}
+    </button>
+  ) : (
+    <Link href={href ?? "#"} className={clasesElemento}>
+      {contenido}
+    </Link>
+  );
+  if (!extra) return elemento;
+  return (
+    <div className={fila}>
+      {elemento}
+      {extra}
+    </div>
   );
 }

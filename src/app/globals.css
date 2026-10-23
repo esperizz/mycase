@@ -1,20 +1,257 @@
 @import "tailwindcss";
 
-@theme {
-  --font-sans: var(--font-geist), ui-sans-serif, system-ui, sans-serif;
+/*
+ * Sistema de diseño de MyCase.
+ *
+ * Nomenclatura de los tokens de color, siempre en inglés:
+ *   color-[elemento]-[parte]-[prioridad]-[estado]
+ *   elemento:  bg (fondos), text, border
+ *   parte:     surface (superficies), fill (rellenos de botones y marcas), solo en bg
+ *   prioridad: primary · secondary · tertiary, o un rol: accent · danger · warning · success · info
+ *   estado:    hover · focus · disabled (sin estado = default)
+ * Ejemplos: color-bg-surface-secondary-hover, color-bg-fill-primary, color-text-secondary.
+ *
+ * Text styles: typography-[estilo]-[propiedad], con estilos h1 · h2 · h3 · body · body-sm ·
+ * caption · label · overline (más metric y brand). En la app: `text-h1`, `text-body-sm`.
+ *
+ * Los tokens viven en :root con ese nombre. El bloque @theme los expone a Tailwind por
+ * propiedad, así las clases no repiten el elemento: `bg-surface-primary`, `text-secondary`,
+ * `border-primary`, `hover:bg-fill-primary-hover`.
+ *
+ * Se apagan los valores por defecto de Tailwind (`initial`): una clase como `text-gray-500` o
+ * `rounded-lg` no genera nada. Si hace falta algo nuevo, se agrega acá siguiendo la nomenclatura.
+ * Solo `src/components/ui` usa estas clases; `src/sistema-diseno.test.ts` lo controla.
+ */
 
+:root {
   /*
    * Estética "estudio": fondo gris frío, superficies blancas, tinta pizarra
    * y un único acento azul grisáceo para lo que hay que mirar primero.
    * Rojo y ámbar quedan reservados para vencido / urgente.
    */
-  --color-fondo: #eef0f3;
-  --color-tinta: #1c1f26;
-  --color-tenue: #9aa1ad; /* segundo tono de los títulos y textos secundarios */
-  --color-linea: #e2e5ea;
-  --color-acento: #b9c3dd;
-  --color-acento-suave: #e4e9f4;
-  --color-acento-tinta: #2e3b5e;
+
+  /* Background */
+  --color-bg-default: #eef0f3; /* fondo de la página */
+  --color-bg-surface-primary: #ffffff; /* tarjetas, campos, menús */
+  --color-bg-surface-primary-hover: #eef0f3; /* opciones sobre una superficie blanca */
+  --color-bg-surface-secondary: #eef0f3; /* filas y recuadros dentro de una tarjeta */
+  --color-bg-surface-secondary-hover: #e2e5ea;
+  --color-bg-surface-tertiary: #e2e5ea; /* badge neutro */
+  --color-bg-surface-accent: #b9c3dd; /* lo que hay que mirar primero */
+  --color-bg-surface-accent-subtle: #e4e9f4; /* navegación activa, badge de plazo */
+  --color-bg-surface-danger: #fef0ee;
+  --color-bg-surface-warning: #fdf4e1;
+  --color-bg-surface-success: #e9f7ee;
+  --color-bg-surface-info: #ebf1fd;
+  --color-bg-surface-special: #f3ecfb; /* etapa demanda */
+  --color-bg-surface-art: #dff4f1; /* casos de ART */
+  --color-bg-fill-primary: #1c1f26; /* botón principal, opción elegida */
+  --color-bg-fill-primary-hover: #3e4147;
+  --color-bg-fill-danger: #b42318; /* acciones que borran */
+  --color-bg-fill-danger-hover: #93190f;
+  --color-bg-fill-success: #17713a; /* cumplido, WhatsApp */
+  --color-bg-fill-success-hover: #115a2d;
+  --color-bg-fill-disabled: #d5d9df;
+  --color-bg-overlay: rgb(28 31 38 / 0.5); /* detrás de un diálogo */
+
+  /* Text */
+  --color-text-primary: #1c1f26;
+  --color-text-secondary: #5f6672; /* ayudas, fechas, datos secundarios */
+  --color-text-secondary-hover: #1c1f26; /* links secundarios al pasar por encima */
+  --color-text-tertiary: #9aa1ad; /* pendiente, opcional, segundo tono de títulos */
+  --color-text-disabled: #8a919c;
+  --color-text-on-fill: #ffffff; /* sobre los rellenos (bg-fill-*) */
+  --color-text-accent: #2e3b5e;
+  --color-text-danger: #b42318;
+  --color-text-warning: #8a4b0b;
+  --color-text-success: #17713a;
+  --color-text-info: #24479b;
+  --color-text-special: #6b2fa8;
+  --color-text-art: #12665f;
+
+  /* Border */
+  --color-border-primary: #1c1f26; /* lo elegido o lo que se está usando */
+  --color-border-secondary: #e2e5ea; /* bordes y divisiones comunes */
+  --color-border-secondary-hover: #9aa1ad;
+  --color-border-secondary-focus: #2e3b5e; /* campo con el foco */
+  --color-border-accent: #b9c3dd;
+  --color-border-danger: #f8c9c3;
+  --color-border-warning: #f3d699;
+
+  /*
+   * Text styles: typography-[estilo]-[propiedad]. Cada estilo define tamaño, interlineado,
+   * tracking y peso juntos; en la app se usan enteros (`text-h1`, `text-body-sm`), nunca sueltos.
+   */
+  --typography-h1-size: 1.5rem; /* 30px desde sm, abajo */
+  --typography-h1-line-height: 1.2;
+  --typography-h1-letter-spacing: -0.025em;
+  --typography-h1-weight: 600;
+
+  --typography-h2-size: 1.125rem;
+  --typography-h2-line-height: 1.4;
+  --typography-h2-weight: 600;
+
+  --typography-h3-size: 1rem;
+  --typography-h3-line-height: 1.5;
+  --typography-h3-weight: 600;
+
+  --typography-body-size: 1rem;
+  --typography-body-line-height: 1.5;
+
+  --typography-body-sm-size: 0.875rem;
+  --typography-body-sm-line-height: 1.43;
+
+  --typography-caption-size: 0.75rem;
+  --typography-caption-line-height: 1.33;
+
+  --typography-label-size: 0.875rem;
+  --typography-label-line-height: 1.43;
+  --typography-label-weight: 600;
+
+  --typography-overline-size: 0.75rem;
+  --typography-overline-line-height: 1.33;
+  --typography-overline-letter-spacing: 0.025em;
+  --typography-overline-weight: 600;
+
+  --typography-metric-size: 1.25rem; /* 24px desde sm */
+  --typography-metric-line-height: 1.3;
+  --typography-metric-letter-spacing: -0.025em;
+  --typography-metric-weight: 600;
+
+  --typography-brand-size: 1rem; /* 18px desde xs */
+  --typography-brand-line-height: 1.4;
+  --typography-brand-letter-spacing: -0.05em;
+  --typography-brand-weight: 700;
+
+  /* Pesos para destacar una parte dentro de un text style. */
+  --typography-weight-regular: 400;
+  --typography-weight-medium: 500;
+  --typography-weight-semibold: 600;
+}
+
+/* Text styles que crecen en pantallas más anchas. */
+@media (width >= 22.5rem) {
+  :root {
+    --typography-brand-size: 1.125rem;
+  }
+}
+
+@media (width >= 40rem) {
+  :root {
+    --typography-h1-size: 1.875rem;
+    --typography-metric-size: 1.5rem;
+  }
+}
+
+@theme inline {
+  --font-sans: var(--font-geist), ui-sans-serif, system-ui, sans-serif;
+
+  --color-*: initial;
+
+  --background-color-default: var(--color-bg-default);
+  --background-color-surface-primary: var(--color-bg-surface-primary);
+  --background-color-surface-primary-hover: var(--color-bg-surface-primary-hover);
+  --background-color-surface-secondary: var(--color-bg-surface-secondary);
+  --background-color-surface-secondary-hover: var(--color-bg-surface-secondary-hover);
+  --background-color-surface-tertiary: var(--color-bg-surface-tertiary);
+  --background-color-surface-accent: var(--color-bg-surface-accent);
+  --background-color-surface-accent-subtle: var(--color-bg-surface-accent-subtle);
+  --background-color-surface-danger: var(--color-bg-surface-danger);
+  --background-color-surface-warning: var(--color-bg-surface-warning);
+  --background-color-surface-success: var(--color-bg-surface-success);
+  --background-color-surface-info: var(--color-bg-surface-info);
+  --background-color-surface-special: var(--color-bg-surface-special);
+  --background-color-surface-art: var(--color-bg-surface-art);
+  --background-color-fill-primary: var(--color-bg-fill-primary);
+  --background-color-fill-primary-hover: var(--color-bg-fill-primary-hover);
+  --background-color-fill-danger: var(--color-bg-fill-danger);
+  --background-color-fill-danger-hover: var(--color-bg-fill-danger-hover);
+  --background-color-fill-success: var(--color-bg-fill-success);
+  --background-color-fill-success-hover: var(--color-bg-fill-success-hover);
+  --background-color-fill-disabled: var(--color-bg-fill-disabled);
+  --background-color-overlay: var(--color-bg-overlay);
+
+  --text-color-primary: var(--color-text-primary);
+  --text-color-secondary: var(--color-text-secondary);
+  --text-color-secondary-hover: var(--color-text-secondary-hover);
+  --text-color-tertiary: var(--color-text-tertiary);
+  --text-color-disabled: var(--color-text-disabled);
+  --text-color-on-fill: var(--color-text-on-fill);
+  --text-color-accent: var(--color-text-accent);
+  --text-color-danger: var(--color-text-danger);
+  --text-color-warning: var(--color-text-warning);
+  --text-color-success: var(--color-text-success);
+  --text-color-info: var(--color-text-info);
+  --text-color-special: var(--color-text-special);
+  --text-color-art: var(--color-text-art);
+
+  --border-color-primary: var(--color-border-primary);
+  --border-color-secondary: var(--color-border-secondary);
+  --border-color-secondary-hover: var(--color-border-secondary-hover);
+  --border-color-secondary-focus: var(--color-border-secondary-focus);
+  --border-color-accent: var(--color-border-accent);
+  --border-color-danger: var(--color-border-danger);
+  --border-color-warning: var(--color-border-warning);
+
+  /* Anillo de foco de los campos y casillas de verificación. */
+  --ring-color-focus: var(--color-border-secondary-focus);
+  --accent-color-primary: var(--color-bg-fill-primary);
+
+  /* Text styles: `text-h1`, `text-body-sm`… ponen tamaño, interlineado, tracking y peso. */
+  --text-*: initial;
+  --font-weight-*: initial;
+  --tracking-*: initial;
+  --leading-*: initial;
+
+  --text-h1: var(--typography-h1-size);
+  --text-h1--line-height: var(--typography-h1-line-height);
+  --text-h1--letter-spacing: var(--typography-h1-letter-spacing);
+  --text-h1--font-weight: var(--typography-h1-weight);
+  --text-h2: var(--typography-h2-size);
+  --text-h2--line-height: var(--typography-h2-line-height);
+  --text-h2--font-weight: var(--typography-h2-weight);
+  --text-h3: var(--typography-h3-size);
+  --text-h3--line-height: var(--typography-h3-line-height);
+  --text-h3--font-weight: var(--typography-h3-weight);
+  --text-body: var(--typography-body-size);
+  --text-body--line-height: var(--typography-body-line-height);
+  --text-body-sm: var(--typography-body-sm-size);
+  --text-body-sm--line-height: var(--typography-body-sm-line-height);
+  --text-caption: var(--typography-caption-size);
+  --text-caption--line-height: var(--typography-caption-line-height);
+  --text-label: var(--typography-label-size);
+  --text-label--line-height: var(--typography-label-line-height);
+  --text-label--font-weight: var(--typography-label-weight);
+  --text-overline: var(--typography-overline-size);
+  --text-overline--line-height: var(--typography-overline-line-height);
+  --text-overline--letter-spacing: var(--typography-overline-letter-spacing);
+  --text-overline--font-weight: var(--typography-overline-weight);
+  --text-metric: var(--typography-metric-size);
+  --text-metric--line-height: var(--typography-metric-line-height);
+  --text-metric--letter-spacing: var(--typography-metric-letter-spacing);
+  --text-metric--font-weight: var(--typography-metric-weight);
+  --text-brand: var(--typography-brand-size);
+  --text-brand--line-height: var(--typography-brand-line-height);
+  --text-brand--letter-spacing: var(--typography-brand-letter-spacing);
+  --text-brand--font-weight: var(--typography-brand-weight);
+
+  --font-weight-regular: var(--typography-weight-regular);
+  --font-weight-medium: var(--typography-weight-medium);
+  --font-weight-semibold: var(--typography-weight-semibold);
+
+  /* Radios: option (opciones de menú y listas), control (campos, filas, avisos), card (tarjetas). */
+  --radius-*: initial;
+  --radius-option: 0.75rem;
+  --radius-control: 1rem;
+  --radius-card: 1.5rem;
+
+  /* Sombras: solo para lo que flota sobre la página. */
+  --shadow-*: initial;
+  --shadow-popover: 0 10px 15px -3px rgb(28 31 38 / 0.1), 0 4px 6px -4px rgb(28 31 38 / 0.1);
+  --shadow-dialog: 0 20px 25px -5px rgb(28 31 38 / 0.1), 0 8px 10px -6px rgb(28 31 38 / 0.1);
+
+  /* Celulares muy angostos (360px): el header acomoda sus textos. */
+  --breakpoint-xs: 22.5rem;
 }
 
 html {
@@ -23,10 +260,14 @@ html {
 
 body {
   font-family: var(--font-sans);
+  background-color: var(--color-bg-default);
+  color: var(--color-text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 /* Foco visible y consistente en toda la app (teclado). */
 :focus-visible {
-  outline: 2px solid var(--color-acento-tinta);
+  outline: 2px solid var(--color-border-secondary-focus);
   outline-offset: 2px;
 }

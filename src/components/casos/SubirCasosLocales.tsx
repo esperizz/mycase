@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/Button";
+import { Aviso } from "@/components/ui/Superficies";
+import { Texto } from "@/components/ui/Texto";
 import { CLAVE_LOCAL, useCasos } from "@/lib/casos/CasosProvider";
 
 /** Casos que la versión anterior dejó guardados en este navegador, si quedan sin subir. */
@@ -40,14 +42,14 @@ export function SubirCasosLocales() {
   };
 
   return (
-    <div className="flex flex-col gap-3 rounded-2xl bg-amber-50 p-4 text-left text-sm text-amber-900">
-      <p>
+    <Aviso tono="warning" className="flex flex-col gap-3 text-left">
+      <Texto>
         Este navegador tiene {locales.length} caso{locales.length === 1 ? "" : "s"} de antes de crear tu cuenta.
         Subilos para tenerlos en cualquier dispositivo.
-      </p>
-      <div>
-        <Button onClick={subir}>Subir a mi cuenta</Button>
-      </div>
-    </div>
+      </Texto>
+      <Button className="self-start" onClick={subir}>
+        Subir a mi cuenta
+      </Button>
+    </Aviso>
   );
 }

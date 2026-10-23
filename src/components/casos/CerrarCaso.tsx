@@ -1,6 +1,7 @@
 "use client";
 
 import { DialogoConfirmar } from "@/components/ui/DialogoConfirmar";
+import { Aviso } from "@/components/ui/Superficies";
 import { useCasos } from "@/lib/casos/CasosProvider";
 import { pendientesDe } from "@/lib/casos/panel";
 import type { Caso } from "@/lib/casos/tipos";
@@ -30,9 +31,9 @@ export function DialogoCerrarCaso({ caso, abierto, onCerrar }: { caso: Caso; abi
       }}
     >
       {quedan && (
-        <p className="rounded-2xl bg-amber-50 p-3 text-amber-900">
+        <Aviso tono="warning">
           Tiene {quedan} sin cumplir: al cerrarlo {total === 1 ? "deja" : "dejan"} de aparecer en el panel.
-        </p>
+        </Aviso>
       )}
       <p>Sale del panel y pasa a “Cerrados” en tus casos. No se borra nada y podés reabrirlo cuando quieras.</p>
     </DialogoConfirmar>

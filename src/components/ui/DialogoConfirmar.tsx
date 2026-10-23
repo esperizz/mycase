@@ -42,18 +42,20 @@ export function DialogoConfirmar({
       onClose={onCancelar}
       onClick={(e) => e.target === ref.current && onCancelar()}
       aria-labelledby="dialogo-titulo"
-      className="m-auto w-[calc(100%-2rem)] max-w-md rounded-3xl bg-white p-0 shadow-xl backdrop:bg-tinta/50"
+      // Con los costados fijos a 1rem y ancho automático, en celular deja ese margen y desde md se
+      // queda en su ancho máximo, centrado.
+      className="inset-x-4 m-auto w-auto max-w-md rounded-card bg-surface-primary p-0 shadow-dialog backdrop:bg-overlay"
     >
       <div className="flex flex-col gap-4 p-6">
-        <h2 id="dialogo-titulo" className="text-lg font-bold text-tinta">
+        <h2 id="dialogo-titulo" className="text-h2 text-primary">
           {titulo}
         </h2>
-        {children && <div className="flex flex-col gap-2 text-sm text-gray-600">{children}</div>}
+        {children && <div className="flex flex-col gap-2 text-body-sm text-secondary">{children}</div>}
         <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <Button variante="secondary" onClick={onCancelar} autoFocus>
             Cancelar
           </Button>
-          <Button className={peligro ? "bg-red-600 hover:bg-red-700" : undefined} onClick={onConfirmar} disabled={confirmarDeshabilitado}>
+          <Button variante={peligro ? "danger" : "primary"} onClick={onConfirmar} disabled={confirmarDeshabilitado}>
             {textoConfirmar}
           </Button>
         </div>
