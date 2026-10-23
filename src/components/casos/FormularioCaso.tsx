@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { SelectField, TextField } from "@/components/ui/Field";
+import { Texto } from "@/components/ui/Texto";
 import { simple } from "@/lib/casos/buscar";
 import { useCasos } from "@/lib/casos/CasosProvider";
 import { TIPOS_RECLAMO } from "@/lib/casos/catalogo";
@@ -69,7 +70,9 @@ export function FormularioCaso({
         ))}
       </datalist>
       {repetido && (
-        <p className="-mt-3 text-xs text-gray-500">Ya tiene otro caso: se van a ver juntos en la ficha.</p>
+        <Texto estilo="caption" tono="secondary" className="-mt-3">
+          Ya tiene otro caso: se van a ver juntos en la ficha.
+        </Texto>
       )}
       <TextField
         label="Teléfono o email del cliente"

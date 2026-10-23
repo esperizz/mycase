@@ -50,7 +50,7 @@ export function MenuAcciones({ acciones, etiqueta }: { acciones: Accion[]; etiqu
         aria-expanded={abierto}
         aria-controls={id}
         onClick={() => setAbierto((a) => !a)}
-        className="flex size-8 items-center justify-center rounded-full text-gray-500 transition-colors hover:bg-fondo hover:text-tinta"
+        className="flex size-8 items-center justify-center rounded-full text-secondary transition-colors hover:bg-surface-primary-hover hover:text-secondary-hover"
       >
         <svg viewBox="0 0 16 16" className="size-4" fill="currentColor" aria-hidden>
           <circle cx="3" cy="8" r="1.5" />
@@ -62,7 +62,7 @@ export function MenuAcciones({ acciones, etiqueta }: { acciones: Accion[]; etiqu
         <div
           id={id}
           role="menu"
-          className="absolute right-0 top-9 z-20 flex min-w-52 flex-col rounded-2xl border border-linea bg-white p-1 shadow-lg"
+          className="absolute right-0 top-9 z-20 flex min-w-52 flex-col rounded-control border border-secondary bg-surface-primary p-1 shadow-popover"
         >
           {acciones.map((a) => (
             <button
@@ -73,8 +73,8 @@ export function MenuAcciones({ acciones, etiqueta }: { acciones: Accion[]; etiqu
                 setAbierto(false);
                 a.onClick();
               }}
-              className={`rounded-xl px-3 py-2 text-left text-sm font-medium hover:bg-fondo focus:bg-fondo focus:outline-none ${
-                a.peligro ? "text-red-700" : "text-tinta"
+              className={`rounded-option px-3 py-2 text-left text-body-sm font-medium hover:bg-surface-primary-hover focus:bg-surface-primary-hover focus:outline-none ${
+                a.peligro ? "text-danger" : "text-primary"
               }`}
             >
               {a.etiqueta}

@@ -2,7 +2,8 @@
 
 import { useRouter } from "next/navigation";
 import { FormularioCaso } from "@/components/casos/FormularioCaso";
-import { Header } from "@/components/ui/Header";
+import { Pagina } from "@/components/ui/Pagina";
+import { Titulo } from "@/components/ui/Texto";
 import { useCasos } from "@/lib/casos/CasosProvider";
 
 export default function NuevoCasoPage() {
@@ -10,18 +11,15 @@ export default function NuevoCasoPage() {
   const { agregar } = useCasos();
 
   return (
-    <>
-      <Header />
-      <main className="mx-auto flex w-full max-w-xl flex-1 flex-col gap-6 px-4 py-8">
-        <h1 className="text-2xl font-bold tracking-tight text-tinta">Cargar un caso nuevo</h1>
-        <FormularioCaso
-          textoBoton="Cargar caso"
-          onGuardar={(datos) => {
-            const caso = agregar({ ...datos, estado: "consulta" });
-            router.push(`/casos/${caso.id}`);
-          }}
-        />
-      </main>
-    </>
+    <Pagina ancho="angosto">
+      <Titulo>Cargar un caso nuevo</Titulo>
+      <FormularioCaso
+        textoBoton="Cargar caso"
+        onGuardar={(datos) => {
+          const caso = agregar({ ...datos, estado: "consulta" });
+          router.push(`/casos/${caso.id}`);
+        }}
+      />
+    </Pagina>
   );
 }

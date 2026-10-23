@@ -5,26 +5,36 @@ import { Children, isValidElement, useEffect, useId, useRef, useState } from "re
 // El foco se marca con el borde y el anillo del propio campo; se apaga el contorno global
 // de :focus-visible para que no quede un doble contorno.
 const control =
-  "w-full rounded-2xl border border-linea bg-white px-4 h-11 text-sm text-tinta placeholder:text-tenue focus:border-acento-tinta focus:outline-none focus:ring-1 focus:ring-acento-tinta focus-visible:outline-none";
+  "w-full rounded-control border border-secondary bg-surface-primary px-4 h-11 text-body-sm text-primary placeholder:text-tertiary focus:border-secondary-focus focus:outline-none focus:ring-1 focus:ring-focus focus-visible:outline-none";
 
 interface CampoProps {
   label: string;
   opcional?: boolean;
+  /** Explicación corta debajo del campo; los lectores de pantalla la leen junto con él. */
+  ayuda?: React.ReactNode;
 }
+
+const idAyuda = (id: string, ayuda: React.ReactNode) => (ayuda ? `${id}-ayuda` : undefined);
 
 function Campo({
   id,
   label,
   opcional,
+  ayuda,
   children,
 }: CampoProps & { id: string; children: React.ReactNode }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <label id={`${id}-label`} htmlFor={id} className="text-sm font-semibold text-tinta">
+      <label id={`${id}-label`} htmlFor={id} className="text-label text-primary">
         {label}
-        {opcional && <span className="font-normal text-gray-400"> (opcional)</span>}
+        {opcional && <span className="font-regular text-tertiary"> (opcional)</span>}
       </label>
       {children}
+      {ayuda && (
+        <p id={`${id}-ayuda`} className="text-caption text-secondary">
+          {ayuda}
+        </p>
+      )}
     </div>
   );
 }
@@ -32,19 +42,20 @@ function Campo({
 export function TextField({
   label,
   opcional,
+  ayuda,
   ...input
 }: CampoProps & React.ComponentProps<"input">) {
   const id = useId();
   return (
-    <Campo id={id} label={label} opcional={opcional}>
-      <input id={id} className={control} {...input} />
+    <Campo id={id} label={label} opcional={opcional} ayuda={ayuda}>
+      <input id={id} aria-describedby={idAyuda(id, ayuda)} className={control} {...input} />
     </Campo>
   );
 }
 
 function Chevron({ className = "" }: { className?: string }) {
   return (
-    <svg viewBox="0 0 16 16" className={`size-4 text-gray-500 ${className}`} fill="none" stroke="currentColor" strokeWidth={1.75} aria-hidden>
+    <svg viewBox="0 0 16 16" className={`size-4 text-secondary ${className}`} fill="none" stroke="currentColor" strokeWidth={1.75} aria-hidden>
       <path d="M4 6l4 4 4-4" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
@@ -175,7 +186,7 @@ export function SelectField({
             id={`${id}-lista`}
             role="listbox"
             aria-labelledby={`${id}-label`}
-            className="absolute left-0 right-0 top-12 z-30 max-h-64 overflow-auto rounded-2xl border border-linea bg-white p-1 shadow-lg"
+            className="absolute left-0 right-0 top-12 z-30 max-h-64 overflow-auto rounded-control border border-secondary bg-surface-primary p-1 shadow-popover"
           >
             {opciones.map((o, i) => {
               const seleccionada = o.value === elegida?.value;
@@ -188,9 +199,9 @@ export function SelectField({
                   onPointerDown={(e) => e.preventDefault()}
                   onClick={() => elegir(o)}
                   onPointerMove={() => setActiva(i)}
-                  className={`flex cursor-pointer items-center justify-between gap-2 rounded-xl px-3 py-2 text-sm ${
-                    i === activa ? "bg-fondo" : ""
-                  } ${seleccionada ? "font-semibold text-acento-tinta" : "text-tinta"}`}
+                  className={`flex cursor-pointer items-center justify-between gap-2 rounded-option px-3 py-2 text-body-sm ${
+                    i === activa ? "bg-surface-primary-hover" : ""
+                  } ${seleccionada ? "font-semibold text-accent" : "text-primary"}`}
                 >
                   {o.label}
                   {seleccionada && (
@@ -211,12 +222,18 @@ export function SelectField({
 export function TextAreaField({
   label,
   opcional,
+  ayuda,
   ...area
 }: CampoProps & React.ComponentProps<"textarea">) {
   const id = useId();
   return (
-    <Campo id={id} label={label} opcional={opcional}>
-      <textarea id={id} className={`${control} field-sizing-content h-auto min-h-24 py-2`} {...area} />
+    <Campo id={id} label={label} opcional={opcional} ayuda={ayuda}>
+      <textarea
+        id={id}
+        aria-describedby={idAyuda(id, ayuda)}
+        className={`${control} field-sizing-content h-auto min-h-24 py-2`}
+        {...area}
+      />
     </Campo>
   );
 }

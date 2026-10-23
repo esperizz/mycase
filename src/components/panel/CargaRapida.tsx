@@ -1,8 +1,11 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Button } from "@/components/ui/Button";
+import { BotonTexto, Button } from "@/components/ui/Button";
+import { Chip, Segmentado } from "@/components/ui/Controles";
 import { SelectField, TextField } from "@/components/ui/Field";
+import { Tarjeta } from "@/components/ui/Superficies";
+import { Texto } from "@/components/ui/Texto";
 import { useCasos } from "@/lib/casos/CasosProvider";
 import { feriado } from "@/lib/casos/feriados";
 import { formatearFecha, hoyIso, sumarDias } from "@/lib/casos/formato";
@@ -14,21 +17,6 @@ const TEXTOS: Record<TipoVencimiento, { pregunta: string; ejemplo: string; boton
   plazo: { pregunta: "¿Qué vence?", ejemplo: 'Ej.: "Contestar traslado"', boton: "Agregar plazo" },
   tarea: { pregunta: "¿Qué hay que hacer?", ejemplo: 'Ej.: "Mandarle el instructivo de escaneo"', boton: "Agregar tarea" },
 };
-
-function Chip({ activo, onClick, children }: { activo: boolean; onClick: () => void; children: React.ReactNode }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-pressed={activo}
-      className={`rounded-full border px-3 py-1.5 text-sm font-medium transition-colors ${
-        activo ? "border-tinta bg-tinta text-white" : "border-linea bg-white text-gray-700 hover:bg-fondo"
-      }`}
-    >
-      {children}
-    </button>
-  );
-}
 
 /** Si la fecha no es día hábil, por qué: para avisar antes de cargar un vencimiento ahí. */
 function avisoDiaInhabil(fecha: string): string | null {
@@ -93,20 +81,16 @@ export function CargaRapida({
   };
 
   return (
-    <section
+    <Tarjeta
       ref={tarjeta}
-      aria-labelledby="carga-rapida-titulo"
-      className="flex scroll-mt-4 flex-col gap-4 rounded-3xl border border-tinta bg-white p-5"
-    >
-      <div className="flex items-center justify-between gap-3">
-        <h2 id="carga-rapida-titulo" className="font-semibold text-tinta">
-          Agregar un plazo o una tarea
-        </h2>
-        <button type="button" onClick={onCerrar} className="text-sm font-medium text-gray-500 hover:text-tinta">
+      destacada
+      titulo="Agregar un plazo o una tarea"
+      accion={
+        <BotonTexto variante="quiet" estilo="body-sm" className="self-start" onClick={onCerrar}>
           Cerrar
-        </button>
-      </div>
-
+        </BotonTexto>
+      }
+    >
       <form onSubmit={guardar} className="flex flex-col gap-4">
         <SelectField label="Caso" value={casoId} onChange={(e) => setCasoId(e.target.value)}>
           {casos.map((c) => (
@@ -116,36 +100,20 @@ export function CargaRapida({
           ))}
         </SelectField>
 
-        <div className="flex flex-col gap-2">
-          <p className="text-sm font-semibold text-tinta" id="tipo-label">
-            Tipo
-          </p>
-          <div
-            role="radiogroup"
-            aria-labelledby="tipo-label"
-            className="grid w-full max-w-xs grid-cols-2 rounded-2xl border border-linea p-1"
-          >
-            {(["plazo", "tarea"] as const).map((t) => (
-              <button
-                key={t}
-                type="button"
-                role="radio"
-                aria-checked={tipo === t}
-                onClick={() => setTipo(t)}
-                className={`rounded-md py-1.5 text-sm font-semibold transition-colors ${
-                  tipo === t ? "bg-tinta text-white" : "text-gray-600 hover:bg-fondo"
-                }`}
-              >
-                {t === "plazo" ? "Plazo" : "Tarea"}
-              </button>
-            ))}
-          </div>
-          <p className="text-xs text-gray-500">
-            {tipo === "plazo"
+        <Segmentado
+          label="Tipo"
+          opciones={[
+            { valor: "plazo", etiqueta: "Plazo" },
+            { valor: "tarea", etiqueta: "Tarea" },
+          ]}
+          valor={tipo}
+          onChange={setTipo}
+          ayuda={
+            tipo === "plazo"
               ? "Lo fija la ley o el juzgado y tiene consecuencias si se pasa. Si vence, aparece en rojo en el panel."
-              : "Algo que te anotás para no olvidarte, como llamar al cliente. Si se atrasa no pasa nada grave: aparece en amarillo."}
-          </p>
-        </div>
+              : "Algo que te anotás para no olvidarte, como llamar al cliente. Si se atrasa no pasa nada grave: aparece en amarillo."
+          }
+        />
 
         <div className="flex flex-col gap-2">
           <TextField
@@ -174,7 +142,9 @@ export function CargaRapida({
         </div>
 
         <div className="flex flex-col gap-2">
-          <p className="text-sm font-semibold text-tinta">Cuándo</p>
+          <Texto estilo="body-sm" peso="semibold" tono="primary">
+            Cuándo
+          </Texto>
           <div className="flex flex-wrap gap-2">
             {atajos.map((a) => (
               <Chip key={a.etiqueta} activo={fecha === a.fecha} onClick={() => setFecha(fecha === a.fecha ? "" : a.fecha)}>
@@ -184,21 +154,19 @@ export function CargaRapida({
           </div>
           <TextField label="O elegí la fecha" type="date" value={fecha} onChange={(e) => setFecha(e.target.value)} />
           {fecha && (
-            <p className={`text-sm ${aviso ? "text-amber-800" : "text-gray-500"}`}>
+            <Texto estilo="body-sm" tono={aviso ? "warning" : "secondary"}>
               {formatearFecha(fecha)}
               {aviso && ` · ${aviso} Revisá si corresponde.`}
-            </p>
+            </Texto>
           )}
         </div>
 
         <CamposHoraLugar hora={hora} lugar={lugar} onHora={setHora} onLugar={setLugar} abrir={esCita(descripcion)} />
 
-        <div>
-          <Button type="submit" disabled={!completo}>
-            {TEXTOS[tipo].boton}
-          </Button>
-        </div>
+        <Button type="submit" className="self-start" disabled={!completo}>
+          {TEXTOS[tipo].boton}
+        </Button>
       </form>
-    </section>
+    </Tarjeta>
   );
 }

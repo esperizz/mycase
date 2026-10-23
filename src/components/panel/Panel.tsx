@@ -1,11 +1,14 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState } from "react";
 import { ArtBadge, EstadoBadge } from "@/components/casos/EstadoBadge";
 import { SubirCasosLocales } from "@/components/casos/SubirCasosLocales";
 import { TipoTag } from "@/components/casos/TipoTag";
-import { Button, ButtonLink, Flecha } from "@/components/ui/Button";
+import { BotonTexto, Button, ButtonLink, Enlace, FilaEnlace } from "@/components/ui/Button";
+import { Casilla } from "@/components/ui/Controles";
+import { Indicador } from "@/components/ui/Datos";
+import { Aviso, ListaDividida, Recuadro, Tarjeta, Vacio } from "@/components/ui/Superficies";
+import { Rotulo, Texto, Titulo, type TonoTexto } from "@/components/ui/Texto";
 import { descargarCalendario } from "@/lib/casos/calendario";
 import { tipoCartaPorId } from "@/lib/casos/cartaCatalogo";
 import { useCasos } from "@/lib/casos/CasosProvider";
@@ -14,44 +17,6 @@ import { formatearFecha, horaYLugar, hoyIso, textoPendiente } from "@/lib/casos/
 import { armarPanel, DIAS_SEMANA, titular, type Pendiente } from "@/lib/casos/panel";
 import { ESTADOS, type Caso } from "@/lib/casos/tipos";
 import { CargaRapida } from "./CargaRapida";
-
-/**
- * Dato de arriba del panel (hoy, el próximo plazo): algo que la lista no dice, y que lleva a
- * una acción al tocarlo. El color dice cuán urgente es.
- */
-function Dato({
-  etiqueta,
-  valor,
-  detalle,
-  href,
-  tono = "neutro",
-}: {
-  etiqueta: string;
-  valor: string;
-  detalle: string;
-  href: string;
-  /** "acento": el dato que hay que mirar primero cuando no hay urgencia. */
-  tono?: "rojo" | "ambar" | "acento" | "neutro";
-}) {
-  const color =
-    tono === "rojo"
-      ? "border-red-200 bg-red-50 text-red-800"
-      : tono === "ambar"
-        ? "border-amber-200 bg-amber-50 text-amber-900"
-        : tono === "acento"
-          ? "border-acento bg-acento text-acento-tinta"
-          : "border-linea bg-white text-tinta";
-  return (
-    <Link
-      href={href}
-      className={`flex min-w-0 flex-col gap-0.5 rounded-3xl border p-4 transition-colors hover:border-tinta/40 sm:px-5 ${color}`}
-    >
-      <p className="text-xs font-medium sm:text-sm">{etiqueta}</p>
-      <p className="text-xl font-semibold tracking-tight sm:text-2xl">{valor}</p>
-      <p className="truncate text-xs opacity-70 sm:text-sm">{detalle}</p>
-    </Link>
-  );
-}
 
 /** "Marta Ríos" o "Marta Ríos y 4 más". */
 function yMas(nombres: string[]): string {
@@ -62,38 +27,42 @@ function ItemPendiente({ pendiente, onCumplir }: { pendiente: Pendiente; onCumpl
   const { caso, vencimiento, dias } = pendiente;
   const tarea = vencimiento.tipo === "tarea";
   // Una tarea atrasada no es grave como un plazo vencido: va en ámbar, no en rojo.
-  const color = dias < 0 ? (tarea ? "text-amber-800" : "text-red-700") : dias === 0 ? "text-amber-800" : "text-gray-500";
+  const tono: TonoTexto = dias < 0 ? (tarea ? "warning" : "danger") : dias === 0 ? "warning" : "secondary";
   const cuando = textoPendiente(dias, vencimiento.tipo);
   const cuandoExacto = [formatearFecha(vencimiento.fecha), horaYLugar(vencimiento)].filter(Boolean).join(" · ");
   return (
     <li className="flex items-start gap-3 py-3">
-      <input
-        type="checkbox"
+      <Casilla
         checked={false}
         onChange={onCumplir}
-        className="mt-1 size-4 shrink-0"
+        className="mt-1"
         aria-label={`Marcar "${vencimiento.descripcion || "vencimiento"}" como cumplido`}
       />
       <div className="flex min-w-0 flex-1 flex-col gap-1 sm:flex-row sm:justify-between sm:gap-4">
         <div className="flex min-w-0 flex-col gap-0.5">
-          <p className="font-semibold text-tinta">
+          <Texto peso="semibold" tono="primary">
             {vencimiento.descripcion || (tarea ? "Tarea sin descripción" : "Plazo sin descripción")}
             <TipoTag tipo={vencimiento.tipo} />
-          </p>
-          <p className="text-sm text-gray-500">
-            <Link href={`/casos/${caso.id}`} className="font-medium text-gray-700 underline-offset-2 hover:underline">
+          </Texto>
+          <Texto estilo="body-sm" tono="secondary">
+            <Enlace href={`/casos/${caso.id}`} variante="subtle">
               {caso.cliente}
-            </Link>{" "}
+            </Enlace>{" "}
             · contra {caso.empleador}
-          </p>
+          </Texto>
         </div>
-        <div className={`shrink-0 text-sm sm:text-right ${color}`}>
-          <p className="font-semibold">
+        <Texto as="div" estilo="body-sm" tono={tono} className="shrink-0 sm:text-right">
+          <Texto peso="semibold">
             {cuando}
-            <span className="font-normal sm:hidden"> · {cuandoExacto}</span>
-          </p>
-          <p className="hidden text-xs sm:block">{cuandoExacto}</p>
-        </div>
+            <Texto as="span" peso="regular" className="sm:hidden">
+              {" "}
+              · {cuandoExacto}
+            </Texto>
+          </Texto>
+          <Texto estilo="caption" className="hidden sm:block">
+            {cuandoExacto}
+          </Texto>
+        </Texto>
       </div>
     </li>
   );
@@ -111,58 +80,15 @@ function Grupo({
   if (pendientes.length === 0) return null;
   return (
     <div>
-      <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-400">
+      <Rotulo as="h3">
         {titulo} · {pendientes.length}
-      </h3>
-      <ul className="divide-y divide-gray-100">
+      </Rotulo>
+      <ListaDividida>
         {pendientes.map((p) => (
           <ItemPendiente key={p.vencimiento.id} pendiente={p} onCumplir={() => onCumplir(p)} />
         ))}
-      </ul>
+      </ListaDividida>
     </div>
-  );
-}
-
-function Tarjeta({
-  id,
-  titulo,
-  ayuda,
-  accion,
-  children,
-}: {
-  /** Ancla para llegar desde los datos de arriba. */
-  id?: string;
-  titulo: string;
-  ayuda?: string;
-  /** Acción propia de la tarjeta, junto al título. */
-  accion?: React.ReactNode;
-  children: React.ReactNode;
-}) {
-  return (
-    <section id={id} className="flex scroll-mt-4 flex-col gap-3 rounded-3xl border border-linea bg-white p-5">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <h2 className="font-semibold text-tinta">{titulo}</h2>
-          {ayuda && <p className="text-sm text-gray-500">{ayuda}</p>}
-        </div>
-        {accion}
-      </div>
-      {children}
-    </section>
-  );
-}
-
-const filaCorta = "flex w-full items-center justify-between gap-3 rounded-2xl bg-fondo px-3 py-2 text-left text-sm hover:bg-gray-100";
-
-function ContenidoFila({ caso, accion }: { caso: Caso; accion: string }) {
-  return (
-    <>
-      <span className="min-w-0 truncate font-medium text-tinta">{caso.cliente}</span>
-      <span className="flex shrink-0 items-center gap-2 font-semibold text-tinta">
-        {accion}
-        <Flecha variante="secondary" className="size-6" />
-      </span>
-    </>
   );
 }
 
@@ -182,15 +108,15 @@ function ListaCorta({
     <ul className="flex flex-col gap-2">
       {casos.map((c) => (
         <li key={c.id}>
-          {onElegir ? (
-            <button type="button" onClick={() => onElegir(c)} className={filaCorta}>
-              <ContenidoFila caso={c} accion={accion} />
-            </button>
-          ) : (
-            <Link href={destino?.(c) ?? `/casos/${c.id}`} className={filaCorta}>
-              <ContenidoFila caso={c} accion={accion} />
-            </Link>
-          )}
+          <FilaEnlace
+            href={onElegir ? undefined : (destino?.(c) ?? `/casos/${c.id}`)}
+            onClick={onElegir && (() => onElegir(c))}
+            accion={accion}
+          >
+            <Texto as="span" peso="medium" tono="primary" className="truncate">
+              {c.cliente}
+            </Texto>
+          </FilaEnlace>
         </li>
       ))}
     </ul>
@@ -217,16 +143,15 @@ export function Panel() {
 
   if (casos.length === 0) {
     return (
-      <div className="flex flex-col items-center gap-4 rounded-3xl border border-dashed border-linea py-16 text-center">
-        <p className="text-lg font-semibold text-tinta">Acá vas a ver qué tenés que hacer cada día</p>
-        <p className="max-w-sm text-sm text-gray-500">
-          Cargá tus casos con sus vencimientos y el panel te va a mostrar lo vencido, lo de hoy y lo que viene.
-        </p>
+      <Vacio
+        titulo="Acá vas a ver qué tenés que hacer cada día"
+        descripcion="Cargá tus casos con sus vencimientos y el panel te va a mostrar lo vencido, lo de hoy y lo que viene."
+      >
         <ButtonLink href="/casos/nuevo">Cargar el primer caso</ButtonLink>
         <div className="max-w-sm">
           <SubirCasosLocales />
         </div>
-      </div>
+      </Vacio>
     );
   }
 
@@ -245,8 +170,8 @@ export function Panel() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <p className="text-sm font-medium text-gray-500">
+      <div className="flex flex-col gap-1">
+        <Texto estilo="body-sm" peso="medium" tono="secondary">
           {fechaTitulo}
           {feriadoCerca && (
             <span>
@@ -255,15 +180,13 @@ export function Panel() {
               ({feriadoCerca.nombre})
             </span>
           )}
-        </p>
-        <h1 className="mt-1 max-w-3xl text-2xl font-semibold leading-tight tracking-tight text-tinta sm:text-3xl">
-          {titular(panel)}
-        </h1>
+        </Texto>
+        <Titulo className="max-w-3xl">{titular(panel)}</Titulo>
       </div>
 
       <div>
         {proximo ? (
-          <Dato
+          <Indicador
             etiqueta={
               panel.proximosPlazos.length > 1 ? `Próximo plazo · ${panel.proximosPlazos.length} plazos` : "Próximo plazo"
             }
@@ -276,10 +199,10 @@ export function Panel() {
                 : `${proximo.vencimiento.descripcion || "Plazo"} · ${proximo.caso.cliente}`
             }
             href={panel.proximosPlazos.length > 1 ? "#para-hacer" : `/casos/${proximo.caso.id}`}
-            tono={proximo.dias < 0 ? "rojo" : proximo.dias <= 1 ? "ambar" : "acento"}
+            tono={proximo.dias < 0 ? "danger" : proximo.dias <= 1 ? "warning" : "accent"}
           />
         ) : (
-          <Dato etiqueta="Próximo plazo" valor="ninguno" detalle="No hay plazos cargados" href="#para-hacer" />
+          <Indicador etiqueta="Próximo plazo" valor="ninguno" detalle="No hay plazos cargados" href="#para-hacer" />
         )}
       </div>
 
@@ -299,9 +222,9 @@ export function Panel() {
             }
           >
             {aviso && (
-              <p role="status" className="rounded-2xl bg-green-50 px-4 py-3 text-sm font-medium text-green-800">
+              <Aviso tono="success" role="status">
                 {aviso}
-              </p>
+              </Aviso>
             )}
             {carga !== null && (
               <CargaRapida
@@ -320,18 +243,16 @@ export function Panel() {
                 <Grupo titulo={`Próximos ${DIAS_SEMANA} días`} pendientes={panel.semana} onCumplir={cumplir} />
               </div>
             ) : (
-              <p className="rounded-2xl bg-fondo px-4 py-6 text-center text-sm text-gray-500">
-                No hay plazos ni tareas en los próximos {DIAS_SEMANA} días.
-              </p>
+              <Recuadro centrado>
+                <Texto estilo="body-sm" tono="secondary">
+                  No hay plazos ni tareas en los próximos {DIAS_SEMANA} días.
+                </Texto>
+              </Recuadro>
             )}
             {porVenir.length > 0 && (
-              <button
-                type="button"
-                onClick={() => descargarCalendario(porVenir, "mycase-plazos")}
-                className="w-fit text-sm font-semibold text-tinta underline-offset-2 hover:underline"
-              >
+              <BotonTexto estilo="body-sm" className="w-fit" onClick={() => descargarCalendario(porVenir, "mycase-plazos")}>
                 Agregar {porVenir.length === 1 ? "el pendiente" : `los ${porVenir.length} pendientes`} a mi calendario
-              </button>
+              </BotonTexto>
             )}
           </Tarjeta>
         </div>
@@ -360,15 +281,14 @@ export function Panel() {
               <ul className="flex flex-col gap-2">
                 {panel.cartasSinEnviar.map(({ caso, carta }) => (
                   <li key={carta.id}>
-                    <Link href={`/casos/${caso.id}/cartas/${carta.id}`} className={filaCorta}>
-                      <span className="min-w-0 truncate font-medium text-tinta">
-                        {caso.cliente} <span className="font-normal text-gray-500">· {tipoCartaPorId(carta.tipo).titulo}</span>
-                      </span>
-                      <span className="flex shrink-0 items-center gap-2 font-semibold text-tinta">
-                        Seguir
-                        <Flecha variante="secondary" className="size-6" />
-                      </span>
-                    </Link>
+                    <FilaEnlace href={`/casos/${caso.id}/cartas/${carta.id}`} accion="Seguir">
+                      <Texto as="span" peso="medium" tono="primary" className="truncate">
+                        {caso.cliente}{" "}
+                        <Texto as="span" peso="regular" tono="secondary">
+                          · {tipoCartaPorId(carta.tipo).titulo}
+                        </Texto>
+                      </Texto>
+                    </FilaEnlace>
                   </li>
                 ))}
               </ul>
@@ -378,16 +298,18 @@ export function Panel() {
           <Tarjeta titulo="Casos por etapa">
             <ul className="flex flex-col gap-2">
               {ESTADOS.map((e) => (
-                <li key={e} className="flex items-center justify-between text-sm">
+                <li key={e} className="flex items-center justify-between">
                   <EstadoBadge estado={e} />
-                  <span className="font-semibold tabular-nums text-tinta">
+                  <Texto as="span" estilo="body-sm" peso="semibold" tono="primary" numerico>
                     {panel.porEtapa[e]}
-                  </span>
+                  </Texto>
                 </li>
               ))}
-              <li className="flex items-center justify-between text-sm">
+              <li className="flex items-center justify-between">
                 <ArtBadge>ART (según hoja de ruta)</ArtBadge>
-                <span className="font-semibold tabular-nums text-tinta">{panel.art}</span>
+                <Texto as="span" estilo="body-sm" peso="semibold" tono="primary" numerico>
+                  {panel.art}
+                </Texto>
               </li>
             </ul>
           </Tarjeta>

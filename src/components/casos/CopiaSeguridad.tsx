@@ -2,6 +2,8 @@
 
 import { useRef } from "react";
 import { Button } from "@/components/ui/Button";
+import { Tarjeta } from "@/components/ui/Superficies";
+import { Texto } from "@/components/ui/Texto";
 import { useCasos } from "@/lib/casos/CasosProvider";
 import { hoyIso } from "@/lib/casos/formato";
 import { SubirCasosLocales } from "./SubirCasosLocales";
@@ -35,12 +37,11 @@ export function CopiaSeguridad() {
   if (!listo) return null;
 
   return (
-    <section className="flex flex-col gap-3 rounded-3xl border border-linea bg-white p-5">
-      <h2 className="font-semibold text-tinta">Copia de seguridad</h2>
+    <Tarjeta titulo="Copia de seguridad">
       <SubirCasosLocales />
-      <p className="text-sm text-gray-500">
+      <Texto estilo="body-sm" tono="secondary">
         Tus casos se guardan en tu cuenta. Si querés, podés descargar una copia en un archivo.
-      </p>
+      </Texto>
       <div className="flex flex-col gap-3 sm:flex-row">
         <Button variante="secondary" onClick={descargar} disabled={casos.length === 0}>
           Descargar copia
@@ -50,6 +51,6 @@ export function CopiaSeguridad() {
         </Button>
         <input ref={input} type="file" accept="application/json,.json" className="hidden" onChange={restaurar} />
       </div>
-    </section>
+    </Tarjeta>
   );
 }

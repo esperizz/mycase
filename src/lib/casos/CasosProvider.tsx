@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
+import { AvisoFlotante } from "@/components/ui/Superficies";
 import { createClient } from "@/lib/supabase/client";
 import { cartasDe } from "./cartas";
 import { BUCKET, carpetaDelCaso } from "./documentos";
@@ -478,15 +479,9 @@ export function CasosProvider({ children }: { children: React.ReactNode }) {
     >
       {children}
       {errorGuardado && (
-        <div
-          role="alert"
-          className="fixed inset-x-4 bottom-4 z-50 mx-auto flex max-w-md items-center justify-between gap-3 rounded-2xl bg-red-600 px-4 py-3 text-sm text-white shadow-lg"
-        >
-          <span>No pudimos guardar el último cambio. Revisá tu conexión y recargá la página.</span>
-          <button type="button" className="font-semibold underline" onClick={() => setErrorGuardado(false)}>
-            Cerrar
-          </button>
-        </div>
+        <AvisoFlotante onCerrar={() => setErrorGuardado(false)}>
+          No pudimos guardar el último cambio. Revisá tu conexión y recargá la página.
+        </AvisoFlotante>
       )}
     </CasosContext.Provider>
   );

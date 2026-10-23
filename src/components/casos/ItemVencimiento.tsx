@@ -1,108 +1,68 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "@/components/ui/Button";
-import { SelectField, TextField } from "@/components/ui/Field";
+import { Casilla } from "@/components/ui/Controles";
 import { MenuAcciones } from "@/components/ui/MenuAcciones";
+import { Recuadro, type TonoRecuadro } from "@/components/ui/Superficies";
+import { Texto } from "@/components/ui/Texto";
 import { descargarCalendario } from "@/lib/casos/calendario";
 import { useCasos } from "@/lib/casos/CasosProvider";
-import { CamposHoraLugar } from "./CamposHoraLugar";
-import { TipoTag } from "./TipoTag";
-import { esCita } from "@/lib/casos/sugerencias";
 import { diasHasta, formatearFecha, horaYLugar } from "@/lib/casos/formato";
-import type { TipoVencimiento, Vencimiento } from "@/lib/casos/tipos";
+import type { Vencimiento } from "@/lib/casos/tipos";
+import { FormularioVencimiento } from "./FormularioVencimiento";
+import { TipoTag } from "./TipoTag";
 
 /** Un plazo o tarea de la ficha: se tilda, se edita (tipo, fecha y texto) o se quita. */
 export function ItemVencimiento({ casoId, vencimiento: v }: { casoId: string; vencimiento: Vencimiento }) {
   const { casos, actualizar, marcarVencimiento, quitarVencimiento } = useCasos();
   const caso = casos.find((c) => c.id === casoId);
   const [editando, setEditando] = useState(false);
-  const [fecha, setFecha] = useState(v.fecha);
-  const [descripcion, setDescripcion] = useState(v.descripcion);
-  const [tipo, setTipo] = useState<TipoVencimiento>(v.tipo);
-  const [hora, setHora] = useState(v.hora ?? "");
-  const [lugar, setLugar] = useState(v.lugar ?? "");
 
   if (editando) {
-    const guardar = (e: React.FormEvent) => {
-      e.preventDefault();
-      if (!fecha) return;
-      actualizar(casoId, (c) => ({
-        ...c,
-        vencimientos: c.vencimientos.map((x) => (x.id === v.id ? { ...x, fecha, descripcion, tipo, hora, lugar: lugar.trim() } : x)),
-      }));
-      setEditando(false);
-    };
     return (
-      <li className="rounded-2xl bg-fondo px-4 py-3">
-        <form onSubmit={guardar} className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
-          <div className="sm:w-28">
-            <SelectField label="Tipo" value={tipo} onChange={(e) => setTipo(e.target.value as TipoVencimiento)}>
-              <option value="plazo">Plazo</option>
-              <option value="tarea">Tarea</option>
-            </SelectField>
-          </div>
-          <div className="flex-1">
-            <TextField label="Fecha" type="date" value={fecha} onChange={(e) => setFecha(e.target.value)} required />
-          </div>
-          <div className="flex-[2]">
-            <TextField label={tipo === "plazo" ? "Qué vence" : "Qué hay que hacer"} value={descripcion} onChange={(e) => setDescripcion(e.target.value)} />
-          </div>
-          <div className="sm:basis-full">
-            <CamposHoraLugar hora={hora} lugar={lugar} onHora={setHora} onLugar={setLugar} abrir={esCita(descripcion)} />
-          </div>
-          <div className="flex gap-2">
-            <Button type="submit">Guardar</Button>
-            <Button
-              variante="secondary"
-              onClick={() => {
-                setFecha(v.fecha);
-                setDescripcion(v.descripcion);
-                setTipo(v.tipo);
-                setHora(v.hora ?? "");
-                setLugar(v.lugar ?? "");
-                setEditando(false);
-              }}
-            >
-              Cancelar
-            </Button>
-          </div>
-        </form>
-      </li>
+      <Recuadro as="li">
+        <FormularioVencimiento
+          inicial={{ ...v, hora: v.hora ?? "", lugar: v.lugar ?? "" }}
+          textoBoton="Guardar"
+          onGuardar={(datos) => {
+            actualizar(casoId, (c) => ({
+              ...c,
+              vencimientos: c.vencimientos.map((x) => (x.id === v.id ? { ...x, ...datos } : x)),
+            }));
+            setEditando(false);
+          }}
+          onCancelar={() => setEditando(false)}
+        />
+      </Recuadro>
     );
   }
 
   const dias = diasHasta(v.fecha);
   const tarea = v.tipo === "tarea";
   // Una tarea atrasada no es tan grave como un plazo vencido.
-  const urgencia = v.cumplido
-    ? "bg-fondo text-gray-400"
-    : dias < 0
-      ? tarea
-        ? "bg-amber-50 text-amber-800"
-        : "bg-red-50 text-red-700"
-      : dias <= 3
-        ? "bg-amber-50 text-amber-800"
-        : "bg-fondo text-gray-700";
+  const tono: TonoRecuadro = v.cumplido ? "neutral" : dias < 0 ? (tarea ? "warning" : "danger") : dias <= 3 ? "warning" : "neutral";
 
   return (
-    <li className={`flex flex-wrap items-center gap-3 rounded-2xl px-4 py-3 ${urgencia}`}>
-      <input
-        type="checkbox"
+    <Recuadro as="li" tono={tono} className="flex flex-wrap items-center gap-3">
+      <Casilla
         checked={v.cumplido}
         onChange={(e) => marcarVencimiento(casoId, v.id, e.target.checked)}
-        className="size-4"
         aria-label={`Marcar "${v.descripcion}" como cumplido`}
       />
-      <div className={`min-w-40 flex-1 ${v.cumplido ? "line-through" : ""}`}>
-        <p className="font-semibold">
+      <div className="min-w-40 flex-1">
+        <Texto peso="semibold" tono={v.cumplido ? "tertiary" : undefined} tachado={v.cumplido}>
           {formatearFecha(v.fecha)}
-          {horaYLugar(v) && <span className="font-normal"> · {horaYLugar(v)}</span>}
-        </p>
-        <p className="text-sm">
+          {horaYLugar(v) && (
+            <Texto as="span" peso="regular">
+              {" "}
+              · {horaYLugar(v)}
+            </Texto>
+          )}
+        </Texto>
+        <Texto estilo="body-sm" tono={v.cumplido ? "tertiary" : undefined} tachado={v.cumplido}>
           {v.descripcion}
           <TipoTag tipo={v.tipo} />
-        </p>
+        </Texto>
       </div>
       <MenuAcciones
         etiqueta={`Acciones de "${v.descripcion || "este vencimiento"}"`}
@@ -114,6 +74,6 @@ export function ItemVencimiento({ casoId, vencimiento: v }: { casoId: string; ve
           { etiqueta: "Quitar", onClick: () => quitarVencimiento(casoId, v.id), peligro: true },
         ]}
       />
-    </li>
+    </Recuadro>
   );
 }

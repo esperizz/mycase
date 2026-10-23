@@ -2,8 +2,10 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
+import { Segmentado } from "@/components/ui/Controles";
 import { DialogoConfirmar } from "@/components/ui/DialogoConfirmar";
 import { TextAreaField, TextField } from "@/components/ui/Field";
+import { Texto } from "@/components/ui/Texto";
 import { useCasos } from "@/lib/casos/CasosProvider";
 import { linkWhatsApp } from "@/lib/casos/hojaRuta";
 import { mensajeParaCliente, notaInforme } from "@/lib/casos/informarCliente";
@@ -56,34 +58,18 @@ export function InformarCliente({ caso }: { caso: Caso }) {
         onCancelar={() => setAbierto(false)}
         onConfirmar={mandar}
       >
-        <div className="flex flex-col gap-2">
-          <p className="text-sm font-semibold text-tinta" id="hay-novedades">
-            ¿Hay novedades?
-          </p>
-          <div
-            role="radiogroup"
-            aria-labelledby="hay-novedades"
-            className="grid w-full max-w-xs grid-cols-2 rounded-2xl border border-linea p-1"
-          >
-            {[false, true].map((si) => (
-              <button
-                key={String(si)}
-                type="button"
-                role="radio"
-                aria-checked={hayNovedad === si}
-                onClick={() => {
-                  setHayNovedad(si);
-                  setEditado(null);
-                }}
-                className={`rounded-md py-1.5 text-sm font-semibold transition-colors ${
-                  hayNovedad === si ? "bg-tinta text-white" : "text-gray-600 hover:bg-fondo"
-                }`}
-              >
-                {si ? "Sí" : "No"}
-              </button>
-            ))}
-          </div>
-        </div>
+        <Segmentado
+          label="¿Hay novedades?"
+          opciones={[
+            { valor: "no", etiqueta: "No" },
+            { valor: "si", etiqueta: "Sí" },
+          ]}
+          valor={hayNovedad ? "si" : "no"}
+          onChange={(v) => {
+            setHayNovedad(v === "si");
+            setEditado(null);
+          }}
+        />
         {hayNovedad && (
           <TextField
             label="¿Qué pasó?"
@@ -101,7 +87,9 @@ export function InformarCliente({ caso }: { caso: Caso }) {
           value={texto}
           onChange={(e) => setEditado(e.target.value)}
         />
-        <p className="text-xs text-gray-500">Al mandarlo queda anotado en las notas del caso.</p>
+        <Texto estilo="caption" tono="secondary">
+          Al mandarlo queda anotado en las notas del caso.
+        </Texto>
       </DialogoConfirmar>
     </>
   );

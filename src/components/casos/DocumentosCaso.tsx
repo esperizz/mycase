@@ -1,8 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Button } from "@/components/ui/Button";
+import { BotonTexto, Button } from "@/components/ui/Button";
 import { DialogoConfirmar } from "@/components/ui/DialogoConfirmar";
+import { Aviso, ListaDividida, Tarjeta } from "@/components/ui/Superficies";
+import { Texto } from "@/components/ui/Texto";
 import {
   BUCKET,
   carpetaDelCaso,
@@ -118,14 +120,10 @@ export function DocumentosCaso({ caso }: { caso: Caso }) {
   };
 
   return (
-    <section className="flex flex-col gap-4 rounded-3xl border border-linea bg-white p-5">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <h2 className="font-semibold text-tinta">Documentos</h2>
-          <p className="text-sm text-gray-500">
-            DNI, recibos, historia clínica, cartas. Se guardan en un espacio privado: solo los ves vos.
-          </p>
-        </div>
+    <Tarjeta
+      titulo="Documentos"
+      ayuda="DNI, recibos, historia clínica, cartas. Se guardan en un espacio privado: solo los ves vos."
+      accion={
         <Button
           variante="secondary"
           className="self-start"
@@ -134,43 +132,40 @@ export function DocumentosCaso({ caso }: { caso: Caso }) {
         >
           {subiendo ? "Subiendo…" : "+ Subir archivos"}
         </Button>
-        <input ref={input} type="file" multiple className="hidden" onChange={subir} />
-      </div>
+      }
+    >
+      <input ref={input} type="file" multiple className="hidden" onChange={subir} />
 
       {error && (
-        <p role="alert" className="rounded-2xl bg-red-50 px-3 py-2 text-sm text-red-700">
+        <Aviso tono="danger" role="alert">
           {error}
-        </p>
+        </Aviso>
       )}
 
       {documentos === null ? (
-        <p className="text-sm text-gray-400">Cargando…</p>
+        <Texto estilo="body-sm" tono="tertiary">
+          Cargando…
+        </Texto>
       ) : documentos.length === 0 ? (
-        <p className="text-sm text-gray-500">Todavía no hay documentos en este caso.</p>
+        <Texto estilo="body-sm" tono="secondary">
+          Todavía no hay documentos en este caso.
+        </Texto>
       ) : (
-        <ul className="flex flex-col divide-y divide-gray-100">
+        <ListaDividida>
           {documentos.map((d) => (
             <li key={d.ruta} className="flex items-center gap-3 py-2">
-              <button
-                type="button"
-                onClick={() => abrir(d)}
-                className="min-w-0 flex-1 truncate text-left text-sm font-medium text-tinta underline-offset-2 hover:underline"
-              >
+              <BotonTexto variante="subtle" estilo="body-sm" className="min-w-0 flex-1 truncate text-left" onClick={() => abrir(d)}>
                 {nombreVisible(d.archivo)}
-              </button>
-              <span className="shrink-0 text-xs text-gray-500">
+              </BotonTexto>
+              <Texto as="span" estilo="caption" tono="secondary" className="shrink-0">
                 {d.fecha && formatearFecha(d.fecha)} · {formatearTamanio(d.tamanio)}
-              </span>
-              <button
-                type="button"
-                onClick={() => setBorrando(d)}
-                className="shrink-0 text-xs text-gray-500 hover:text-red-700 hover:underline"
-              >
+              </Texto>
+              <BotonTexto variante="dangerQuiet" estilo="caption" className="shrink-0" onClick={() => setBorrando(d)}>
                 Borrar
-              </button>
+              </BotonTexto>
             </li>
           ))}
-        </ul>
+        </ListaDividida>
       )}
 
       <DialogoConfirmar
@@ -183,6 +178,6 @@ export function DocumentosCaso({ caso }: { caso: Caso }) {
       >
         <p>Se borra para siempre. No se puede deshacer.</p>
       </DialogoConfirmar>
-    </section>
+    </Tarjeta>
   );
 }
